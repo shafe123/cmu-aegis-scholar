@@ -27,7 +27,7 @@
   "mounts": [
     "source=${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
   ],
-  "postCreateCommand": "git config --local user.signingkey /home/vscode/.ssh/${SSH_KEY_NAME}.pub && git config --local gpg.format ssh && git config --local commit.gpgsign true && for d in services/*; do if [ -f \"$d/pyproject.toml\" ]; then (cd \"$d\" && poetry install); fi; done",
+  "postCreateCommand": "for d in services/*; do if [ -f \"$d/pyproject.toml\" ]; then (cd \"$d\" && poetry install); fi; done",
   "postStartCommand": "bash /workspaces/cmu-aegis-scholar/.devcontainer/shell-init.sh",
   "forwardPorts": [8000]
 }
