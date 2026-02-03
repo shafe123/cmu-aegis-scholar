@@ -10,9 +10,9 @@ ENV PATH="/root/.local/bin:/usr/local/bin:$PATH"
 
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false \
-  && poetry install --no-dev --no-interaction --no-ansi
+  && poetry install --only main --no-interaction --no-ansi --no-root
 
 COPY . .
 
-EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8001
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

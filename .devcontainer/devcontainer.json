@@ -2,9 +2,12 @@
   "name": "Python + Terraform + Azure + Kubernetes",
   "build": {
     "dockerfile": "Dockerfile",
-    "context": ".."
+    "context": "..",
+    "args": {
+      "DOCKER_GID": "${localEnv:DOCKER_GID}"
+    }
   },
-  "remoteUser": "vscode",
+  "remoteUser": "root",
   "customizations": {
     "vscode": {
       "settings": {
@@ -25,9 +28,11 @@
     "SSH_KEY_NAME": "${localEnv:SSH_KEY_NAME:personal}"
   },
   "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
     "source=${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
   ],
+  "runArgs": ["--network=dev_aegisnet"],
   "postCreateCommand": "for d in services/*; do if [ -f \"$d/pyproject.toml\" ]; then (cd \"$d\" && poetry install); fi; done",
   "postStartCommand": "bash /workspaces/cmu-aegis-scholar/.devcontainer/shell-init.sh",
-  "forwardPorts": [8000]
+  "forwardPorts": [8000, 8001]
 }

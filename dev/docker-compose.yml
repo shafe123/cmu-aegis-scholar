@@ -1,8 +1,13 @@
-version: '3.8'
+networks:
+  aegisnet:
+    driver: bridge
+
 services:
   example-service:
     build: ../services/example-service
     ports:
-      - 8000:8000
+      - 8001:8001
     environment:
       - PYTHONUNBUFFERED=1
+    networks:
+      - aegisnet

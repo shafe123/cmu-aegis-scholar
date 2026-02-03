@@ -14,8 +14,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install Azure CLI
 RUN python -m pip install azure-cli
 
+# Install Docker
+RUN apt-get update && apt-get install -y docker.io && apt-get install -y docker-compose
+
 # Install kubectl
-RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+ARG KUBECTL_VERSION=1.35.0
+RUN curl -LO "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl" \
   && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
   && rm kubectl
 
@@ -41,4 +45,11 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --version ${POETRY_V
 # Configure Poetry to install into system environment in container builds
 RUN poetry config virtualenvs.create false --local || true
 
-USER vscode
+# Ensure docker group exists with host GID (default 999, override with build arg if needed)
+# This allows docker without root access
+ARG DOCKER_GID=999
+RUN if ! getent group docker; then groupadd -g $DOCKER_GID docker; fi \
+  && usermod -aG docker vscode
+
+# Use root user for Docker access on Windows
+USER root
