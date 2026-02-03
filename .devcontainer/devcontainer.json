@@ -1,0 +1,31 @@
+{
+  "name": "Python + Terraform + Azure + Kubernetes",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python3",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "HashiCorp.terraform",
+        "ms-azuretools.vscode-azurecli",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "GitHub.Copilot-Chat"
+      ]
+    }
+  },
+  "mounts": [
+    "source=${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+  ],
+  "postCreateCommand": "git config --local user.signingkey /home/vscode/.ssh/personal.pub && for d in services/*; do if [ -f \"$d/pyproject.toml\" ]; then (cd \"$d\" && poetry install); fi; done",
+  "postStartCommand": "bash /workspaces/cmu-aegis-scholar/.devcontainer/shell-init.sh",
+  "forwardPorts": [8000]
+}

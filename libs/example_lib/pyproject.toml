@@ -1,0 +1,12 @@
+[tool.poetry]
+name = "example-lib"
+version = "0.1.0"
+description = "Shared library used by multiple services"
+authors = ["you <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
