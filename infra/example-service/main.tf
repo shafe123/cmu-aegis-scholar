@@ -2,9 +2,6 @@ resource "azurerm_resource_group" "example_service" {
   name     = var.resource_group
   location = var.location
 
-  lifecycle {
-    prevent_destroy = true
-  }
   tags = { "env" : var.environment }
 }
 

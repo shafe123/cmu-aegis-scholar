@@ -52,7 +52,7 @@ resource "azurerm_container_registry" "aegis_scholar_acr" {
   tags = { "env" : "required" }
 }
 
-module "example_serivce" {
+module "example_service" {
   source      = "./example-service"
   environment = var.environment
   acr_base    = azurerm_container_registry.aegis_scholar_acr.name
