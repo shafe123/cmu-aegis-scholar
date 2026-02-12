@@ -27,16 +27,16 @@ This project demonstrates a complete **Retrieval Augmented Generation (RAG)** pi
 ## Installation
 
 ### 1. Clone the Repository
-   git clone https://github.com/shafe123/cmu-aegis-scholar.git
+   git clone https://github.com/shafe123/cmu-aegis-scholar.git  
    cd aegis-scholar/steve
 
 ### 2. Create a Virtual Environment
    # Windows
-   python -m venv venv
+   python -m venv venv  
    .\venv\Scripts\activate
 
    # Mac/Linux
-   python3 -m venv venv
+   python3 -m venv venv  
    source venv/bin/activate
 
 ### 3. Install Dependencies
