@@ -1,0 +1,5 @@
+Cleaning:
+OpenAlex stores abstracts as Inverted Indexes to save space, so we must rebuild the sentences before we can vectorize them (create_golden_dataset.py already does this)
+
+Running:
+Any Windows machine running this code will likely require the Microsoft Visual C++ Redistributable to prevent PyTorch DLL errors (https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)
