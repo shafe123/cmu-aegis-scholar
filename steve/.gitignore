@@ -1,0 +1,15 @@
+# --- Python Basics ---
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# --- Project Data ---
+*.json
+*.gz
+*.index
+*.pkl
+
+# --- OS Junk ---
+.DS_Store
+Thumbs.db
