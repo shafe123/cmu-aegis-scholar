@@ -1,0 +1,100 @@
+{
+    "scraper": {
+        "base_url": "https://dtic.dimensions.ai/discover/publication",
+        "headless": true,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "parallel_workers": 4
+    },
+    "rate_limiting": {
+        "min_delay": 0.2,
+        "max_delay": 0.8,
+        "base_backoff": 2.0,
+        "max_backoff": 60,
+        "comments": "In fast mode with eager page loading and parallel workers, shorter delays are safe"
+    },
+    "timeouts": {
+        "page_load": 10,
+        "element_wait": 5,
+        "implicit_wait": 3
+    },
+    "selectors": {
+        "publication_links": [
+            "a[href*='/details/publication/pub.']",
+            "a[href*='/publication/pub.']",
+            "a[href*='/publication/']"
+        ],
+        "title": [
+            "h1",
+            "h1[class*='title']",
+            ".publication-title"
+        ],
+        "abstract": [
+            "div[class*='abstract']",
+            "section[class*='abstract']",
+            "p[class*='abstract']"
+        ],
+        "authors": [
+            "a[href*='and_facet_researcher=']",
+            "a[href*='/researcher/']",
+            "div[class*='author']",
+            "li[class*='author']"
+        ],
+        "organizations": [
+            "a[href*='and_facet_research_org=']",
+            "a[href*='/institution/']",
+            "div[class*='organization']",
+            "div[class*='affiliation']"
+        ],
+        "keywords": [
+            "a[href*='for=']",
+            "span[class*='keyword']",
+            "li[class*='keyword']",
+            "[class*='topic']"
+        ],
+        "publication_date": [
+            "time",
+            "span[class*='date']",
+            "[class*='published']"
+        ],
+        "doi": [
+            "a[href*='doi.org']"
+        ],
+        "document_type": [
+            "h2[class*='type']",
+            "span[class*='type']",
+            "div[class*='document-type']"
+        ],
+        "citations_count": [
+            "a[href*='badge.dimensions.ai']",
+            "span[class*='citation']",
+            "[class*='metric']"
+        ],
+        "next_page_button": [
+            "a[aria-label='Next page']",
+            "button[aria-label='Next page']",
+            "a.next",
+            "button.next",
+            "[class*='pagination'] a:last-child"
+        ]
+    },
+    "javascript": {
+        "data_object_name": "__NUXT__",
+        "alternative_objects": [
+            "window.__NUXT__",
+            "window.__INITIAL_STATE__",
+            "window.__DATA__"
+        ]
+    },
+    "output": {
+        "default_output_dir": "dtic_publications",
+        "default_state_file": "scraper_state.json",
+        "log_file": "YYYYMMDD_HHMMSS_dtic_scraper.log",
+        "encoding": "utf-8",
+        "format": "individual JSON files (one per publication)"
+    },
+    "notes": {
+        "description": "Configuration file for DTIC scraper",
+        "selector_priority": "Selectors are tried in order until a match is found",
+        "customization": "Adjust selectors if website structure changes"
+    }
+}

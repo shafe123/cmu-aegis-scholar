@@ -1,0 +1,39 @@
+# Scraper output files
+*.jsonl
+dtic_publications.*
+dtic_publications/
+
+# State files
+scraper_state*.json
+*_state.json
+
+# Log files
+*.log
+*_dtic_scraper.log
+logs/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Selenium artifacts
+*.crdownload
+selenium-*.log
+geckodriver.log
