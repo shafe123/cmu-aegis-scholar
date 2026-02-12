@@ -51,19 +51,19 @@ This project demonstrates a complete **Retrieval Augmented Generation (RAG)** pi
 You must build the database locally first.
 
 ### Step 1: Download & Filter Data
-Run the ingestion script to fetch real academic papers (keywords can be adjusted):
+Run the ingestion script to fetch real academic papers (keywords can be adjusted):  
    python create_golden_dataset.py
    
    *Output: aegis_ai_deception_data.json*
 
 ### Step 2: Build the Vector Index
-Turn those papers into a searchable AI database:
+Turn those papers into a searchable AI database:  
    python build_vector_store.py
    
    *Output: aegis.index and aegis_metadata.pkl*
 
 ### Step 3: Run the Search Engine
-Launch the interactive search tool:
+Launch the interactive search tool:  
    python search_aegis.py
 
 **Example Queries to Try:**
