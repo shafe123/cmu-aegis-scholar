@@ -27,8 +27,8 @@ This project demonstrates a complete **Retrieval Augmented Generation (RAG)** pi
 ## Installation
 
 ### 1. Clone the Repository
-   git clone https://github.com/YOUR_USERNAME/aegis-scholar.git
-   cd aegis-scholar
+   git clone https://github.com/shafe123/cmu-aegis-scholar.git
+   cd aegis-scholar/steve
 
 ### 2. Create a Virtual Environment
    # Windows
