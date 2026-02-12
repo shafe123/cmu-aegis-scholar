@@ -8,6 +8,7 @@ It includes state persistence and rate limiting for resilient operation.
 
 import json
 import logging
+import sys
 import time
 import random
 from pathlib import Path
@@ -46,14 +47,15 @@ _logs_dir = Path("logs")
 _logs_dir.mkdir(exist_ok=True)
 _log_filename = _logs_dir / f"{_log_timestamp}_dtic_scraper.log"
 
-# Configure logging
+# Configure logging with UTF-8 encoding
+file_handler = logging.FileHandler(_log_filename, encoding='utf-8')
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.stream = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(_log_filename),
-        logging.StreamHandler()
-    ]
+    handlers=[file_handler, stream_handler]
 )
 logger = logging.getLogger(__name__)
 
@@ -321,6 +323,7 @@ class DTICScraper:
     def _extract_publication_from_page(self, url: str) -> Optional[Publication]:
         """
         Extract publication data from a detailed publication page using JavaScript.
+        Opens publication in a new tab to keep search results in main tab.
         
         Args:
             url: Publication URL
@@ -329,7 +332,15 @@ class DTICScraper:
             # Rate limit before page load
             self.rate_limiter.wait()
             
-            # Start loading page
+            # Open new tab using JavaScript
+            self.driver.execute_script("window.open('about:blank', '_blank');")
+            
+            # Switch to the new tab (it will be the last one in the list)
+            all_windows = self.driver.window_handles
+            new_tab = [w for w in all_windows if w != self.main_window][0]
+            self.driver.switch_to.window(new_tab)
+            
+            # Start loading page in new tab
             start_load = time.time()
             logger.info(f"Starting page load: {url}")
             
@@ -346,8 +357,8 @@ class DTICScraper:
             wait_time = time.time() - start_wait
             logger.debug(f"JavaScript ready in {wait_time:.2f}s")
             
-            # Extract publication ID from URL
-            pub_id = url.split('/')[-1]
+            # Extract publication ID from URL (strip query parameters)
+            pub_id = url.split('/')[-1].split('?')[0]
             
             # Start extraction
             start_extract = time.time()
@@ -358,10 +369,23 @@ class DTICScraper:
             extract_time = time.time() - start_extract
             logger.info(f"Data extraction completed in {extract_time:.2f}s")
             
+            # Close the new tab
+            self.driver.close()
+            
+            # Switch back to main window (search results)
+            self.driver.switch_to.window(self.main_window)
+            
             return result
             
         except Exception as e:
             logger.error(f"Error extracting publication from {url}: {e}")
+            # Make sure we're back on the main window even if there's an error
+            try:
+                if self.driver.current_window_handle != self.main_window:
+                    self.driver.close()
+                    self.driver.switch_to.window(self.main_window)
+            except:
+                pass
             return None
     
     def _extract_publication_from_js(self, url: str, pub_id: str) -> Optional[Publication]:
@@ -655,7 +679,7 @@ class DTICScraper:
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             
             # Wait for new content to load
-            time.sleep(2)
+            time.sleep(1)
             self.rate_limiter.wait()
             
             # Get new page height
@@ -673,68 +697,90 @@ class DTICScraper:
             logger.error(f"Error during infinite scroll: {e}")
             return False
     
-    def scrape(self, max_pages: Optional[int] = None, max_publications: Optional[int] = None):
+    def scrape(self, max_pages: Optional[int] = None, max_publications: Optional[int] = None, year: Optional[int] = None):
         """
         Main scraping method using infinite scroll.
         
         Args:
             max_pages: Maximum number of scrolls/batches (None for unlimited)
             max_publications: Maximum number of publications to scrape (None for unlimited)
+            year: Year filter to apply (None for no filter)
         """
         try:
             self._init_driver()
             
-            # Navigate to base URL
-            logger.info(f"Navigating to {self.base_url}")
-            self.driver.get(self.base_url)
+            # Build URL with year filter if specified
+            url = self.base_url
+            if year:
+                url = f"{self.base_url}?or_facet_year={year}"
+                logger.info(f"Scraping publications for year: {year}")
+            
+            # Navigate to URL
+            logger.info(f"Navigating to {url}")
+            self.driver.get(url)
             self.rate_limiter.wait()
             
-            scraped_count = len(self.state_manager.state['scraped_ids'])
+            # Store the main window handle (search results page)
+            self.main_window = self.driver.current_window_handle
+            
+            # Track per-year progress if year is specified
+            year_processed_count = 0  # Total processed for this year (new + already scraped)
+            year_newly_scraped = 0    # Newly scraped for this year
             scroll_count = 0
-            all_seen_links = set()
+            seen_links = set()
+            
+            logger.info("Starting interleaved scroll and scrape process...")
             
             while True:
-                # Check limits
-                if max_pages and scroll_count >= max_pages:
-                    logger.info(f"Reached maximum scroll limit: {max_pages}")
-                    break
-                
-                if max_publications and scraped_count >= max_publications:
-                    logger.info(f"Reached maximum publications limit: {max_publications}")
-                    break
-                
-                logger.info(f"Processing scroll batch {scroll_count + 1}")
-                
-                # Get all publication links currently visible
+                # Get publication links currently visible
                 pub_links = self._get_publication_links()
                 
                 if not pub_links:
                     logger.warning("No publication links found")
                     break
                 
-                # Filter to new links only
-                new_links = [link for link in pub_links if link not in all_seen_links]
-                logger.info(f"Found {len(new_links)} new publication links (total seen: {len(all_seen_links)})")
+                # Find new links we haven't seen yet
+                new_links = [link for link in pub_links if link not in seen_links]
+                seen_links.update(new_links)
                 
-                # Add to seen set
-                all_seen_links.update(new_links)
+                if new_links:
+                    logger.info(f"Found {len(new_links)} new publication links (total seen: {len(seen_links)})")
                 
-                # Process new publications
+                # Process the new links
                 for link in new_links:
-                    pub_id = link.split('/')[-1]
+                    pub_id = link.split('/')[-1].split('?')[0]
                     
-                    # Skip if already scraped
-                    if self.state_manager.is_scraped(pub_id):
+                    # Check if already scraped
+                    already_scraped = self.state_manager.is_scraped(pub_id)
+                    
+                    if already_scraped:
                         logger.debug(f"Skipping already scraped publication: {pub_id}")
+                        # If filtering by year, count this towards the year's total
+                        if year:
+                            year_processed_count += 1
+                            logger.debug(f"Year {year}: {year_processed_count} processed ({year_newly_scraped} new)")
                         continue
                     
-                    # Check publication limit
-                    if max_publications and scraped_count >= max_publications:
-                        break
+                    # For year filtering, check if we've hit the limit for this year
+                    if year and max_publications and year_processed_count >= max_publications:
+                        logger.info(f"Reached publication limit for year {year}: {max_publications}")
+                        logger.info(f"Year {year} complete: {year_newly_scraped} newly scraped, {year_processed_count - year_newly_scraped} already existed")
+                        return
+                    
+                    # For non-year filtering, use global count
+                    if not year and max_publications:
+                        scraped_count = len(self.state_manager.state['scraped_ids'])
+                        if scraped_count >= max_publications:
+                            logger.info(f"Reached publication limit: {max_publications}")
+                            logger.info(f"Scraping completed. Total publications: {scraped_count}")
+                            return
                     
                     try:
                         logger.info(f"{'='*60}")
-                        logger.info(f"Processing publication {scraped_count + 1}: {pub_id}")
+                        if year:
+                            logger.info(f"Processing publication {year_processed_count + 1}/{max_publications or 'ALL'} (Year {year}): {pub_id}")
+                        else:
+                            logger.info(f"Processing publication: {pub_id}")
                         logger.info(f"{'='*60}")
                         
                         # Extract publication data
@@ -744,19 +790,15 @@ class DTICScraper:
                             # Save publication
                             self._save_publication(publication)
                             self.state_manager.mark_scraped(pub_id)
-                            scraped_count += 1
+                            if year:
+                                year_processed_count += 1
+                                year_newly_scraped += 1
                             self.rate_limiter.reset()
                             
-                            logger.info(f"[OK] Successfully scraped publication {scraped_count}/{max_publications or 'ALL'}")
-                            
-                            # Navigate back to main page
-                            self.driver.get(self.base_url)
-                            self.rate_limiter.wait()
-                            
-                            # Scroll to where we were
-                            for _ in range(scroll_count):
-                                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                                time.sleep(0.5)
+                            if year:
+                                logger.info(f"[OK] Year {year}: {year_processed_count}/{max_publications or 'ALL'} processed ({year_newly_scraped} new)")
+                            else:
+                                logger.info(f"[OK] Successfully scraped publication")
                         else:
                             self.state_manager.mark_failed(pub_id)
                         
@@ -764,26 +806,26 @@ class DTICScraper:
                         logger.error(f"Error processing publication {pub_id}: {e}")
                         self.state_manager.mark_failed(pub_id)
                         self.rate_limiter.backoff()
-                        
-                        # Try to recover by going back to main page
-                        try:
-                            self.driver.get(self.base_url)
-                            self.rate_limiter.wait()
-                        except:
-                            pass
                 
-                # Check if we've hit the publication limit
-                if max_publications and scraped_count >= max_publications:
+                # Check scroll limit
+                if max_pages and scroll_count >= max_pages:
+                    logger.info(f"Reached maximum scroll limit: {max_pages}")
                     break
                 
-                # Try to load more content via infinite scroll
+                # Try to load more content
                 if not self._scroll_and_load_more():
-                    logger.info("No more content to load")
+                    logger.info("Reached end of infinite scroll")
                     break
                 
                 scroll_count += 1
             
-            logger.info(f"Scraping completed. Total publications: {scraped_count}")
+            # Log completion
+            if year:
+                logger.info(f"Year {year} complete: {year_newly_scraped} newly scraped, {year_processed_count - year_newly_scraped} already existed")
+                logger.info(f"Total processed for year {year}: {year_processed_count}")
+            else:
+                scraped_count = len(self.state_manager.state['scraped_ids'])
+                logger.info(f"Scraping completed. Total publications: {scraped_count}")
             
         except KeyboardInterrupt:
             logger.info("Scraping interrupted by user")
@@ -793,6 +835,41 @@ class DTICScraper:
             if self.driver:
                 self.driver.quit()
                 logger.info("WebDriver closed")
+    
+    def scrape_by_years(self, start_year: int, end_year: int, max_pages: Optional[int] = None, max_publications_per_year: Optional[int] = None):
+        """
+        Scrape publications by iterating through years.
+        
+        Args:
+            start_year: Starting year (inclusive)
+            end_year: Ending year (inclusive)
+            max_pages: Maximum number of scrolls per year (None for unlimited)
+            max_publications_per_year: Maximum number of publications per year (None for unlimited)
+        """
+        years = list(range(start_year, end_year + 1))
+        logger.info(f"Scraping publications for years: {start_year} to {end_year}")
+        
+        for year in years:
+            logger.info(f"{'='*80}")
+            logger.info(f"Starting scrape for year: {year}")
+            logger.info(f"{'='*80}")
+            
+            try:
+                self.scrape(max_pages=max_pages, max_publications=max_publications_per_year, year=year)
+            except Exception as e:
+                logger.error(f"Error scraping year {year}: {e}")
+                logger.info(f"Continuing to next year...")
+            
+            # Reinitialize driver for next year
+            if self.driver:
+                try:
+                    self.driver.quit()
+                    logger.info("WebDriver closed for year transition")
+                except:
+                    pass
+                self.driver = None
+        
+        logger.info(f"Completed scraping all years from {start_year} to {end_year}")
     
     def resume(self, max_pages: Optional[int] = None, max_publications: Optional[int] = None):
         """Resume scraping from last saved state."""
@@ -821,6 +898,10 @@ def main():
                       help='Run browser with visible window')
     parser.add_argument('--resume', '-r', action='store_true',
                       help='Resume from last saved state')
+    parser.add_argument('--years', '-y', type=str, default=None,
+                      help='Year range to scrape (e.g., "2020-2026" or "2024")')
+    parser.add_argument('--max-per-year', type=int, default=None,
+                      help='Maximum publications per year (only used with --years)')
     
     args = parser.parse_args()
     
@@ -833,6 +914,19 @@ def main():
     
     if args.resume:
         scraper.resume(max_pages=args.max_pages, max_publications=args.max_publications)
+    elif args.years:
+        # Parse year range
+        if '-' in args.years:
+            start_year, end_year = map(int, args.years.split('-'))
+        else:
+            start_year = end_year = int(args.years)
+        
+        scraper.scrape_by_years(
+            start_year=start_year,
+            end_year=end_year,
+            max_pages=args.max_pages,
+            max_publications_per_year=args.max_per_year
+        )
     else:
         scraper.scrape(max_pages=args.max_pages, max_publications=args.max_publications)
 
