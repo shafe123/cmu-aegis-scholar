@@ -32,8 +32,9 @@ This project demonstrates a complete **Retrieval Augmented Generation (RAG)** pi
 
 ### 2. Create a Virtual Environment
    # Windows
-   python -m venv venv  
-   .\venv\Scripts\activate
+   
+   `python -m venv venv`  
+   `.\venv\Scripts\activate`
 
    # Mac/Linux
    python3 -m venv venv  
