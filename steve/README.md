@@ -27,20 +27,36 @@ This project demonstrates a complete **Retrieval Augmented Generation (RAG)** pi
 ## Installation
 
 ### 1. Clone the Repository
-   git clone https://github.com/YOUR_USERNAME/aegis-scholar.git
-   cd aegis-scholar
+
+   ```bash
+   git clone https://github.com/shafe123/cmu-aegis-scholar.git
+   ```  
+   ```bash
+   cd aegis-scholar/steve
+   ```
 
 ### 2. Create a Virtual Environment
    # Windows
+   
+   ```python
    python -m venv venv
+   ```  
+   ```bash
    .\venv\Scripts\activate
+   ```
 
    # Mac/Linux
+   ```python
    python3 -m venv venv
+   ```  
+   ```bash
    source venv/bin/activate
+   ```
 
 ### 3. Install Dependencies
+   ```bash
    pip install -r requirements.txt
+   ```
    
    (Note: If you encounter errors with PyTorch or FAISS on Windows, you may need to install the Microsoft Visual C++ Redistributable.)
 
@@ -51,20 +67,31 @@ This project demonstrates a complete **Retrieval Augmented Generation (RAG)** pi
 You must build the database locally first.
 
 ### Step 1: Download & Filter Data
-Run the ingestion script to fetch real academic papers (keywords can be adjusted):
+Run the ingestion script to fetch real academic papers (keywords can be adjusted):  
+   
+   ```python
    python create_golden_dataset.py
+   ```
    
    *Output: aegis_ai_deception_data.json*
 
 ### Step 2: Build the Vector Index
-Turn those papers into a searchable AI database:
+Turn those papers into a searchable AI database:  
+   
+   ```python
    python build_vector_store.py
+   ```
    
    *Output: aegis.index and aegis_metadata.pkl*
 
 ### Step 3: Run the Search Engine
-Launch the interactive search tool:
+Launch the interactive search tool:  
+   
+   ```python
    python search_aegis.py
+   ```
+
+   *Note: may hang for a minute before asking for input*
 
 **Example Queries to Try:**
 - "Lying to computers"

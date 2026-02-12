@@ -1,11 +1,13 @@
 #!/usr/bin/env pwsh
 # Example script to run scraper and uploader together
-# Usage: .\run_scraper_with_uploader.ps1 -ConnectionString "YOUR_CONNECTION_STRING"
+# Usage: .\run_scraper_with_uploader.ps1 -ConnectionString "YOUR_CONNECTION_STRING" -Years "1970-2026"
 #    Or: Set $env:AZURE_STORAGE_CONNECTION_STRING and run without -ConnectionString
 
 param(
     [string]$ConnectionString = $env:AZURE_STORAGE_CONNECTION_STRING,
-    [string]$Container = "raw"
+    [string]$Container = "raw",
+    [string]$Years = "1970-2026",
+    [int]$MaxPerYear = 1000
 )
 
 if (-not $ConnectionString) {
@@ -17,6 +19,18 @@ if (-not $ConnectionString) {
 Write-Host "Starting DTIC scraper with Azure uploader" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Green
 Write-Host ""
+
+# Check if uploader is already running
+$existingUploader = Get-Process -Name python -ErrorAction SilentlyContinue | Where-Object {
+    $_.CommandLine -like "*uploader.py*--watch*"
+}
+
+if ($existingUploader) {
+    Write-Host "Error: An uploader process is already running (PID: $($existingUploader.Id))" -ForegroundColor Red
+    Write-Host "Please stop the existing uploader before starting a new one." -ForegroundColor Yellow
+    Write-Host "You can stop it with: Stop-Process -Id $($existingUploader.Id)" -ForegroundColor Yellow
+    exit 1
+}
 
 # Start uploader in background
 Write-Host "Starting uploader in watch mode..." -ForegroundColor Cyan
@@ -38,7 +52,14 @@ Start-Sleep -Seconds 2
 
 # Start scraper
 Write-Host "Starting scraper..." -ForegroundColor Cyan
-poetry run python scraper.py
+Write-Host "Year range: $Years" -ForegroundColor Yellow
+if ($MaxPerYear -gt 0) {
+    Write-Host "Max per year: $MaxPerYear" -ForegroundColor Yellow
+    poetry run python scraper.py --years $Years --max-per-year $MaxPerYear
+}
+else {
+    poetry run python scraper.py --years $Years
+}
 
 # Stop uploader
 Write-Host ""
