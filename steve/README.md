@@ -1,6 +1,6 @@
 # Aegis Scholar (Proof of Concept)
 
-A local AI-powered search engine for academic papers, specifically focused on **Artificial Intelligence**, **Deception**, and **Defense Technology**.
+A local AI-powered search engine for academic research.
 
 This project demonstrates a complete **Retrieval Augmented Generation (RAG)** pipeline, moving from raw data ingestion to vector embeddings and semantic search.
 
@@ -17,7 +17,9 @@ This project demonstrates a complete **Retrieval Augmented Generation (RAG)** pi
    - Uses sentence-transformers (Model: all-mpnet-base-v2) to generate 768-dimensional vector embeddings for every paper.
    - Stores vectors in a FAISS index for millisecond-speed similarity search.
 
-3. **Search Interface (search_aegis.py)**
+3. **Search Interface**
+   - **Web App (aegis_web.py):** A modern browser-based interface built with Streamlit.
+   - **CLI (search_aegis.py):** A simple command-line tool for quick testing.
    - Accepts natural language queries (e.g., "How to trick neural networks").
    - Converts the query into a vector on the fly.
    - Retrieves the top 5 most semantically similar papers, even if they don't share exact keywords.
@@ -85,8 +87,17 @@ Turn those papers into a searchable AI database:
    *Output: aegis.index and aegis_metadata.pkl*
 
 ### Step 3: Run the Search Engine
-Launch the interactive search tool:  
+
+**Option A: Web Interface**
+
+   ```bash
+   streamlit run aegis_web.py
+   ```
    
+   *Opens a local website at http://localhost:8501*
+
+**Option B: Command Line**
+
    ```python
    python search_aegis.py
    ```
@@ -104,6 +115,7 @@ Launch the interactive search tool:
 
 - create_golden_dataset.py: ETL pipeline for OpenAlex data.
 - build_vector_store.py: Generates embeddings and builds the FAISS index.
+- aegis_web.py: The Streamlit web interface.
 - search_aegis.py: The CLI search interface.
 - requirements.txt: Python dependencies.
 - .gitignore: What is not committed to Git.
