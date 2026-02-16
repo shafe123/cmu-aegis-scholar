@@ -1,0 +1,160 @@
+import json
+import gzip
+import io
+import time
+from azure.storage.blob import BlobServiceClient, ContentSettings
+
+# --- CONFIGURATION ---
+ACCOUNT_URL = "https://aegisscholardata.blob.core.windows.net"
+SAS_TOKEN = "?sv=2024-11-04&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2026-05-30T08:31:15Z&st=2026-02-12T01:16:15Z&spr=https&sig=pU5C5a%2B%2BxE1zvMMv3vjUqjlJXC9dMgpsVyM0V%2FfuEIo%3D"
+
+SOURCE_CONTAINER = "raw"
+SOURCE_PREFIX = "openalex/works/"  # The root of the works data
+
+DEST_CONTAINER = "clean"
+DEST_PREFIX = "openalex/"        # Where we want it to end up
+
+# --- HELPER FUNCTIONS ---
+
+def reconstruct_abstract(inverted_index):
+    """Rebuilds the abstract text from the inverted index."""
+    if not inverted_index:
+        return None
+    
+    # Collect all (position, word) pairs
+    word_list = []
+    for word, positions in inverted_index.items():
+        for pos in positions:
+            word_list.append((pos, word))
+    
+    # Sort by position and join
+    word_list.sort(key=lambda x: x[0])
+    return " ".join([word for _, word in word_list])
+
+def process_record(record):
+    """Extracts and cleans a single OpenAlex record."""
+    
+    if not record.get('id'):
+        return None
+
+    # Extract Author Names safely
+    authors = []
+    if 'authorships' in record:
+        for authorship in record['authorships']:
+            if 'author' in authorship:
+                name = authorship['author'].get('display_name')
+                if name:
+                    authors.append(name)
+
+    # Build Clean Record
+    clean_record = {
+        "id": record.get("id"),
+        "doi": record.get("doi"),
+        "title": record.get("title"),
+        "publication_year": record.get("publication_year"),
+        "publication_date": record.get("publication_date"),
+        "type": record.get("type"),
+        "authors": authors,
+        "abstract": reconstruct_abstract(record.get("abstract_inverted_index")),
+        "cited_by_count": record.get("cited_by_count"),
+        "topics": [t.get('display_name') for t in record.get('topics', []) if t.get('display_name')][:3] 
+    }
+    
+    return clean_record
+
+def main():
+    print("Connecting to Azure...")
+    blob_service_client = BlobServiceClient(account_url=ACCOUNT_URL, credential=SAS_TOKEN)
+    source_container = blob_service_client.get_container_client(SOURCE_CONTAINER)
+    dest_container = blob_service_client.get_container_client(DEST_CONTAINER)
+
+    print(f"Scanning {SOURCE_CONTAINER}/{SOURCE_PREFIX} recursively...")
+    
+    # List all blobs (files) starting with the prefix. This is recursive by default.
+    source_blobs = source_container.list_blobs(name_starts_with=SOURCE_PREFIX)
+    
+    processed_count = 0
+
+    for blob in source_blobs:
+        if not blob.name.endswith('.gz'):
+            continue
+
+        if "updated_date=" in blob.name:
+            try:
+                # Extracts "2024-01-01" from the path
+                folder_date = blob.name.split("updated_date=")[1].split("/")[0]
+                
+                # If the folder date is BEFORE 2026, SKIP IT.
+                if folder_date < "2026-01-01":
+                    continue 
+            except:
+                pass
+        # --- PATH CALCULATION ---
+        # 1. Get the full path: "openalex/works/updated_date=2024-01-01/part_0000.gz"
+        full_source_path = blob.name
+        
+        # 2. Remove the prefix "openalex/works/" to get the relative path
+        #    Result: "updated_date=2024-01-01/part_0000.gz"
+        relative_path = full_source_path.replace(SOURCE_PREFIX, "")
+        
+        # 3. Create destination path
+        #    Result: "openalex/updated_date=2024-01-01/part_0000.jsonl"
+        dest_blob_name = f"{DEST_PREFIX}{relative_path.replace('.gz', '.jsonl')}"
+        
+        # Check if already processed
+        dest_blob_client = dest_container.get_blob_client(dest_blob_name)
+        if dest_blob_client.exists():
+            print(f"Skipping {relative_path} (already exists)")
+            continue
+
+        print(f"Processing: {relative_path} -> Uncompressed JSONL...")
+        start_time = time.time()
+        
+        try:
+            # Download
+            source_blob_client = source_container.get_blob_client(blob.name)
+            download_stream = source_blob_client.download_blob()
+            compressed_data = download_stream.readall() 
+            
+            # Process
+            output_buffer = io.BytesIO()
+            record_count = 0
+            
+            with gzip.GzipFile(fileobj=io.BytesIO(compressed_data), mode='rb') as gz_in:
+                for line in gz_in:
+                    try:
+                        raw_record = json.loads(line)
+                        clean_data = process_record(raw_record)
+                        
+                        if clean_data:
+                            json_line = json.dumps(clean_data, ensure_ascii=False) + "\n"
+                            output_buffer.write(json_line.encode('utf-8'))
+                            record_count += 1
+                            
+                    except Exception:
+                        continue 
+
+            # Upload
+            data_size_mb = output_buffer.tell() / (1024 * 1024)
+            output_buffer.seek(0)
+            
+            print(f"Uploading {record_count} records ({data_size_mb:.2f} MB) to {dest_blob_name}...")
+            
+            dest_blob_client.upload_blob(
+                output_buffer, 
+                overwrite=True,
+                content_settings=ContentSettings(content_type='application/json')
+            )
+            
+            elapsed = time.time() - start_time
+            print(f"Success. Time: {elapsed:.2f}s")
+            processed_count += 1
+
+        except Exception as e:
+            print(f"Error processing {blob.name}: {e}")
+
+    print("-" * 30)
+    print(f"Job Complete. Processed {processed_count} files.")
+
+if __name__ == "__main__":
+    main()
