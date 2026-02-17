@@ -12,7 +12,7 @@ SOURCE_CONTAINER = "raw"
 SOURCE_PREFIX = "openalex/works/"  # The root of the works data
 
 DEST_CONTAINER = "clean"
-DEST_PREFIX = "openalex/works/"        # Where we want it to end up
+DEST_PREFIX = "openalex/"        # Where we want it to end up
 
 # --- HELPER FUNCTIONS ---
 
@@ -166,7 +166,7 @@ def main():
                 # Extracts "2024-01-01" from the path
                 folder_date = blob.name.split("updated_date=")[1].split("/")[0]
                 
-                if folder_date >= "2025-01-01":
+                if folder_date < "2025-01-01":
                     continue 
             except:
                 pass

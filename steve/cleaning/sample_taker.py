@@ -6,84 +6,88 @@ from azure.storage.blob import BlobServiceClient
 # --- CONFIGURATION ---
 ACCOUNT_URL = "https://aegisscholardata.blob.core.windows.net"
 SAS_TOKEN = "?sv=2024-11-04&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2026-05-30T08:31:15Z&st=2026-02-12T01:16:15Z&spr=https&sig=pU5C5a%2B%2BxE1zvMMv3vjUqjlJXC9dMgpsVyM0V%2FfuEIo%3D"
-CONTAINER_NAME = "raw"
+CONTAINER = "raw"
+PREFIX = "openalex/works/"
 
-# TARGET: Specifically the "works" folder inside "openalex"
-TARGET_FOLDER = "openalex/works/"
-
-def get_first_works_blob(container_client):
-    print(f"Scanning inside '{TARGET_FOLDER}' for a .gz file...")
+def inspect_modern():
+    print("Connecting...")
+    client = BlobServiceClient(account_url=ACCOUNT_URL, credential=SAS_TOKEN)
+    container = client.get_container_client(CONTAINER)
     
-    # We list blobs starting with that specific prefix
-    blob_list = container_client.list_blobs(name_starts_with=TARGET_FOLDER)
+    print("Scanning for a MODERN file (2024+)...")
+    # We iterate until we find a file with a recent date in the name
+    blob_iterator = container.list_blobs(name_starts_with=PREFIX)
+    target_blob = None
     
-    for blob in blob_list:
-        if blob.name.endswith('.gz'):
-            return blob.name
-    return None
+    for blob in blob_iterator:
+        # LOOK FOR 2024 or 2025 in the filename
+        if ("updated_date=2024" in blob.name or "updated_date=2025" in blob.name) and blob.name.endswith('.gz'):
+            target_blob = blob
+            break
+            
+    if not target_blob:
+        print("ERROR: Could not find any files from 2024 or 2025!")
+        return
 
-def main():
+    print(f"Downloading header from: {target_blob.name}")
+    blob_client = container.get_blob_client(target_blob.name)
+    stream = blob_client.download_blob()
+    data = stream.readall()
+    
     try:
-        print("Connecting to Azure...")
-        blob_service_client = BlobServiceClient(account_url=ACCOUNT_URL, credential=SAS_TOKEN)
-        container_client = blob_service_client.get_container_client(CONTAINER_NAME)
-
-        # 1. Find the file
-        blob_name = get_first_works_blob(container_client)
-        if not blob_name:
-            print(f"Error: No .gz files found in '{TARGET_FOLDER}'. Check the path!")
-            return
-
-        print(f"Found file: {blob_name}")
-        blob_client = container_client.get_blob_client(blob_name)
-
-        # 2. Download a chunk (1MB to improve chances of finding a good record)
-        print("Downloading 1MB chunk...")
-        stream = blob_client.download_blob(offset=0, length=1024 * 1024)
-        compressed_data = stream.readall()
-
-        print("Decompressing and searching for a record with an abstract...")
-        
-        found_record = None
-        
-        # 3. Read line by line from the compressed stream
-        with gzip.GzipFile(fileobj=io.BytesIO(compressed_data)) as f:
-            for i, line in enumerate(f):
-                try:
-                    record = json.loads(line)
-                    
-                    # Prioritize finding a record that has the abstract index
-                    if record.get('abstract_inverted_index'):
-                        print(f"Found a record WITH an abstract on line {i+1}!")
-                        found_record = record
-                        break
-                    
-                    # If we haven't found one with an abstract yet, keep the first valid record as a backup
-                    if found_record is None:
-                        found_record = record
-                        
-                except Exception:
-                    continue
-
-        if found_record:
-            output_filename = "raw_openalex_work.json"
-            with open(output_filename, "w", encoding="utf-8") as out_f:
-                json.dump(found_record, out_f, indent=4)
+        with gzip.GzipFile(fileobj=io.BytesIO(data), mode='rb') as f:
+            # Read the first line only
+            first_line = f.readline()
+            record = json.loads(first_line)
             
-            print(f"Saved sample to: {output_filename}")
+            print("\n" + "="*40)
+            print(" MODERN DATA VERIFICATION ")
+            print("="*40)
+            print(f"Record ID: {record.get('id', 'MISSING')}")
+            print(f"Title:     {record.get('title', 'No Title')[:60]}...")
             
-            # Check for the abstract field
-            if found_record.get('abstract_inverted_index'):
-                print("Note: This record has 'abstract_inverted_index'. Your reconstruction script will work.")
+            # 1. TOPICS (The new taxonomy)
+            print("\n--- 1. TOPICS (Crucial for Vector Search) ---")
+            topics = record.get('topics', [])
+            if topics:
+                t = topics[0]
+                print(f"✅ Found {len(topics)} topics.")
+                print(f"   Sample: {t.get('display_name')} (Score: {t.get('score')})")
+                print(f"   Domain: {t.get('domain', {}).get('display_name')}")
             else:
-                print("Note: This specific sample record has NO abstract (it might be null).")
-                print("Check the file content to see the structure anyway.")
+                print("⚠️ No topics found.")
 
-        else:
-            print("Error: Could not find any valid JSON records in the first 1MB.")
+            # 2. INSTITUTIONS (Crucial for Graph)
+            print("\n--- 2. INSTITUTIONS (Crucial for Experts) ---")
+            has_inst = False
+            if 'authorships' in record:
+                for auth in record['authorships']:
+                    insts = auth.get('institutions', [])
+                    if insts:
+                        print(f"✅ Found Institution: {insts[0].get('display_name')}")
+                        print(f"   Country: {insts[0].get('country_code')}")
+                        print(f"   ID: {insts[0].get('id')}")
+                        has_inst = True
+                        break # Just show one
+            if not has_inst:
+                print("⚠️ No institutions listed in this record.")
+
+            # 3. FUNDER / GRANTS (Crucial for 'Who Paid')
+            print("\n--- 3. FUNDING (Crucial for Analysis) ---")
+            grants = record.get('grants', [])
+            if grants:
+                print(f"✅ Found {len(grants)} grants.")
+                print(f"   Funder: {grants[0].get('funder_display_name')}")
+            else:
+                print("ℹ️ No grants listed (Common for many papers).")
+
+            # 4. REFERENCES
+            print("\n--- 4. REFERENCES (Crucial for Citations) ---")
+            refs = record.get('referenced_works', [])
+            print(f"Found {len(refs)} references.")
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error reading file: {e}")
 
 if __name__ == "__main__":
-    main()
+    inspect_modern()
