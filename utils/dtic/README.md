@@ -392,6 +392,71 @@ chmod +x run_scraper_with_uploader.sh
 
 See [UPLOADER_README.md](UPLOADER_README.md) for detailed uploader documentation.
 
+## Keyword Amplification
+
+The `amplify_keywords.py` script enriches DTIC publications by fetching actual keywords from the URLs stored in the `keywords` field.
+
+### Quick Start
+
+```bash
+# Set connection string
+export AZURE_STORAGE_CONNECTION_STRING="YOUR_CONNECTION_STRING"
+
+# Amplify all publications
+poetry run python amplify_keywords.py
+```
+
+**Windows (PowerShell):**
+```powershell
+cd utils/dtic
+.\run_amplify_keywords.ps1
+```
+
+**Linux/Mac:**
+```bash
+cd utils/dtic
+chmod +x run_amplify_keywords.sh
+./run_amplify_keywords.sh
+```
+
+### What It Does
+
+The scraper initially saves keyword references as URLs:
+```json
+"keywords": ["/details/sources/publication/pub.1000004508/for.json"]
+```
+
+The amplifier:
+1. Fetches the actual keywords from `https://dtic.dimensions.ai` + URL
+2. Replaces `keywords` field with actual keyword data
+3. Preserves original URLs in `keywords_urls` field for reference
+4. Saves amplified publications to `dtic/works_amplified/` prefix
+
+Output example:
+```json
+{
+  "keywords": ["Mathematics", "Finite Element Method"],
+  "keywords_urls": ["/details/sources/publication/pub.1000004508/for.json"],
+  "keywords_amplified": true,
+  "keywords_amplified_at": "2026-02-19T14:30:00"
+}
+```
+
+### Options
+
+```bash
+# Process only 10 files for testing
+python amplify_keywords.py --max-files 10
+
+# Adjust rate limiting
+python amplify_keywords.py --delay 0.5
+
+# Custom source/destination
+python amplify_keywords.py --source-prefix "dtic/works/" --dest-prefix "dtic/works_keywords/"
+```
+
+See [AMPLIFY_README.md](AMPLIFY_README.md) for detailed amplifier documentation.
+
 ## License
 
 See the main repository for license information.
