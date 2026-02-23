@@ -5,9 +5,21 @@
     "openalex/authors/updated_date=2026-02-01/part_0002.gz",
     "openalex/authors/updated_date=2026-02-01/part_0003.gz",
     "openalex/authors/updated_date=2026-02-01/part_0004.gz",
-    "openalex/authors/updated_date=2026-02-01/part_0005.gz"
+    "openalex/authors/updated_date=2026-02-01/part_0005.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0006.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0007.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0008.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0009.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0010.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0011.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0012.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0013.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0014.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0015.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0016.gz",
+    "openalex/authors/updated_date=2026-02-01/part_0017.gz"
   ],
   "failed_files": [],
-  "last_updated": "2026-02-20T14:45:07.016543",
-  "total_documents": 6
+  "last_updated": "2026-02-22T19:45:33.410370",
+  "total_documents": 18
 }
