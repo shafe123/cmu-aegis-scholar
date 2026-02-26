@@ -1,0 +1,53 @@
+[
+    {
+        "id": "org_a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+        "name": "Carnegie Mellon University",
+        "country": "US",
+        "type": "institution",
+        "sources": [
+            {
+                "source": "ror",
+                "id": "041nk4h53"
+            },
+            {
+                "source": "openalex",
+                "id": "I130238516"
+            }
+        ],
+        "last_updated": "2024-01-15T10:30:00Z"
+    },
+    {
+        "id": "org_b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+        "name": "Massachusetts Institute of Technology",
+        "country": "US",
+        "type": "institution",
+        "sources": [
+            {
+                "source": "ror",
+                "id": "042nb2s44"
+            },
+            {
+                "source": "openalex",
+                "id": "I63966007"
+            }
+        ],
+        "last_updated": "2024-01-15T10:30:00Z"
+    },
+    {
+        "id": "org_c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+        "name": "National Science Foundation",
+        "country": "US",
+        "type": "funder",
+        "sources": [
+            {
+                "source": "ror",
+                "id": "021nxhr62"
+            },
+            {
+                "source": "crossref",
+                "id": "100000001"
+            }
+        ],
+        "last_updated": "2024-01-15T10:30:00Z"
+    }
+]
