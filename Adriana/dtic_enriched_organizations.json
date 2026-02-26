@@ -1,0 +1,4002 @@
+[
+    {
+        "id": 1,
+        "publication_id": "pub.1000004508",
+        "organization_name": "Georgia Institute of Technology",
+        "country": "United States",
+        "contact_email": "ask@gatech.edu",
+        "contact_phone": "+1 404-894-2000"
+    },
+    {
+        "id": 2,
+        "publication_id": "pub.1000004508",
+        "organization_name": "Brunel University London",
+        "country": "United Kingdom",
+        "contact_email": "info@brunel.ac.uk",
+        "contact_phone": "+44 (0)1895 274000"
+    },
+    {
+        "id": 3,
+        "publication_id": "pub.1000005795",
+        "organization_name": "Kansas State University",
+        "country": "United States",
+        "contact_email": "info@k-state.edu",
+        "contact_phone": "+1 785-532-6011"
+    },
+    {
+        "id": 4,
+        "publication_id": "pub.1000006170",
+        "organization_name": "Roswell Park Comprehensive Cancer Center",
+        "country": "United States",
+        "contact_email": "askrpci@roswellpark.org",
+        "contact_phone": "1-800-767-9355"
+    },
+    {
+        "id": 5,
+        "publication_id": "pub.1000006170",
+        "organization_name": "University of Minnesota Twin Cities",
+        "country": "United States",
+        "contact_email": "umnnews@umn.edu",
+        "contact_phone": "+1 612-625-5000"
+    },
+    {
+        "id": 6,
+        "publication_id": "pub.1000007703",
+        "organization_name": "University of Bristol",
+        "country": "United Kingdom",
+        "contact_email": "public-relations@bristol.ac.uk",
+        "contact_phone": "+44 (0)117 928 9000"
+    },
+    {
+        "id": 7,
+        "publication_id": "pub.1000007703",
+        "organization_name": "University of Groningen",
+        "country": "Netherlands",
+        "contact_email": "info@rug.nl",
+        "contact_phone": "+31 50 363 9111"
+    },
+    {
+        "id": 8,
+        "publication_id": "pub.1000013918",
+        "organization_name": "The University of Texas MD Anderson Cancer Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": "+1-877-632-6789"
+    },
+    {
+        "id": 9,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Medical College of Wisconsin",
+        "country": "United States",
+        "contact_email": "mcwinfo@mcw.edu",
+        "contact_phone": "+1 414-955-8296"
+    },
+    {
+        "id": 10,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Ankara University",
+        "country": "Turkey",
+        "contact_email": "bidb@ankara.edu.tr",
+        "contact_phone": "+90 312 212 6040"
+    },
+    {
+        "id": 11,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Heidelberg University",
+        "country": "Germany",
+        "contact_email": "kommunikation@uni-heidelberg.de",
+        "contact_phone": "+49 6221 54-0"
+    },
+    {
+        "id": 12,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Instituto Scientifico HS Raffaele, Milano, Italy",
+        "country": "Italy",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 13,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Ospedale Policlinico San Martino",
+        "country": "Italy",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 14,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Institute Paoli-Calmettes",
+        "country": "France",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 15,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Northside Hospital",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 16,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Advocate Lutheran General Hospital",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 17,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Cleveland Clinic Foundation",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 18,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Boston University",
+        "country": "United States",
+        "contact_email": "buinfo@bu.edu",
+        "contact_phone": "+1 617-353-2000"
+    },
+    {
+        "id": 19,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Moffitt Cancer Center",
+        "country": "United States",
+        "contact_email": "null",
+        "contact_phone": "null"
+    },
+    {
+        "id": 20,
+        "publication_id": "pub.1000013918",
+        "organization_name": "The University of Texas Health Science Center at San Antonio",
+        "country": "United States",
+        "contact_email": "webmaster@uthscsa.edu",
+        "contact_phone": "+1 210-567-7000"
+    },
+    {
+        "id": 21,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Center for Advanced Studies in Leukemia, Los Angeles, CA, USA",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 22,
+        "publication_id": "pub.1000013918",
+        "organization_name": "University Hospitals of Cleveland",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 23,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Loyola University Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 24,
+        "publication_id": "pub.1000013918",
+        "organization_name": "Leipzig University",
+        "country": "Germany",
+        "contact_email": "info@uni-leipzig.de",
+        "contact_phone": "+49 341 97-0"
+    },
+    {
+        "id": 25,
+        "publication_id": "pub.1000017748",
+        "organization_name": "The Pennsylvania State University",
+        "country": "United States",
+        "contact_email": "webaccessibility@psu.edu",
+        "contact_phone": "+1 814-865-4700"
+    },
+    {
+        "id": 26,
+        "publication_id": "pub.1000018714",
+        "organization_name": "University of Arizona Cancer Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 27,
+        "publication_id": "pub.1000018714",
+        "organization_name": "University of Arizona Health Sciences",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 28,
+        "publication_id": "pub.1000029586",
+        "organization_name": "Scripps Research Institute",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 29,
+        "publication_id": "pub.1000029586",
+        "organization_name": "Bristol Myers Squibb Co",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 30,
+        "publication_id": "pub.1000044456",
+        "organization_name": "University of Pittsburgh Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 31,
+        "publication_id": "pub.1000044456",
+        "organization_name": "Air Force Medical University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 32,
+        "publication_id": "pub.1000044456",
+        "organization_name": "Xijing Hospital",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 33,
+        "publication_id": "pub.1000044456",
+        "organization_name": "University of Pittsburgh",
+        "country": "United States",
+        "contact_email": "web@pitt.edu",
+        "contact_phone": "+1 412-624-4141"
+    },
+    {
+        "id": 34,
+        "publication_id": "pub.1000044456",
+        "organization_name": "First Affiliated Hospital of GuangXi Medical University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 35,
+        "publication_id": "pub.1000044456",
+        "organization_name": "New York University",
+        "country": "United States",
+        "contact_email": "university.info@nyu.edu",
+        "contact_phone": "+1 212-998-1212"
+    },
+    {
+        "id": 36,
+        "publication_id": "pub.1000044456",
+        "organization_name": "United States Department of Veterans Affairs",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": "1-800-827-1000"
+    },
+    {
+        "id": 37,
+        "publication_id": "pub.1000047745",
+        "organization_name": "Tulane University",
+        "country": "United States",
+        "contact_email": "tuadmission@tulane.edu",
+        "contact_phone": "+1 504-865-5000"
+    },
+    {
+        "id": 38,
+        "publication_id": "pub.1000057123",
+        "organization_name": "Lawrence Livermore National Laboratory",
+        "country": "United States",
+        "contact_email": "info@llnl.gov",
+        "contact_phone": "+1 925-422-1100"
+    },
+    {
+        "id": 39,
+        "publication_id": "pub.1000058982",
+        "organization_name": "University of Toronto",
+        "country": "Canada",
+        "contact_email": "info.utoronto@utoronto.ca",
+        "contact_phone": "+1 416-978-2011"
+    },
+    {
+        "id": 40,
+        "publication_id": "pub.1000062662",
+        "organization_name": "Courant Institute of Mathematical Sciences",
+        "country": "United States",
+        "contact_email": "communications@cims.nyu.edu",
+        "contact_phone": "+1 212-998-3000"
+    },
+    {
+        "id": 41,
+        "publication_id": "pub.1000062662",
+        "organization_name": "University of Wisconsin-Madison",
+        "country": "United States",
+        "contact_email": "info@wisc.edu",
+        "contact_phone": "+1 608-263-2400"
+    },
+    {
+        "id": 42,
+        "publication_id": "pub.1000065117",
+        "organization_name": "University of Washington",
+        "country": "United States",
+        "contact_email": "uw.edu",
+        "contact_phone": "+1 206-543-2100"
+    },
+    {
+        "id": 43,
+        "publication_id": "pub.1000065117",
+        "organization_name": "Stanford University",
+        "country": "United States",
+        "contact_email": "info@stanford.edu",
+        "contact_phone": "+1 650-723-2300"
+    },
+    {
+        "id": 44,
+        "publication_id": "pub.1000079773",
+        "organization_name": "Clark Atlanta University",
+        "country": "United States",
+        "contact_email": "info@cau.edu",
+        "contact_phone": "+1 404-880-8000"
+    },
+    {
+        "id": 45,
+        "publication_id": "pub.1000084246",
+        "organization_name": "Peking University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 46,
+        "publication_id": "pub.1000084246",
+        "organization_name": "Nanjing University of Information Science and Technology",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 47,
+        "publication_id": "pub.1000084246",
+        "organization_name": "China Meteorological Administration",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 48,
+        "publication_id": "pub.1000084246",
+        "organization_name": "The Pennsylvania State University",
+        "country": "United States",
+        "contact_email": "webaccessibility@psu.edu",
+        "contact_phone": "+1 814-865-4700"
+    },
+    {
+        "id": 49,
+        "publication_id": "pub.1000084246",
+        "organization_name": "Systems Group Inc",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 50,
+        "publication_id": "pub.1000084246",
+        "organization_name": "National Oceanic and Atmospheric Administration",
+        "country": "United States",
+        "contact_email": "webmaster@noaa.gov",
+        "contact_phone": "301-713-1208"
+    },
+    {
+        "id": 51,
+        "publication_id": "pub.1000086542",
+        "organization_name": "Duke University",
+        "country": "United States",
+        "contact_email": "duke.edu",
+        "contact_phone": "+1 919-684-8111"
+    },
+    {
+        "id": 52,
+        "publication_id": "pub.1000095438",
+        "organization_name": "University of Chicago",
+        "country": "United States",
+        "contact_email": "infocenter@uchicago.edu",
+        "contact_phone": "+1 773-702-1234"
+    },
+    {
+        "id": 53,
+        "publication_id": "pub.1000098148",
+        "organization_name": "University of Pennsylvania",
+        "country": "United States",
+        "contact_email": "info@upenn.edu",
+        "contact_phone": "+1 215-898-5000"
+    },
+    {
+        "id": 54,
+        "publication_id": "pub.1000098148",
+        "organization_name": "National University of La Plata",
+        "country": "Argentina",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 55,
+        "publication_id": "pub.1000101284",
+        "organization_name": "Rutgers, The State University of New Jersey",
+        "country": "United States",
+        "contact_email": "info@rutgers.edu",
+        "contact_phone": "+1 732-445-4636"
+    },
+    {
+        "id": 56,
+        "publication_id": "pub.1000101284",
+        "organization_name": "Complutense University of Madrid",
+        "country": "Spain",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 57,
+        "publication_id": "pub.1000101284",
+        "organization_name": "S.N. Bose National Centre for Basic Sciences",
+        "country": "India",
+        "contact_email": "info@bose.res.in",
+        "contact_phone": "+91-33-2335-5706"
+    },
+    {
+        "id": 58,
+        "publication_id": "pub.1000101284",
+        "organization_name": "New Jersey Institute of Technology",
+        "country": "United States",
+        "contact_email": "info@njit.edu",
+        "contact_phone": "+1 973-596-3000"
+    },
+    {
+        "id": 59,
+        "publication_id": "pub.1000101284",
+        "organization_name": "Lamont-Doherty Earth Observatory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 60,
+        "publication_id": "pub.1000110466",
+        "organization_name": "Neuroregeneration and Stem Cell Programs, Institute for Cell Engineering,",
+        "country": null,
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 61,
+        "publication_id": "pub.1000110466",
+        "organization_name": "Weill Medical College of Cornell University",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 62,
+        "publication_id": "pub.1000110466",
+        "organization_name": "Johns Hopkins University",
+        "country": "United States",
+        "contact_email": "info@jhu.edu",
+        "contact_phone": "+1 410-516-8000"
+    },
+    {
+        "id": 63,
+        "publication_id": "pub.1000110466",
+        "organization_name": "Department of Neurology,",
+        "country": null,
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 64,
+        "publication_id": "pub.1000110466",
+        "organization_name": "Solomon H. Snyder Department of Neuroscience,",
+        "country": null,
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 65,
+        "publication_id": "pub.1000110466",
+        "organization_name": "Department of Physiology, and",
+        "country": null,
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 66,
+        "publication_id": "pub.1000111575",
+        "organization_name": "Rice University",
+        "country": "United States",
+        "contact_email": "admission@rice.edu",
+        "contact_phone": "+1 713-348-0000"
+    },
+    {
+        "id": 67,
+        "publication_id": "pub.1000111575",
+        "organization_name": "University of Arizona",
+        "country": "United States",
+        "contact_email": "admissions@arizona.edu",
+        "contact_phone": "+1 520-621-2211"
+    },
+    {
+        "id": 68,
+        "publication_id": "pub.1000115116",
+        "organization_name": "Brown University",
+        "country": "United States",
+        "contact_email": "web@brown.edu",
+        "contact_phone": "+1 401-863-1000"
+    },
+    {
+        "id": 69,
+        "publication_id": "pub.1000115116",
+        "organization_name": "Duke University",
+        "country": "United States",
+        "contact_email": "duke.edu",
+        "contact_phone": "+1 919-684-8111"
+    },
+    {
+        "id": 70,
+        "publication_id": "pub.1000117223",
+        "organization_name": "Institute of Physics, Academia Sinica",
+        "country": "Taiwan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 71,
+        "publication_id": "pub.1000117223",
+        "organization_name": "Institute of Astronomy and Astrophysics, Academia Sinica",
+        "country": "Taiwan",
+        "contact_email": "asiaa@asiaa.sinica.edu.tw",
+        "contact_phone": "+886-2-2366-5400"
+    },
+    {
+        "id": 72,
+        "publication_id": "pub.1000117223",
+        "organization_name": "Departments of, c, Physics and",
+        "country": null,
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 73,
+        "publication_id": "pub.1000117223",
+        "organization_name": "National Tsing Hua University",
+        "country": "Taiwan",
+        "contact_email": "web@my.nthu.edu.tw",
+        "contact_phone": "+886-3-5715131"
+    },
+    {
+        "id": 74,
+        "publication_id": "pub.1000117223",
+        "organization_name": "University of Antwerp",
+        "country": "Belgium",
+        "contact_email": "info@uantwerpen.be",
+        "contact_phone": "+32 3 265 41 11"
+    },
+    {
+        "id": 75,
+        "publication_id": "pub.1000117223",
+        "organization_name": "National Dong Hwa University",
+        "country": "Taiwan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 76,
+        "publication_id": "pub.1000124523",
+        "organization_name": "The University of Tokyo",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 77,
+        "publication_id": "pub.1000124523",
+        "organization_name": "Japan Science and Technology Agency",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 78,
+        "publication_id": "pub.1000124523",
+        "organization_name": "Waseda University",
+        "country": "Japan",
+        "contact_email": "info@waseda.jp",
+        "contact_phone": "+81-3-3203-4141"
+    },
+    {
+        "id": 79,
+        "publication_id": "pub.1000125180",
+        "organization_name": "Seoul National University",
+        "country": "South Korea",
+        "contact_email": "webmaster@snu.ac.kr",
+        "contact_phone": "+82-2-880-5114"
+    },
+    {
+        "id": 80,
+        "publication_id": "pub.1000137198",
+        "organization_name": "London School of Hygiene & Tropical Medicine",
+        "country": "United Kingdom",
+        "contact_email": "info@lshtm.ac.uk",
+        "contact_phone": "+44 (0)20 7636 8636"
+    },
+    {
+        "id": 81,
+        "publication_id": "pub.1000137198",
+        "organization_name": "Public Health England",
+        "country": "United Kingdom",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 82,
+        "publication_id": "pub.1000146736",
+        "organization_name": "Institute of Terrestrial Magnetism Ionosphere and Radio Wave Propagation",
+        "country": "Russia",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 83,
+        "publication_id": "pub.1000147332",
+        "organization_name": "Shanghai Medical University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 84,
+        "publication_id": "pub.1000147332",
+        "organization_name": "University of California, Los Angeles",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 85,
+        "publication_id": "pub.1000154712",
+        "organization_name": "Duke University",
+        "country": "United States",
+        "contact_email": "duke.edu",
+        "contact_phone": "+1 919-684-8111"
+    },
+    {
+        "id": 86,
+        "publication_id": "pub.1000154712",
+        "organization_name": "University of Delaware",
+        "country": "United States",
+        "contact_email": "admissions@udel.edu",
+        "contact_phone": "+1 302-831-2792"
+    },
+    {
+        "id": 87,
+        "publication_id": "pub.1000160935",
+        "organization_name": "National Center for Atmospheric Research",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 88,
+        "publication_id": "pub.1000160935",
+        "organization_name": "Cooperative Institute for Research in Environmental Sciences",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 89,
+        "publication_id": "pub.1000160935",
+        "organization_name": "National Oceanic and Atmospheric Administration",
+        "country": "United States",
+        "contact_email": "webmaster@noaa.gov",
+        "contact_phone": "301-713-1208"
+    },
+    {
+        "id": 90,
+        "publication_id": "pub.1000166797",
+        "organization_name": "Kyoto University",
+        "country": "Japan",
+        "contact_email": "kokusai@mail2.adm.kyoto-u.ac.jp",
+        "contact_phone": "+81-75-753-7531"
+    },
+    {
+        "id": 91,
+        "publication_id": "pub.1000166797",
+        "organization_name": "The University of Osaka",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 92,
+        "publication_id": "pub.1000166797",
+        "organization_name": "Tomita Pharmaceutical Co Ltd",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 93,
+        "publication_id": "pub.1000166797",
+        "organization_name": "Japan Science and Technology Agency",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 94,
+        "publication_id": "pub.1000166797",
+        "organization_name": "Saga University",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 95,
+        "publication_id": "pub.1000177186",
+        "organization_name": "Monash University",
+        "country": "Australia",
+        "contact_email": "future@monash.edu",
+        "contact_phone": "+61 3 9902 6000"
+    },
+    {
+        "id": 96,
+        "publication_id": "pub.1000177186",
+        "organization_name": "Harvard University",
+        "country": "United States",
+        "contact_email": "info@harvard.edu",
+        "contact_phone": "+1 617-495-1000"
+    },
+    {
+        "id": 97,
+        "publication_id": "pub.1000177186",
+        "organization_name": "Cooperative Research Centre for Polymers",
+        "country": "Australia",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 98,
+        "publication_id": "pub.1000182635",
+        "organization_name": "Icahn School of Medicine at Mount Sinai",
+        "country": "United States",
+        "contact_email": "admissions@mssm.edu",
+        "contact_phone": "+1 212-241-6500"
+    },
+    {
+        "id": 99,
+        "publication_id": "pub.1000182635",
+        "organization_name": "Washington University in St. Louis",
+        "country": "United States",
+        "contact_email": "admissions@wustl.edu",
+        "contact_phone": "+1 314-935-5000"
+    },
+    {
+        "id": 100,
+        "publication_id": "pub.1000182635",
+        "organization_name": "Leiden University Medical Center",
+        "country": "Netherlands",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 101,
+        "publication_id": "pub.1000182635",
+        "organization_name": "US Army Medical Research Institute of Infectious Diseases",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 102,
+        "publication_id": "pub.1000182635",
+        "organization_name": "University of Ulster",
+        "country": "United Kingdom",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 103,
+        "publication_id": "pub.1000182635",
+        "organization_name": "National Institute of Allergy and Infectious Diseases",
+        "country": "United States",
+        "contact_email": "niaidinfo@niaid.nih.gov",
+        "contact_phone": "301-496-5717"
+    },
+    {
+        "id": 104,
+        "publication_id": "pub.1000182635",
+        "organization_name": "National Animal Disease Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 105,
+        "publication_id": "pub.1000182635",
+        "organization_name": "Kansas State University",
+        "country": "United States",
+        "contact_email": "info@k-state.edu",
+        "contact_phone": "+1 785-532-6011"
+    },
+    {
+        "id": 106,
+        "publication_id": "pub.1000185329",
+        "organization_name": "University of Washington",
+        "country": "United States",
+        "contact_email": "uw.edu",
+        "contact_phone": "+1 206-543-2100"
+    },
+    {
+        "id": 107,
+        "publication_id": "pub.1000185329",
+        "organization_name": "University of North Carolina at Chapel Hill",
+        "country": "United States",
+        "contact_email": "null",
+        "contact_phone": "null"
+    },
+    {
+        "id": 108,
+        "publication_id": "pub.1000187591",
+        "organization_name": "Marine Hydrophysical Institute",
+        "country": "Ukraine",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 109,
+        "publication_id": "pub.1000187591",
+        "organization_name": "Nansen Environmental and Remote Sensing Center",
+        "country": "Norway",
+        "contact_email": "post@nersc.no",
+        "contact_phone": "+47 55 20 58 00"
+    },
+    {
+        "id": 110,
+        "publication_id": "pub.1000187591",
+        "organization_name": "Royal Netherlands Meteorological Institute",
+        "country": "Netherlands",
+        "contact_email": "info@knmi.nl",
+        "contact_phone": "+31 30 220 6911"
+    },
+    {
+        "id": 111,
+        "publication_id": "pub.1000193578",
+        "organization_name": "Vanderbilt University",
+        "country": "United States",
+        "contact_email": "info@vanderbilt.edu",
+        "contact_phone": "+1 615-322-7311"
+    },
+    {
+        "id": 112,
+        "publication_id": "pub.1000193578",
+        "organization_name": "Vanderbilt University Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 113,
+        "publication_id": "pub.1000193578",
+        "organization_name": "State University of New York at Albany",
+        "country": "United States",
+        "contact_email": "askUAlbany@albany.edu",
+        "contact_phone": "+1 518-442-3300"
+    },
+    {
+        "id": 114,
+        "publication_id": "pub.1000193578",
+        "organization_name": "X Ray Optical Systems Inc",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 115,
+        "publication_id": "pub.1000203732",
+        "organization_name": "University of Illinois at Urbana-Champaign",
+        "country": "United States",
+        "contact_email": "illinois@illinois.edu",
+        "contact_phone": "+1 217-333-1000"
+    },
+    {
+        "id": 116,
+        "publication_id": "pub.1000207831",
+        "organization_name": "Mississippi State University",
+        "country": "United States",
+        "contact_email": "info@msstate.edu",
+        "contact_phone": "+1 662-325-2323"
+    },
+    {
+        "id": 117,
+        "publication_id": "pub.1000207831",
+        "organization_name": "Schweitzer Engineering Laboratories Inc",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 118,
+        "publication_id": "pub.1000214850",
+        "organization_name": "University of Illinois at Urbana-Champaign",
+        "country": "United States",
+        "contact_email": "illinois@illinois.edu",
+        "contact_phone": "+1 217-333-1000"
+    },
+    {
+        "id": 119,
+        "publication_id": "pub.1000214850",
+        "organization_name": "Autonomous University of Madrid",
+        "country": "Spain",
+        "contact_email": "informacion@uam.es",
+        "contact_phone": "+34 91 497 5000"
+    },
+    {
+        "id": 120,
+        "publication_id": "pub.1000220307",
+        "organization_name": "University of Notre Dame",
+        "country": "United States",
+        "contact_email": "ndworks@nd.edu",
+        "contact_phone": "+1 574-631-5000"
+    },
+    {
+        "id": 121,
+        "publication_id": "pub.1000220307",
+        "organization_name": "Los Alamos National Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 122,
+        "publication_id": "pub.1000220307",
+        "organization_name": "Arizona State University",
+        "country": "United States",
+        "contact_email": "asuinfo@asu.edu",
+        "contact_phone": "+1 855-278-5080"
+    },
+    {
+        "id": 123,
+        "publication_id": "pub.1000220307",
+        "organization_name": "Tata Institute of Fundamental Research",
+        "country": "India",
+        "contact_email": "webmaster@tifr.res.in",
+        "contact_phone": "+91-22-22782000"
+    },
+    {
+        "id": 124,
+        "publication_id": "pub.1000220307",
+        "organization_name": "University of Missouri-Columbia",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 125,
+        "publication_id": "pub.1000239240",
+        "organization_name": "National Institute of Dental and Craniofacial Research",
+        "country": "United States",
+        "contact_email": "nidcrinfo@mail.nih.gov",
+        "contact_phone": "301-496-4261"
+    },
+    {
+        "id": 126,
+        "publication_id": "pub.1000243365",
+        "organization_name": "The University of Maryland Biotechnology Institute",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 127,
+        "publication_id": "pub.1000243365",
+        "organization_name": "Princeton University",
+        "country": "United States",
+        "contact_email": "info@princeton.edu",
+        "contact_phone": "+1 609-258-3000"
+    },
+    {
+        "id": 128,
+        "publication_id": "pub.1000256614",
+        "organization_name": "George Mason University",
+        "country": "United States",
+        "contact_email": "info@gmu.edu",
+        "contact_phone": "+1 703-993-1000"
+    },
+    {
+        "id": 129,
+        "publication_id": "pub.1000261828",
+        "organization_name": "Los Alamos National Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 130,
+        "publication_id": "pub.1000263980",
+        "organization_name": "University of Trieste",
+        "country": "Italy",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 131,
+        "publication_id": "pub.1000271382",
+        "organization_name": "University of California, San Diego",
+        "country": "United States",
+        "contact_email": "null",
+        "contact_phone": "null"
+    },
+    {
+        "id": 132,
+        "publication_id": "pub.1000277860",
+        "organization_name": "Casi Pharmaceuticals Inc",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 133,
+        "publication_id": "pub.1000277860",
+        "organization_name": "Naval Medical Research Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 134,
+        "publication_id": "pub.1000277880",
+        "organization_name": "Lawrence Berkeley National Laboratory",
+        "country": "United States",
+        "contact_email": "inquiries@lbl.gov",
+        "contact_phone": "+1 510-486-4000"
+    },
+    {
+        "id": 135,
+        "publication_id": "pub.1000277880",
+        "organization_name": "University of California, Berkeley",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 136,
+        "publication_id": "pub.1000279374",
+        "organization_name": "Nanyang Technological University",
+        "country": "Singapore",
+        "contact_email": "admissions@ntu.edu.sg",
+        "contact_phone": "+65 67911744"
+    },
+    {
+        "id": 137,
+        "publication_id": "pub.1000284282",
+        "organization_name": "Department of Electrical and Computer Engineering and Center for Nanoscale Science and Engineering, and",
+        "country": null,
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 138,
+        "publication_id": "pub.1000284282",
+        "organization_name": "University of Kentucky",
+        "country": "United States",
+        "contact_email": "ukpr@uky.edu",
+        "contact_phone": "+1 859-257-9000"
+    },
+    {
+        "id": 139,
+        "publication_id": "pub.1000286017",
+        "organization_name": "University of North Carolina at Charlotte",
+        "country": "United States",
+        "contact_email": "null",
+        "contact_phone": "null"
+    },
+    {
+        "id": 140,
+        "publication_id": "pub.1000286017",
+        "organization_name": "Vanderbilt University",
+        "country": "United States",
+        "contact_email": "info@vanderbilt.edu",
+        "contact_phone": "+1 615-322-7311"
+    },
+    {
+        "id": 141,
+        "publication_id": "pub.1000286017",
+        "organization_name": "Measurement Systems Inc",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 142,
+        "publication_id": "pub.1000288748",
+        "organization_name": "University of Wisconsin-Madison",
+        "country": "United States",
+        "contact_email": "info@wisc.edu",
+        "contact_phone": "+1 608-263-2400"
+    },
+    {
+        "id": 143,
+        "publication_id": "pub.1000297866",
+        "organization_name": "California Institute of Technology",
+        "country": "United States",
+        "contact_email": "info@caltech.edu",
+        "contact_phone": "+1 626-395-6811"
+    },
+    {
+        "id": 144,
+        "publication_id": "pub.1000301769",
+        "organization_name": "Naval Information Warfare Center Pacific",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 145,
+        "publication_id": "pub.1000301875",
+        "organization_name": "Indiana University Bloomington",
+        "country": "United States",
+        "contact_email": "iuadmissions@indiana.edu",
+        "contact_phone": "+1 812-855-4848"
+    },
+    {
+        "id": 146,
+        "publication_id": "pub.1000301875",
+        "organization_name": "Oregon State University",
+        "country": "United States",
+        "contact_email": "info@oregonstate.edu",
+        "contact_phone": "+1 541-737-1000"
+    },
+    {
+        "id": 147,
+        "publication_id": "pub.1000301875",
+        "organization_name": "University of Wisconsin-Madison",
+        "country": "United States",
+        "contact_email": "info@wisc.edu",
+        "contact_phone": "+1 608-263-2400"
+    },
+    {
+        "id": 148,
+        "publication_id": "pub.1000301875",
+        "organization_name": "TU Dortmund University",
+        "country": "Germany",
+        "contact_email": "info@tu-dortmund.de",
+        "contact_phone": "+49 231 755-1"
+    },
+    {
+        "id": 149,
+        "publication_id": "pub.1000301875",
+        "organization_name": "Stanford University",
+        "country": "United States",
+        "contact_email": "info@stanford.edu",
+        "contact_phone": "+1 650-723-2300"
+    },
+    {
+        "id": 150,
+        "publication_id": "pub.1000306647",
+        "organization_name": "North Dakota State University",
+        "country": "United States",
+        "contact_email": "ndsu.admission@ndsu.edu",
+        "contact_phone": "+1 701-231-8011"
+    },
+    {
+        "id": 151,
+        "publication_id": "pub.1000307836",
+        "organization_name": "Nederlandse Organisatie voor Toegepast Natuurwetenschappelijk Onderzoek TNO",
+        "country": "Netherlands",
+        "contact_email": "info@tno.nl",
+        "contact_phone": "+31 88 866 00 00"
+    },
+    {
+        "id": 152,
+        "publication_id": "pub.1000319790",
+        "organization_name": "George Mason University",
+        "country": "United States",
+        "contact_email": "info@gmu.edu",
+        "contact_phone": "+1 703-993-1000"
+    },
+    {
+        "id": 153,
+        "publication_id": "pub.1000319790",
+        "organization_name": "David Grant USAF Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 154,
+        "publication_id": "pub.1000319790",
+        "organization_name": "Harvard University",
+        "country": "United States",
+        "contact_email": "info@harvard.edu",
+        "contact_phone": "+1 617-495-1000"
+    },
+    {
+        "id": 155,
+        "publication_id": "pub.1000319790",
+        "organization_name": "Massachusetts Eye and Ear Infirmary",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 156,
+        "publication_id": "pub.1000319790",
+        "organization_name": "National Institute for Viral Disease Control and Prevention",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 157,
+        "publication_id": "pub.1000324107",
+        "organization_name": "The Ohio State University",
+        "country": "United States",
+        "contact_email": "contact@osu.edu",
+        "contact_phone": "+1 614-292-6446"
+    },
+    {
+        "id": 158,
+        "publication_id": "pub.1000326207",
+        "organization_name": "Instituto de Pesquisas Ecológicas",
+        "country": "Brazil",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 159,
+        "publication_id": "pub.1000326207",
+        "organization_name": "State University of New York at Stony Brook",
+        "country": "United States",
+        "contact_email": "null",
+        "contact_phone": "null"
+    },
+    {
+        "id": 160,
+        "publication_id": "pub.1000326207",
+        "organization_name": "São Paulo State University",
+        "country": "Brazil",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 161,
+        "publication_id": "pub.1000326207",
+        "organization_name": "Instituto para a Conservação dos Carnívoros Neotropicais–Pró-Carnívoros, Atibaia, São Paulo, Brazil",
+        "country": "Brazil",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 162,
+        "publication_id": "pub.1000326207",
+        "organization_name": "Universidade Federal de Viçosa",
+        "country": "Brazil",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 163,
+        "publication_id": "pub.1000328515",
+        "organization_name": "University of South Florida",
+        "country": "United States",
+        "contact_email": "admissions@usf.edu",
+        "contact_phone": "+1 813-974-2011"
+    },
+    {
+        "id": 164,
+        "publication_id": "pub.1000332634",
+        "organization_name": "Clemson University",
+        "country": "United States",
+        "contact_email": "info@clemson.edu",
+        "contact_phone": "+1 864-656-3311"
+    },
+    {
+        "id": 165,
+        "publication_id": "pub.1000332634",
+        "organization_name": "Louisiana State University",
+        "country": "United States",
+        "contact_email": "info@lsu.edu",
+        "contact_phone": "+1 225-578-3202"
+    },
+    {
+        "id": 166,
+        "publication_id": "pub.1000335546",
+        "organization_name": "Pacific Northwest National Laboratory",
+        "country": "United States",
+        "contact_email": "webmaster@pnnl.gov",
+        "contact_phone": "+1 509-375-2121"
+    },
+    {
+        "id": 167,
+        "publication_id": "pub.1000335546",
+        "organization_name": "United States Air Force Research Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 168,
+        "publication_id": "pub.1000340521",
+        "organization_name": "University of Illinois at Urbana-Champaign",
+        "country": "United States",
+        "contact_email": "illinois@illinois.edu",
+        "contact_phone": "+1 217-333-1000"
+    },
+    {
+        "id": 169,
+        "publication_id": "pub.1000345406",
+        "organization_name": "Tufts University",
+        "country": "United States",
+        "contact_email": "admissions@tufts.edu",
+        "contact_phone": "+1 617-627-3170"
+    },
+    {
+        "id": 170,
+        "publication_id": "pub.1000347171",
+        "organization_name": "University of Maryland, College Park",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 171,
+        "publication_id": "pub.1000351941",
+        "organization_name": "DEVCOM Army Research Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 172,
+        "publication_id": "pub.1000351941",
+        "organization_name": "University of Delaware",
+        "country": "United States",
+        "contact_email": "admissions@udel.edu",
+        "contact_phone": "+1 302-831-2792"
+    },
+    {
+        "id": 173,
+        "publication_id": "pub.1000351941",
+        "organization_name": "Drexel University",
+        "country": "United States",
+        "contact_email": "info@drexel.edu",
+        "contact_phone": "+1 215-895-2000"
+    },
+    {
+        "id": 174,
+        "publication_id": "pub.1000360564",
+        "organization_name": "University of Massachusetts Amherst",
+        "country": "United States",
+        "contact_email": "umassadmissions@umass.edu",
+        "contact_phone": "+1 413-545-0111"
+    },
+    {
+        "id": 175,
+        "publication_id": "pub.1000360564",
+        "organization_name": "Argonne National Laboratory",
+        "country": "United States",
+        "contact_email": "ask@anl.gov",
+        "contact_phone": "+1 630-252-2000"
+    },
+    {
+        "id": 176,
+        "publication_id": "pub.1000362746",
+        "organization_name": "University of Wisconsin-Madison",
+        "country": "United States",
+        "contact_email": "info@wisc.edu",
+        "contact_phone": "+1 608-263-2400"
+    },
+    {
+        "id": 177,
+        "publication_id": "pub.1000365374",
+        "organization_name": "Georgia Institute of Technology",
+        "country": "United States",
+        "contact_email": "ask@gatech.edu",
+        "contact_phone": "+1 404-894-2000"
+    },
+    {
+        "id": 178,
+        "publication_id": "pub.1000365374",
+        "organization_name": "Missouri University of Science and Technology",
+        "country": "United States",
+        "contact_email": "contact@mst.edu",
+        "contact_phone": "+1 573-341-4111"
+    },
+    {
+        "id": 179,
+        "publication_id": "pub.1000365652",
+        "organization_name": "RAND Corporation",
+        "country": "United States",
+        "contact_email": "info@rand.org",
+        "contact_phone": "+1 310-393-0411"
+    },
+    {
+        "id": 180,
+        "publication_id": "pub.1000365652",
+        "organization_name": "Office of the Secretary of Defense",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 181,
+        "publication_id": "pub.1000370465",
+        "organization_name": "The Wistar Institute",
+        "country": "United States",
+        "contact_email": "info@wistar.org",
+        "contact_phone": "+1 215-898-3700"
+    },
+    {
+        "id": 182,
+        "publication_id": "pub.1000370465",
+        "organization_name": "Salk Institute for Biological Studies",
+        "country": "United States",
+        "contact_email": "communications@salk.edu",
+        "contact_phone": "+1 858-453-4100"
+    },
+    {
+        "id": 183,
+        "publication_id": "pub.1000370533",
+        "organization_name": "Boston University",
+        "country": "United States",
+        "contact_email": "buinfo@bu.edu",
+        "contact_phone": "+1 617-353-2000"
+    },
+    {
+        "id": 184,
+        "publication_id": "pub.1000387387",
+        "organization_name": "Massachusetts Institute of Technology",
+        "country": "United States",
+        "contact_email": "infocenter@mit.edu",
+        "contact_phone": "+1 617-253-1000"
+    },
+    {
+        "id": 185,
+        "publication_id": "pub.1000387387",
+        "organization_name": "Beth Israel Deaconess Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 186,
+        "publication_id": "pub.1000387387",
+        "organization_name": "Harvard University",
+        "country": "United States",
+        "contact_email": "info@harvard.edu",
+        "contact_phone": "+1 617-495-1000"
+    },
+    {
+        "id": 187,
+        "publication_id": "pub.1000393585",
+        "organization_name": "Northeast Ohio Medical University",
+        "country": "United States",
+        "contact_email": "null",
+        "contact_phone": "null"
+    },
+    {
+        "id": 188,
+        "publication_id": "pub.1000393585",
+        "organization_name": "The University of Texas at Dallas",
+        "country": "United States",
+        "contact_email": "admissions@utdallas.edu",
+        "contact_phone": "+1 972-883-2111"
+    },
+    {
+        "id": 189,
+        "publication_id": "pub.1000393585",
+        "organization_name": "Kent State University",
+        "country": "United States",
+        "contact_email": "info@kent.edu",
+        "contact_phone": "+1 330-672-3000"
+    },
+    {
+        "id": 190,
+        "publication_id": "pub.1000396536",
+        "organization_name": "Johns Hopkins University",
+        "country": "United States",
+        "contact_email": "info@jhu.edu",
+        "contact_phone": "+1 410-516-8000"
+    },
+    {
+        "id": 191,
+        "publication_id": "pub.1000396536",
+        "organization_name": "Hawaii Pacific Health",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 192,
+        "publication_id": "pub.1000396536",
+        "organization_name": "Hawaii Safer Care SUSP, Honolulu, Hawaii",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 193,
+        "publication_id": "pub.1000396536",
+        "organization_name": "Straub Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 194,
+        "publication_id": "pub.1000398447",
+        "organization_name": "Chapman University",
+        "country": "United States",
+        "contact_email": "admit@chapman.edu",
+        "contact_phone": "+1 714-997-6711"
+    },
+    {
+        "id": 195,
+        "publication_id": "pub.1000398447",
+        "organization_name": "University of California, Irvine",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 196,
+        "publication_id": "pub.1000400778",
+        "organization_name": "Duke University",
+        "country": "United States",
+        "contact_email": "duke.edu",
+        "contact_phone": "+1 919-684-8111"
+    },
+    {
+        "id": 197,
+        "publication_id": "pub.1000401674",
+        "organization_name": "Stennis Space Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 198,
+        "publication_id": "pub.1000401674",
+        "organization_name": "University of Southern Mississippi",
+        "country": "United States",
+        "contact_email": "usm@usm.edu",
+        "contact_phone": "+1 601-266-1000"
+    },
+    {
+        "id": 199,
+        "publication_id": "pub.1000405411",
+        "organization_name": "Pacific Northwest National Laboratory",
+        "country": "United States",
+        "contact_email": "webmaster@pnnl.gov",
+        "contact_phone": "+1 509-375-2121"
+    },
+    {
+        "id": 200,
+        "publication_id": "pub.1000406476",
+        "organization_name": "University of Wisconsin-Madison",
+        "country": "United States",
+        "contact_email": "info@wisc.edu",
+        "contact_phone": "+1 608-263-2400"
+    },
+    {
+        "id": 201,
+        "publication_id": "pub.1000406476",
+        "organization_name": "Charles University",
+        "country": "Czechia",
+        "contact_email": "info@cuni.cz",
+        "contact_phone": "+420 224 491 111"
+    },
+    {
+        "id": 202,
+        "publication_id": "pub.1000406873",
+        "organization_name": "The Ohio State University",
+        "country": "United States",
+        "contact_email": "contact@osu.edu",
+        "contact_phone": "+1 614-292-6446"
+    },
+    {
+        "id": 203,
+        "publication_id": "pub.1000419064",
+        "organization_name": "Johns Hopkins University",
+        "country": "United States",
+        "contact_email": "info@jhu.edu",
+        "contact_phone": "+1 410-516-8000"
+    },
+    {
+        "id": 204,
+        "publication_id": "pub.1000421351",
+        "organization_name": "Group for Research in Decision Analysis",
+        "country": "Canada",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 205,
+        "publication_id": "pub.1000421351",
+        "organization_name": "State University of Campinas",
+        "country": "Brazil",
+        "contact_email": "unicamp@unicamp.br",
+        "contact_phone": "+55 19 3521-2121"
+    },
+    {
+        "id": 206,
+        "publication_id": "pub.1000422119",
+        "organization_name": "Johns Hopkins University",
+        "country": "United States",
+        "contact_email": "info@jhu.edu",
+        "contact_phone": "+1 410-516-8000"
+    },
+    {
+        "id": 207,
+        "publication_id": "pub.1000428133",
+        "organization_name": "Physics Division, Michelson Laboratory, China Lake, California 93555, U.S.A.",
+        "country": null,
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 208,
+        "publication_id": "pub.1000440687",
+        "organization_name": "Harvard University",
+        "country": "United States",
+        "contact_email": "info@harvard.edu",
+        "contact_phone": "+1 617-495-1000"
+    },
+    {
+        "id": 209,
+        "publication_id": "pub.1000442950",
+        "organization_name": "Uniformed Services University of the Health Sciences",
+        "country": "United States",
+        "contact_email": "admissions@usuhs.edu",
+        "contact_phone": "+1 800-772-1743"
+    },
+    {
+        "id": 210,
+        "publication_id": "pub.1000442950",
+        "organization_name": "National Cancer Institute",
+        "country": "United States",
+        "contact_email": "nciinfo@nih.gov",
+        "contact_phone": "1-800-422-6237"
+    },
+    {
+        "id": 211,
+        "publication_id": "pub.1000443406",
+        "organization_name": "University of Missouri-Columbia",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 212,
+        "publication_id": "pub.1000443406",
+        "organization_name": "University of Missouri Health System",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 213,
+        "publication_id": "pub.1000445716",
+        "organization_name": "University of Alabama at Birmingham",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 214,
+        "publication_id": "pub.1000445716",
+        "organization_name": "University of California, San Diego",
+        "country": "United States",
+        "contact_email": "null",
+        "contact_phone": "null"
+    },
+    {
+        "id": 215,
+        "publication_id": "pub.1000445950",
+        "organization_name": "Insect Control and Research Inc., Baltimore, Maryland 21228, USA",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 216,
+        "publication_id": "pub.1000447250",
+        "organization_name": "Southampton General Hospital",
+        "country": "United Kingdom",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 217,
+        "publication_id": "pub.1000452189",
+        "organization_name": "Tohoku University",
+        "country": "Japan",
+        "contact_email": "public_relations@tohoku.ac.jp",
+        "contact_phone": "+81-22-217-4816"
+    },
+    {
+        "id": 218,
+        "publication_id": "pub.1000452189",
+        "organization_name": "Fudan University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 219,
+        "publication_id": "pub.1000452189",
+        "organization_name": "University of California, Santa Barbara",
+        "country": "United States",
+        "contact_email": "info@ucsb.edu",
+        "contact_phone": "+1 805-893-8000"
+    },
+    {
+        "id": 220,
+        "publication_id": "pub.1000452189",
+        "organization_name": "Korea Research Institute of Chemical Technology",
+        "country": "South Korea",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 221,
+        "publication_id": "pub.1000452189",
+        "organization_name": "Korea Advanced Institute of Science and Technology",
+        "country": "South Korea",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 222,
+        "publication_id": "pub.1000452893",
+        "organization_name": "Carnegie Mellon University",
+        "country": "United States",
+        "contact_email": "admission@andrew.cmu.edu",
+        "contact_phone": "+1 412-268-2000"
+    },
+    {
+        "id": 223,
+        "publication_id": "pub.1000452893",
+        "organization_name": "Xi'an Jiaotong University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 224,
+        "publication_id": "pub.1000454414",
+        "organization_name": "National Center for Emerging and Zoonotic Infectious Diseases",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 225,
+        "publication_id": "pub.1000455610",
+        "organization_name": "University of Utah",
+        "country": "United States",
+        "contact_email": "info@utah.edu",
+        "contact_phone": "+1 801-581-7200"
+    },
+    {
+        "id": 226,
+        "publication_id": "pub.1000461917",
+        "organization_name": "Emory University",
+        "country": "United States",
+        "contact_email": "admission@emory.edu",
+        "contact_phone": "+1 404-727-6123"
+    },
+    {
+        "id": 227,
+        "publication_id": "pub.1000462774",
+        "organization_name": "Naval Air Warfare Center Weapons Division",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 228,
+        "publication_id": "pub.1000467355",
+        "organization_name": "Georgia Institute of Technology",
+        "country": "United States",
+        "contact_email": "ask@gatech.edu",
+        "contact_phone": "+1 404-894-2000"
+    },
+    {
+        "id": 229,
+        "publication_id": "pub.1000467355",
+        "organization_name": "Fraunhofer Institute for Mechanics of Materials",
+        "country": "Germany",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 230,
+        "publication_id": "pub.1000467355",
+        "organization_name": "University of Freiburg",
+        "country": "Germany",
+        "contact_email": "info@uni-freiburg.de",
+        "contact_phone": "+49 761 203 0"
+    },
+    {
+        "id": 231,
+        "publication_id": "pub.1000467355",
+        "organization_name": "University of Jyväskylä",
+        "country": "Finland",
+        "contact_email": "info@jyu.fi",
+        "contact_phone": "+358 14 260 1211"
+    },
+    {
+        "id": 232,
+        "publication_id": "pub.1000474084",
+        "organization_name": "Beth Israel Deaconess Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 233,
+        "publication_id": "pub.1000474084",
+        "organization_name": "Harvard University",
+        "country": "United States",
+        "contact_email": "info@harvard.edu",
+        "contact_phone": "+1 617-495-1000"
+    },
+    {
+        "id": 234,
+        "publication_id": "pub.1000474084",
+        "organization_name": "Sanford Burnham Prebys Medical Discovery Institute",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 235,
+        "publication_id": "pub.1000474084",
+        "organization_name": "National Institute of Allergy and Infectious Diseases",
+        "country": "United States",
+        "contact_email": "niaidinfo@niaid.nih.gov",
+        "contact_phone": "301-496-5717"
+    },
+    {
+        "id": 236,
+        "publication_id": "pub.1000480716",
+        "organization_name": "University of California, Berkeley",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 237,
+        "publication_id": "pub.1000480999",
+        "organization_name": "Addenbrooke's Hospital",
+        "country": "United Kingdom",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 238,
+        "publication_id": "pub.1000480999",
+        "organization_name": "The University of Texas Health Science Center at San Antonio",
+        "country": "United States",
+        "contact_email": "webmaster@uthscsa.edu",
+        "contact_phone": "+1 210-567-7000"
+    },
+    {
+        "id": 239,
+        "publication_id": "pub.1000481141",
+        "organization_name": "Rensselaer Polytechnic Institute",
+        "country": "United States",
+        "contact_email": "admissions@rpi.edu",
+        "contact_phone": "+1 518-276-6216"
+    },
+    {
+        "id": 240,
+        "publication_id": "pub.1000481141",
+        "organization_name": "Wadsworth Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 241,
+        "publication_id": "pub.1000482120",
+        "organization_name": "Cornell University",
+        "country": "United States",
+        "contact_email": "info@cornell.edu",
+        "contact_phone": "+1 607-254-4636"
+    },
+    {
+        "id": 242,
+        "publication_id": "pub.1000482120",
+        "organization_name": "Solids Mechanic Laboratory",
+        "country": "France",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 243,
+        "publication_id": "pub.1000495477",
+        "organization_name": "The University of Texas MD Anderson Cancer Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": "+1-877-632-6789"
+    },
+    {
+        "id": 244,
+        "publication_id": "pub.1000495477",
+        "organization_name": "Harvard University",
+        "country": "United States",
+        "contact_email": "info@harvard.edu",
+        "contact_phone": "+1 617-495-1000"
+    },
+    {
+        "id": 245,
+        "publication_id": "pub.1000495477",
+        "organization_name": "Hiroshima University",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 246,
+        "publication_id": "pub.1000499153",
+        "organization_name": "University of Florida",
+        "country": "United States",
+        "contact_email": "ufadvising@ufl.edu",
+        "contact_phone": "+1 352-392-3261"
+    },
+    {
+        "id": 247,
+        "publication_id": "pub.1000505120",
+        "organization_name": "Rensselaer Polytechnic Institute",
+        "country": "United States",
+        "contact_email": "admissions@rpi.edu",
+        "contact_phone": "+1 518-276-6216"
+    },
+    {
+        "id": 248,
+        "publication_id": "pub.1000522590",
+        "organization_name": "University of Connecticut",
+        "country": "United States",
+        "contact_email": "info@uconn.edu",
+        "contact_phone": "+1 860-486-2000"
+    },
+    {
+        "id": 249,
+        "publication_id": "pub.1000534564",
+        "organization_name": "University of Kentucky",
+        "country": "United States",
+        "contact_email": "ukpr@uky.edu",
+        "contact_phone": "+1 859-257-9000"
+    },
+    {
+        "id": 250,
+        "publication_id": "pub.1000534884",
+        "organization_name": "University of Tennessee Health Science Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 251,
+        "publication_id": "pub.1000534884",
+        "organization_name": "St. Jude Children's Research Hospital",
+        "country": "United States",
+        "contact_email": "info@stjude.org",
+        "contact_phone": "1-866-278-5833"
+    },
+    {
+        "id": 252,
+        "publication_id": "pub.1000534884",
+        "organization_name": "Cincinnati Children's Hospital Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": "+1-513-636-4200"
+    },
+    {
+        "id": 253,
+        "publication_id": "pub.1000536864",
+        "organization_name": "Massachusetts Institute of Technology",
+        "country": "United States",
+        "contact_email": "infocenter@mit.edu",
+        "contact_phone": "+1 617-253-1000"
+    },
+    {
+        "id": 254,
+        "publication_id": "pub.1000537612",
+        "organization_name": "Massachusetts Institute of Technology",
+        "country": "United States",
+        "contact_email": "infocenter@mit.edu",
+        "contact_phone": "+1 617-253-1000"
+    },
+    {
+        "id": 255,
+        "publication_id": "pub.1000544549",
+        "organization_name": "Dutch Institute for Fundamental Energy Research",
+        "country": "Netherlands",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 256,
+        "publication_id": "pub.1000544549",
+        "organization_name": "Radboud University Nijmegen",
+        "country": "Netherlands",
+        "contact_email": "info@ru.nl",
+        "contact_phone": "+31 24 361 61 61"
+    },
+    {
+        "id": 257,
+        "publication_id": "pub.1000544549",
+        "organization_name": "Prokhorov General Physics Institute",
+        "country": "Russia",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 258,
+        "publication_id": "pub.1000544549",
+        "organization_name": "University of Georgia",
+        "country": "United States",
+        "contact_email": "info@uga.edu",
+        "contact_phone": "+1 706-542-3000"
+    },
+    {
+        "id": 259,
+        "publication_id": "pub.1000556978",
+        "organization_name": "Albert Einstein College of Medicine",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 260,
+        "publication_id": "pub.1000556978",
+        "organization_name": "King's College London",
+        "country": "United Kingdom",
+        "contact_email": "info@kcl.ac.uk",
+        "contact_phone": "+44 (0)20 7836 5454"
+    },
+    {
+        "id": 261,
+        "publication_id": "pub.1000556978",
+        "organization_name": "Guy's Hospital",
+        "country": "United Kingdom",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 262,
+        "publication_id": "pub.1000556978",
+        "organization_name": "Montana State University – Bozeman",
+        "country": "United States",
+        "contact_email": "info@montana.edu",
+        "contact_phone": "+1 406-994-0211"
+    },
+    {
+        "id": 263,
+        "publication_id": "pub.1000559080",
+        "organization_name": "University of Maryland, College Park",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 264,
+        "publication_id": "pub.1000565467",
+        "organization_name": "University of Dayton",
+        "country": "United States",
+        "contact_email": "info@udayton.edu",
+        "contact_phone": "+1 937-229-1000"
+    },
+    {
+        "id": 265,
+        "publication_id": "pub.1000565467",
+        "organization_name": "The Ohio State University",
+        "country": "United States",
+        "contact_email": "contact@osu.edu",
+        "contact_phone": "+1 614-292-6446"
+    },
+    {
+        "id": 266,
+        "publication_id": "pub.1000565467",
+        "organization_name": "University of Florida",
+        "country": "United States",
+        "contact_email": "ufadvising@ufl.edu",
+        "contact_phone": "+1 352-392-3261"
+    },
+    {
+        "id": 267,
+        "publication_id": "pub.1000572371",
+        "organization_name": "Air Force Research Laboratory Materials and Manufacturing Directorate",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 268,
+        "publication_id": "pub.1000572371",
+        "organization_name": "University of Technology Corp",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 269,
+        "publication_id": "pub.1000572371",
+        "organization_name": "University of Dayton",
+        "country": "United States",
+        "contact_email": "info@udayton.edu",
+        "contact_phone": "+1 937-229-1000"
+    },
+    {
+        "id": 270,
+        "publication_id": "pub.1000574569",
+        "organization_name": "United States Department of the Army",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 271,
+        "publication_id": "pub.1000574569",
+        "organization_name": "George Washington University",
+        "country": "United States",
+        "contact_email": "info@gwu.edu",
+        "contact_phone": "+1 202-994-1000"
+    },
+    {
+        "id": 272,
+        "publication_id": "pub.1000589012",
+        "organization_name": "Case Western Reserve University",
+        "country": "United States",
+        "contact_email": "info@case.edu",
+        "contact_phone": "+1 216-368-2000"
+    },
+    {
+        "id": 273,
+        "publication_id": "pub.1000589431",
+        "organization_name": "United States Naval Research Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 274,
+        "publication_id": "pub.1000594092",
+        "organization_name": "Embry–Riddle Aeronautical University",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 275,
+        "publication_id": "pub.1000599968",
+        "organization_name": "Harvard University",
+        "country": "United States",
+        "contact_email": "info@harvard.edu",
+        "contact_phone": "+1 617-495-1000"
+    },
+    {
+        "id": 276,
+        "publication_id": "pub.1000599968",
+        "organization_name": "University of Illinois at Urbana-Champaign",
+        "country": "United States",
+        "contact_email": "illinois@illinois.edu",
+        "contact_phone": "+1 217-333-1000"
+    },
+    {
+        "id": 277,
+        "publication_id": "pub.1000599968",
+        "organization_name": "University of Michigan-Ann Arbor",
+        "country": "United States",
+        "contact_email": "info@umich.edu",
+        "contact_phone": "+1 734-764-1817"
+    },
+    {
+        "id": 278,
+        "publication_id": "pub.1000600456",
+        "organization_name": "Oak Ridge National Laboratory",
+        "country": "United States",
+        "contact_email": "ornlinfo@ornl.gov",
+        "contact_phone": "+1 865-576-7658"
+    },
+    {
+        "id": 279,
+        "publication_id": "pub.1000602298",
+        "organization_name": "The University of Tokyo",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 280,
+        "publication_id": "pub.1000602298",
+        "organization_name": "Japan Science and Technology Agency",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 281,
+        "publication_id": "pub.1000602298",
+        "organization_name": "Technical University of Denmark",
+        "country": "Denmark",
+        "contact_email": "info@dtu.dk",
+        "contact_phone": "+45 45 25 25 25"
+    },
+    {
+        "id": 282,
+        "publication_id": "pub.1000602298",
+        "organization_name": "University of Erlangen-Nuremberg",
+        "country": "Germany",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 283,
+        "publication_id": "pub.1000603716",
+        "organization_name": "Texas Tech University",
+        "country": "United States",
+        "contact_email": "info@ttu.edu",
+        "contact_phone": "+1 806-742-2011"
+    },
+    {
+        "id": 284,
+        "publication_id": "pub.1000605223",
+        "organization_name": "University of Maryland, College Park",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 285,
+        "publication_id": "pub.1000605223",
+        "organization_name": "Institute for Bioscience and Biotechnology Research",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 286,
+        "publication_id": "pub.1000605223",
+        "organization_name": "Cornell University",
+        "country": "United States",
+        "contact_email": "info@cornell.edu",
+        "contact_phone": "+1 607-254-4636"
+    },
+    {
+        "id": 287,
+        "publication_id": "pub.1000606708",
+        "organization_name": "University of Kentucky",
+        "country": "United States",
+        "contact_email": "ukpr@uky.edu",
+        "contact_phone": "+1 859-257-9000"
+    },
+    {
+        "id": 288,
+        "publication_id": "pub.1000609121",
+        "organization_name": "Temple University",
+        "country": "United States",
+        "contact_email": "info@temple.edu",
+        "contact_phone": "+1 215-204-7000"
+    },
+    {
+        "id": 289,
+        "publication_id": "pub.1000609121",
+        "organization_name": "University of Guelph",
+        "country": "Canada",
+        "contact_email": "info@uoguelph.ca",
+        "contact_phone": "+1 519-824-4120"
+    },
+    {
+        "id": 290,
+        "publication_id": "pub.1000609121",
+        "organization_name": "Telemedicine & Advanced Technology Research Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 291,
+        "publication_id": "pub.1000611863",
+        "organization_name": "Florida State University",
+        "country": "United States",
+        "contact_email": "contact@fsu.edu",
+        "contact_phone": "+1 850-644-2525"
+    },
+    {
+        "id": 292,
+        "publication_id": "pub.1000611863",
+        "organization_name": "University of Michigan-Ann Arbor",
+        "country": "United States",
+        "contact_email": "info@umich.edu",
+        "contact_phone": "+1 734-764-1817"
+    },
+    {
+        "id": 293,
+        "publication_id": "pub.1000611863",
+        "organization_name": "Bangor University",
+        "country": "United Kingdom",
+        "contact_email": "info@bangor.ac.uk",
+        "contact_phone": "+44 (0)1248 351151"
+    },
+    {
+        "id": 294,
+        "publication_id": "pub.1000611863",
+        "organization_name": "Stennis Space Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 295,
+        "publication_id": "pub.1000611863",
+        "organization_name": "The University of Texas at Austin",
+        "country": "United States",
+        "contact_email": "utpublicaffairs@utexas.edu",
+        "contact_phone": "+1 512-471-3434"
+    },
+    {
+        "id": 296,
+        "publication_id": "pub.1000611863",
+        "organization_name": "University of Western Brittany",
+        "country": "France",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 297,
+        "publication_id": "pub.1000611889",
+        "organization_name": "German Aerospace Center",
+        "country": "Germany",
+        "contact_email": "info@dlr.de",
+        "contact_phone": "+49 2203 601-0"
+    },
+    {
+        "id": 298,
+        "publication_id": "pub.1000611889",
+        "organization_name": "Naval Research Laboratory Marine Meteorology Division",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 299,
+        "publication_id": "pub.1000614047",
+        "organization_name": "Albany Medical Center Hospital",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 300,
+        "publication_id": "pub.1000614958",
+        "organization_name": "Cincinnati Children's Hospital Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": "+1-513-636-4200"
+    },
+    {
+        "id": 301,
+        "publication_id": "pub.1000614958",
+        "organization_name": "University of Cincinnati",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 302,
+        "publication_id": "pub.1000614958",
+        "organization_name": "Indian Institute of Chemical Biology",
+        "country": "India",
+        "contact_email": "director@iicb.res.in",
+        "contact_phone": "+91-33-2499-5841"
+    },
+    {
+        "id": 303,
+        "publication_id": "pub.1000614958",
+        "organization_name": "Sanford Burnham Prebys Medical Discovery Institute",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 304,
+        "publication_id": "pub.1000614958",
+        "organization_name": "Washington University in St. Louis",
+        "country": "United States",
+        "contact_email": "admissions@wustl.edu",
+        "contact_phone": "+1 314-935-5000"
+    },
+    {
+        "id": 305,
+        "publication_id": "pub.1000614958",
+        "organization_name": "Technical University of Madrid",
+        "country": "Spain",
+        "contact_email": "informacion@upm.es",
+        "contact_phone": "+34 91 336 6000"
+    },
+    {
+        "id": 306,
+        "publication_id": "pub.1000616437",
+        "organization_name": "Georgia Institute of Technology",
+        "country": "United States",
+        "contact_email": "ask@gatech.edu",
+        "contact_phone": "+1 404-894-2000"
+    },
+    {
+        "id": 307,
+        "publication_id": "pub.1000616437",
+        "organization_name": "University of Tennessee Knoxville",
+        "country": "United States",
+        "contact_email": "utkinfo@utk.edu",
+        "contact_phone": "+1 865-974-1000"
+    },
+    {
+        "id": 308,
+        "publication_id": "pub.1000616437",
+        "organization_name": "Oak Ridge National Laboratory",
+        "country": "United States",
+        "contact_email": "ornlinfo@ornl.gov",
+        "contact_phone": "+1 865-576-7658"
+    },
+    {
+        "id": 309,
+        "publication_id": "pub.1000616878",
+        "organization_name": "Northrop Grumman Information Systems, Andover, Massachusetts, U.S.A. E-mail:",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 310,
+        "publication_id": "pub.1000616878",
+        "organization_name": "Engineer Research and Development Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 311,
+        "publication_id": "pub.1000624354",
+        "organization_name": "Duke University",
+        "country": "United States",
+        "contact_email": "duke.edu",
+        "contact_phone": "+1 919-684-8111"
+    },
+    {
+        "id": 312,
+        "publication_id": "pub.1000624354",
+        "organization_name": "Laboratory for Optical and Computational Instrumentation,",
+        "country": null,
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 313,
+        "publication_id": "pub.1000624354",
+        "organization_name": "Research Animal Resources Center, and",
+        "country": null,
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 314,
+        "publication_id": "pub.1000624354",
+        "organization_name": "University of Wisconsin-Madison",
+        "country": "United States",
+        "contact_email": "info@wisc.edu",
+        "contact_phone": "+1 608-263-2400"
+    },
+    {
+        "id": 315,
+        "publication_id": "pub.1000630501",
+        "organization_name": "University of California, Santa Barbara",
+        "country": "United States",
+        "contact_email": "info@ucsb.edu",
+        "contact_phone": "+1 805-893-8000"
+    },
+    {
+        "id": 316,
+        "publication_id": "pub.1000639813",
+        "organization_name": "University of California, Los Angeles",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 317,
+        "publication_id": "pub.1000639813",
+        "organization_name": "University of Pennsylvania",
+        "country": "United States",
+        "contact_email": "info@upenn.edu",
+        "contact_phone": "+1 215-898-5000"
+    },
+    {
+        "id": 318,
+        "publication_id": "pub.1000641632",
+        "organization_name": "University of Pittsburgh",
+        "country": "United States",
+        "contact_email": "web@pitt.edu",
+        "contact_phone": "+1 412-624-4141"
+    },
+    {
+        "id": 319,
+        "publication_id": "pub.1000641632",
+        "organization_name": "University of Maryland Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 320,
+        "publication_id": "pub.1000661165",
+        "organization_name": "United States Naval Research Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 321,
+        "publication_id": "pub.1000661165",
+        "organization_name": "Stennis Space Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 322,
+        "publication_id": "pub.1000661165",
+        "organization_name": "Vencore Services and Solutions, Inc., Stennis Space Center, Mississippi, USA",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 323,
+        "publication_id": "pub.1000671312",
+        "organization_name": "Columbia University",
+        "country": "United States",
+        "contact_email": "ucomm@columbia.edu",
+        "contact_phone": "+1 212-854-1754"
+    },
+    {
+        "id": 324,
+        "publication_id": "pub.1000675709",
+        "organization_name": "Washington State University",
+        "country": "United States",
+        "contact_email": "wsu.info@wsu.edu",
+        "contact_phone": "+1 509-335-3564"
+    },
+    {
+        "id": 325,
+        "publication_id": "pub.1000677412",
+        "organization_name": "United States Naval Research Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 326,
+        "publication_id": "pub.1000690816",
+        "organization_name": "University of South Carolina",
+        "country": "United States",
+        "contact_email": "info@sc.edu",
+        "contact_phone": "+1 803-777-7000"
+    },
+    {
+        "id": 327,
+        "publication_id": "pub.1000701688",
+        "organization_name": "Institute for Medical Research and Occupational Health",
+        "country": "Croatia",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 328,
+        "publication_id": "pub.1000701688",
+        "organization_name": "Ospedale Policlinico San Martino",
+        "country": "Italy",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 329,
+        "publication_id": "pub.1000701688",
+        "organization_name": "ChromoTrax, Inc., Frederick Innovative Technology Center, Frederick, MD, USA",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 330,
+        "publication_id": "pub.1000701688",
+        "organization_name": "Lawrence Livermore National Laboratory",
+        "country": "United States",
+        "contact_email": "info@llnl.gov",
+        "contact_phone": "+1 925-422-1100"
+    },
+    {
+        "id": 331,
+        "publication_id": "pub.1000711144",
+        "organization_name": "The University of Texas at Austin",
+        "country": "United States",
+        "contact_email": "utpublicaffairs@utexas.edu",
+        "contact_phone": "+1 512-471-3434"
+    },
+    {
+        "id": 332,
+        "publication_id": "pub.1000713961",
+        "organization_name": "Northwestern University",
+        "country": "United States",
+        "contact_email": "nu-registrar@northwestern.edu",
+        "contact_phone": "+1 847-491-5234"
+    },
+    {
+        "id": 333,
+        "publication_id": "pub.1000726154",
+        "organization_name": "Medical College of Wisconsin",
+        "country": "United States",
+        "contact_email": "mcwinfo@mcw.edu",
+        "contact_phone": "+1 414-955-8296"
+    },
+    {
+        "id": 334,
+        "publication_id": "pub.1000729573",
+        "organization_name": "The Ohio State University",
+        "country": "United States",
+        "contact_email": "contact@osu.edu",
+        "contact_phone": "+1 614-292-6446"
+    },
+    {
+        "id": 335,
+        "publication_id": "pub.1000730353",
+        "organization_name": "Thomas J Watson Research Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 336,
+        "publication_id": "pub.1000730353",
+        "organization_name": "Massachusetts Institute of Technology",
+        "country": "United States",
+        "contact_email": "infocenter@mit.edu",
+        "contact_phone": "+1 617-253-1000"
+    },
+    {
+        "id": 337,
+        "publication_id": "pub.1000732731",
+        "organization_name": "Oak Ridge National Laboratory",
+        "country": "United States",
+        "contact_email": "ornlinfo@ornl.gov",
+        "contact_phone": "+1 865-576-7658"
+    },
+    {
+        "id": 338,
+        "publication_id": "pub.1000742867",
+        "organization_name": "University of Rhode Island",
+        "country": "United States",
+        "contact_email": "web-group@uri.edu",
+        "contact_phone": "+1 401-874-1000"
+    },
+    {
+        "id": 339,
+        "publication_id": "pub.1000742867",
+        "organization_name": "United States Naval Research Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 340,
+        "publication_id": "pub.1000754782",
+        "organization_name": "Kyushu University",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 341,
+        "publication_id": "pub.1000754782",
+        "organization_name": "Japan Science and Technology Agency",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 342,
+        "publication_id": "pub.1000755254",
+        "organization_name": "University of Idaho",
+        "country": "United States",
+        "contact_email": "info@uidaho.edu",
+        "contact_phone": "+1 208-885-6111"
+    },
+    {
+        "id": 343,
+        "publication_id": "pub.1000756755",
+        "organization_name": "Rutgers, The State University of New Jersey",
+        "country": "United States",
+        "contact_email": "info@rutgers.edu",
+        "contact_phone": "+1 732-445-4636"
+    },
+    {
+        "id": 344,
+        "publication_id": "pub.1000756755",
+        "organization_name": "US West Advanced Technologies Inc",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 345,
+        "publication_id": "pub.1000763277",
+        "organization_name": "University of Colorado Boulder",
+        "country": "United States",
+        "contact_email": "info@colorado.edu",
+        "contact_phone": "+1 303-492-1411"
+    },
+    {
+        "id": 346,
+        "publication_id": "pub.1000763277",
+        "organization_name": "Laboratory for Atmospheric and Space Physics",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 347,
+        "publication_id": "pub.1000763277",
+        "organization_name": "University of Oulu",
+        "country": "Finland",
+        "contact_email": "info@oulu.fi",
+        "contact_phone": "+358 294 480 000"
+    },
+    {
+        "id": 348,
+        "publication_id": "pub.1000765009",
+        "organization_name": "The Pennsylvania State University",
+        "country": "United States",
+        "contact_email": "webaccessibility@psu.edu",
+        "contact_phone": "+1 814-865-4700"
+    },
+    {
+        "id": 349,
+        "publication_id": "pub.1000765009",
+        "organization_name": "The Ohio State University",
+        "country": "United States",
+        "contact_email": "contact@osu.edu",
+        "contact_phone": "+1 614-292-6446"
+    },
+    {
+        "id": 350,
+        "publication_id": "pub.1000768989",
+        "organization_name": "Purdue University West Lafayette",
+        "country": "United States",
+        "contact_email": "admissions@purdue.edu",
+        "contact_phone": "+1 765-494-4600"
+    },
+    {
+        "id": 351,
+        "publication_id": "pub.1000768989",
+        "organization_name": "Guangxi Medical University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 352,
+        "publication_id": "pub.1000769330",
+        "organization_name": "United States Naval Research Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 353,
+        "publication_id": "pub.1000769330",
+        "organization_name": "Computational Physics (United States)",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 354,
+        "publication_id": "pub.1000769330",
+        "organization_name": "Science Applications International Corp SAIC",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 355,
+        "publication_id": "pub.1000776786",
+        "organization_name": "University of Pennsylvania",
+        "country": "United States",
+        "contact_email": "info@upenn.edu",
+        "contact_phone": "+1 215-898-5000"
+    },
+    {
+        "id": 356,
+        "publication_id": "pub.1000776786",
+        "organization_name": "Fritz Haber Institute of the Max Planck Society",
+        "country": "Germany",
+        "contact_email": "info@fhi-berlin.mpg.de",
+        "contact_phone": "+49 30 8413 0"
+    },
+    {
+        "id": 357,
+        "publication_id": "pub.1000778616",
+        "organization_name": "North Carolina State University",
+        "country": "United States",
+        "contact_email": "info@ncsu.edu",
+        "contact_phone": "+1 919-515-2011"
+    },
+    {
+        "id": 358,
+        "publication_id": "pub.1000778616",
+        "organization_name": "GlaxoSmithKline LLC",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 359,
+        "publication_id": "pub.1000780988",
+        "organization_name": "Madigan Army Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 360,
+        "publication_id": "pub.1000781047",
+        "organization_name": "Vanderbilt University",
+        "country": "United States",
+        "contact_email": "info@vanderbilt.edu",
+        "contact_phone": "+1 615-322-7311"
+    },
+    {
+        "id": 361,
+        "publication_id": "pub.1000796327",
+        "organization_name": "University of Oklahoma",
+        "country": "United States",
+        "contact_email": "ouinfo@ou.edu",
+        "contact_phone": "+1 405-325-0311"
+    },
+    {
+        "id": 362,
+        "publication_id": "pub.1000800158",
+        "organization_name": "Maine Institute of Human Genetics and Health Inc",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 363,
+        "publication_id": "pub.1000800158",
+        "organization_name": "Xiangya Hospital Central South University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 364,
+        "publication_id": "pub.1000800158",
+        "organization_name": "University of Maine",
+        "country": "United States",
+        "contact_email": "umaineinfo@maine.edu",
+        "contact_phone": "+1 207-581-1865"
+    },
+    {
+        "id": 365,
+        "publication_id": "pub.1000802418",
+        "organization_name": "Cornell University",
+        "country": "United States",
+        "contact_email": "info@cornell.edu",
+        "contact_phone": "+1 607-254-4636"
+    },
+    {
+        "id": 366,
+        "publication_id": "pub.1000816510",
+        "organization_name": "University of Illinois at Urbana-Champaign",
+        "country": "United States",
+        "contact_email": "illinois@illinois.edu",
+        "contact_phone": "+1 217-333-1000"
+    },
+    {
+        "id": 367,
+        "publication_id": "pub.1000822706",
+        "organization_name": "Whitehead Institute for Biomedical Research",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 368,
+        "publication_id": "pub.1000822706",
+        "organization_name": "Massachusetts Institute of Technology",
+        "country": "United States",
+        "contact_email": "infocenter@mit.edu",
+        "contact_phone": "+1 617-253-1000"
+    },
+    {
+        "id": 369,
+        "publication_id": "pub.1000822881",
+        "organization_name": "Cold Spring Harbor Laboratory",
+        "country": "United States",
+        "contact_email": "info@cshl.edu",
+        "contact_phone": "+1 516-367-8800"
+    },
+    {
+        "id": 370,
+        "publication_id": "pub.1000822881",
+        "organization_name": "Harvard University",
+        "country": "United States",
+        "contact_email": "info@harvard.edu",
+        "contact_phone": "+1 617-495-1000"
+    },
+    {
+        "id": 371,
+        "publication_id": "pub.1000822881",
+        "organization_name": "Dana Farber Cancer Institute Inc",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 372,
+        "publication_id": "pub.1000822881",
+        "organization_name": "Columbia University",
+        "country": "United States",
+        "contact_email": "ucomm@columbia.edu",
+        "contact_phone": "+1 212-854-1754"
+    },
+    {
+        "id": 373,
+        "publication_id": "pub.1000822889",
+        "organization_name": "Stanford University",
+        "country": "United States",
+        "contact_email": "info@stanford.edu",
+        "contact_phone": "+1 650-723-2300"
+    },
+    {
+        "id": 374,
+        "publication_id": "pub.1000824052",
+        "organization_name": "University of California, Irvine",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 375,
+        "publication_id": "pub.1000824052",
+        "organization_name": "Qiagen Gaithersburg LLC",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 376,
+        "publication_id": "pub.1000828736",
+        "organization_name": "University of California, Los Angeles",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 377,
+        "publication_id": "pub.1000834238",
+        "organization_name": "The University of Texas MD Anderson Cancer Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": "+1-877-632-6789"
+    },
+    {
+        "id": 378,
+        "publication_id": "pub.1000835135",
+        "organization_name": "Walter and Eliza Hall Institute of Medical Research",
+        "country": "Australia",
+        "contact_email": "inquiries@wehi.edu.au",
+        "contact_phone": "+61 3 9345 2555"
+    },
+    {
+        "id": 379,
+        "publication_id": "pub.1000835135",
+        "organization_name": "University of Alabama at Birmingham",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 380,
+        "publication_id": "pub.1000838473",
+        "organization_name": "Weill Medical College of Cornell University",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 381,
+        "publication_id": "pub.1000838473",
+        "organization_name": "Cornell University",
+        "country": "United States",
+        "contact_email": "info@cornell.edu",
+        "contact_phone": "+1 607-254-4636"
+    },
+    {
+        "id": 382,
+        "publication_id": "pub.1000840517",
+        "organization_name": "State University of New York at Albany",
+        "country": "United States",
+        "contact_email": "askUAlbany@albany.edu",
+        "contact_phone": "+1 518-442-3300"
+    },
+    {
+        "id": 383,
+        "publication_id": "pub.1000841662",
+        "organization_name": "Harvard University",
+        "country": "United States",
+        "contact_email": "info@harvard.edu",
+        "contact_phone": "+1 617-495-1000"
+    },
+    {
+        "id": 384,
+        "publication_id": "pub.1000841662",
+        "organization_name": "Massachusetts Institute of Technology",
+        "country": "United States",
+        "contact_email": "infocenter@mit.edu",
+        "contact_phone": "+1 617-253-1000"
+    },
+    {
+        "id": 385,
+        "publication_id": "pub.1000842839",
+        "organization_name": "Medical University of South Carolina",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 386,
+        "publication_id": "pub.1000843401",
+        "organization_name": "Advanced Research and Applications Corp",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 387,
+        "publication_id": "pub.1000844615",
+        "organization_name": "Stanford University",
+        "country": "United States",
+        "contact_email": "info@stanford.edu",
+        "contact_phone": "+1 650-723-2300"
+    },
+    {
+        "id": 388,
+        "publication_id": "pub.1000844615",
+        "organization_name": "University of Milano-Bicocca",
+        "country": "Italy",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 389,
+        "publication_id": "pub.1000850873",
+        "organization_name": "The Ohio State University",
+        "country": "United States",
+        "contact_email": "contact@osu.edu",
+        "contact_phone": "+1 614-292-6446"
+    },
+    {
+        "id": 390,
+        "publication_id": "pub.1000850873",
+        "organization_name": "The University of Texas at Austin",
+        "country": "United States",
+        "contact_email": "utpublicaffairs@utexas.edu",
+        "contact_phone": "+1 512-471-3434"
+    },
+    {
+        "id": 391,
+        "publication_id": "pub.1000850873",
+        "organization_name": "University College London",
+        "country": "United Kingdom",
+        "contact_email": "info@ucl.ac.uk",
+        "contact_phone": "+44 (0)20 7679 2000"
+    },
+    {
+        "id": 392,
+        "publication_id": "pub.1000854049",
+        "organization_name": "State University of New York at Buffalo",
+        "country": "United States",
+        "contact_email": "ub-info@buffalo.edu",
+        "contact_phone": "+1 716-645-2000"
+    },
+    {
+        "id": 393,
+        "publication_id": "pub.1000864262",
+        "organization_name": "Community of Universities and Institutions Lille Nord de France",
+        "country": "France",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 394,
+        "publication_id": "pub.1000864262",
+        "organization_name": "Laboratoire de Physico-Chimie de l'Atmosphère",
+        "country": "France",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 395,
+        "publication_id": "pub.1000864262",
+        "organization_name": "Laboratoire de Spectrochimie Infrarouge et Raman",
+        "country": "France",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 396,
+        "publication_id": "pub.1000864262",
+        "organization_name": "Laboratory of Solid State Physics",
+        "country": "France",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 397,
+        "publication_id": "pub.1000874047",
+        "organization_name": "George Washington University",
+        "country": "United States",
+        "contact_email": "info@gwu.edu",
+        "contact_phone": "+1 202-994-1000"
+    },
+    {
+        "id": 398,
+        "publication_id": "pub.1000878837",
+        "organization_name": "Ludwig-Maximilians-Universität München",
+        "country": "Germany",
+        "contact_email": "info@lmu.de",
+        "contact_phone": "+49 89 2180-0"
+    },
+    {
+        "id": 399,
+        "publication_id": "pub.1000880004",
+        "organization_name": "Johns Hopkins University",
+        "country": "United States",
+        "contact_email": "info@jhu.edu",
+        "contact_phone": "+1 410-516-8000"
+    },
+    {
+        "id": 400,
+        "publication_id": "pub.1000881350",
+        "organization_name": "Westinghouse Electric Corp",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 401,
+        "publication_id": "pub.1000881350",
+        "organization_name": "Illinois Institute of Technology",
+        "country": "United States",
+        "contact_email": "admission@iit.edu",
+        "contact_phone": "+1 312-567-3000"
+    },
+    {
+        "id": 402,
+        "publication_id": "pub.1000881350",
+        "organization_name": "Argonne National Laboratory",
+        "country": "United States",
+        "contact_email": "ask@anl.gov",
+        "contact_phone": "+1 630-252-2000"
+    },
+    {
+        "id": 403,
+        "publication_id": "pub.1000882353",
+        "organization_name": "Colorado School of Mines",
+        "country": "United States",
+        "contact_email": "info@mines.edu",
+        "contact_phone": "+1 303-273-3000"
+    },
+    {
+        "id": 404,
+        "publication_id": "pub.1000884734",
+        "organization_name": "Lehigh University",
+        "country": "United States",
+        "contact_email": "inluadm@lehigh.edu",
+        "contact_phone": "+1 610-758-3000"
+    },
+    {
+        "id": 405,
+        "publication_id": "pub.1000896801",
+        "organization_name": "The Pennsylvania State University",
+        "country": "United States",
+        "contact_email": "webaccessibility@psu.edu",
+        "contact_phone": "+1 814-865-4700"
+    },
+    {
+        "id": 406,
+        "publication_id": "pub.1000896937",
+        "organization_name": "University of Wisconsin-Madison",
+        "country": "United States",
+        "contact_email": "info@wisc.edu",
+        "contact_phone": "+1 608-263-2400"
+    },
+    {
+        "id": 407,
+        "publication_id": "pub.1000896937",
+        "organization_name": "Northwestern University",
+        "country": "United States",
+        "contact_email": "nu-registrar@northwestern.edu",
+        "contact_phone": "+1 847-491-5234"
+    },
+    {
+        "id": 408,
+        "publication_id": "pub.1000899938",
+        "organization_name": "Engineer Research and Development Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 409,
+        "publication_id": "pub.1000899938",
+        "organization_name": "US Army Corps of Engineers",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 410,
+        "publication_id": "pub.1000899938",
+        "organization_name": "U.S. Army Research and Development Center, Eau Galle Aquatic Ecology Laboratory, Spring Valley, WI, U.S.A.",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 411,
+        "publication_id": "pub.1000899938",
+        "organization_name": "E2 Consulting Engineers, Inc., Maryville, TN, U.S.A.",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 412,
+        "publication_id": "pub.1000899963",
+        "organization_name": "Jackson State University",
+        "country": "United States",
+        "contact_email": "info@jsums.edu",
+        "contact_phone": "+1 601-979-2121"
+    },
+    {
+        "id": 413,
+        "publication_id": "pub.1000899963",
+        "organization_name": "Boreskov Institute of Catalysis",
+        "country": "Russia",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 414,
+        "publication_id": "pub.1000901989",
+        "organization_name": "Nanyang Technological University",
+        "country": "Singapore",
+        "contact_email": "admissions@ntu.edu.sg",
+        "contact_phone": "+65 67911744"
+    },
+    {
+        "id": 415,
+        "publication_id": "pub.1000901989",
+        "organization_name": "University of California, Berkeley",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 416,
+        "publication_id": "pub.1000902441",
+        "organization_name": "Stanford University",
+        "country": "United States",
+        "contact_email": "info@stanford.edu",
+        "contact_phone": "+1 650-723-2300"
+    },
+    {
+        "id": 417,
+        "publication_id": "pub.1000902441",
+        "organization_name": "Aalto University",
+        "country": "Finland",
+        "contact_email": "communications@aalto.fi",
+        "contact_phone": "+358 9 47001"
+    },
+    {
+        "id": 418,
+        "publication_id": "pub.1000903502",
+        "organization_name": "Stanford University",
+        "country": "United States",
+        "contact_email": "info@stanford.edu",
+        "contact_phone": "+1 650-723-2300"
+    },
+    {
+        "id": 419,
+        "publication_id": "pub.1000903502",
+        "organization_name": "ETH Zurich",
+        "country": "Switzerland",
+        "contact_email": "info@ethz.ch",
+        "contact_phone": "+41 44 632 11 11"
+    },
+    {
+        "id": 420,
+        "publication_id": "pub.1000910786",
+        "organization_name": "Center for Cancer Research",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 421,
+        "publication_id": "pub.1000911787",
+        "organization_name": "University of Colorado Boulder",
+        "country": "United States",
+        "contact_email": "info@colorado.edu",
+        "contact_phone": "+1 303-492-1411"
+    },
+    {
+        "id": 422,
+        "publication_id": "pub.1000911787",
+        "organization_name": "Department of Veterans Affairs, Eastern Colorado Healthcare System, Denver, Colorado, United States of America",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 423,
+        "publication_id": "pub.1000914936",
+        "organization_name": "New Mexico State University",
+        "country": "United States",
+        "contact_email": "admissions@nmsu.edu",
+        "contact_phone": "+1 575-646-0111"
+    },
+    {
+        "id": 424,
+        "publication_id": "pub.1000914936",
+        "organization_name": "Central South University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 425,
+        "publication_id": "pub.1000916573",
+        "organization_name": "Research Centre INRIA Sophia Antipolis - Méditerranée",
+        "country": "France",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 426,
+        "publication_id": "pub.1000916573",
+        "organization_name": "University of Colorado Boulder",
+        "country": "United States",
+        "contact_email": "info@colorado.edu",
+        "contact_phone": "+1 303-492-1411"
+    },
+    {
+        "id": 427,
+        "publication_id": "pub.1000920952",
+        "organization_name": "Skåne University Hospital",
+        "country": "Sweden",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 428,
+        "publication_id": "pub.1000920952",
+        "organization_name": "Lund University",
+        "country": "Sweden",
+        "contact_email": "info@lu.se",
+        "contact_phone": "+46 46 222 00 00"
+    },
+    {
+        "id": 429,
+        "publication_id": "pub.1000930538",
+        "organization_name": "State University of New York at Buffalo",
+        "country": "United States",
+        "contact_email": "ub-info@buffalo.edu",
+        "contact_phone": "+1 716-645-2000"
+    },
+    {
+        "id": 430,
+        "publication_id": "pub.1000939525",
+        "organization_name": "Tohoku University",
+        "country": "Japan",
+        "contact_email": "public_relations@tohoku.ac.jp",
+        "contact_phone": "+81-22-217-4816"
+    },
+    {
+        "id": 431,
+        "publication_id": "pub.1000939525",
+        "organization_name": "Massachusetts Institute of Technology",
+        "country": "United States",
+        "contact_email": "infocenter@mit.edu",
+        "contact_phone": "+1 617-253-1000"
+    },
+    {
+        "id": 432,
+        "publication_id": "pub.1000939525",
+        "organization_name": "FORTH Institute of Electronic Structure and Laser",
+        "country": "Greece",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 433,
+        "publication_id": "pub.1000939525",
+        "organization_name": "University of Crete",
+        "country": "Greece",
+        "contact_email": "info@uoc.gr",
+        "contact_phone": "+30 2810 393000"
+    },
+    {
+        "id": 434,
+        "publication_id": "pub.1000939525",
+        "organization_name": "Joseph Fourier University",
+        "country": "France",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 435,
+        "publication_id": "pub.1000939525",
+        "organization_name": "Adam Mickiewicz University in Poznań",
+        "country": "Poland",
+        "contact_email": "amu@amu.edu.pl",
+        "contact_phone": "+48 61 829 40 00"
+    },
+    {
+        "id": 436,
+        "publication_id": "pub.1000939525",
+        "organization_name": "Max Planck Institute for Dynamics and Self-Organization",
+        "country": "Germany",
+        "contact_email": "info@ds.mpg.de",
+        "contact_phone": "+49 551 5176 0"
+    },
+    {
+        "id": 437,
+        "publication_id": "pub.1000940968",
+        "organization_name": "University of Virginia",
+        "country": "United States",
+        "contact_email": "webmaster@virginia.edu",
+        "contact_phone": "+1 434-924-0311"
+    },
+    {
+        "id": 438,
+        "publication_id": "pub.1000941508",
+        "organization_name": "The University of Texas at Austin",
+        "country": "United States",
+        "contact_email": "utpublicaffairs@utexas.edu",
+        "contact_phone": "+1 512-471-3434"
+    },
+    {
+        "id": 439,
+        "publication_id": "pub.1000941508",
+        "organization_name": "University of British Columbia",
+        "country": "Canada",
+        "contact_email": "info@ubc.ca",
+        "contact_phone": "+1 604-822-2211"
+    },
+    {
+        "id": 440,
+        "publication_id": "pub.1000941937",
+        "organization_name": "Lehrstuhl für Augewandte Mathematik 1, Universitáts straße 2, D‐8900 Augsburg, W. Germany",
+        "country": "Germany",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 441,
+        "publication_id": "pub.1000941937",
+        "organization_name": "Fudan University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 442,
+        "publication_id": "pub.1000945843",
+        "organization_name": "Yale University",
+        "country": "United States",
+        "contact_email": "info@yale.edu",
+        "contact_phone": "+1 203-432-4771"
+    },
+    {
+        "id": 443,
+        "publication_id": "pub.1000947789",
+        "organization_name": "Harvard University",
+        "country": "United States",
+        "contact_email": "info@harvard.edu",
+        "contact_phone": "+1 617-495-1000"
+    },
+    {
+        "id": 444,
+        "publication_id": "pub.1000947789",
+        "organization_name": "University of Pennsylvania",
+        "country": "United States",
+        "contact_email": "info@upenn.edu",
+        "contact_phone": "+1 215-898-5000"
+    },
+    {
+        "id": 445,
+        "publication_id": "pub.1000956608",
+        "organization_name": "Tata Institute of Fundamental Research",
+        "country": "India",
+        "contact_email": "webmaster@tifr.res.in",
+        "contact_phone": "+91-22-22782000"
+    },
+    {
+        "id": 446,
+        "publication_id": "pub.1000956608",
+        "organization_name": "National Institute of Standards and Technology",
+        "country": "United States",
+        "contact_email": "inquiries@nist.gov",
+        "contact_phone": "+1 301-975-2000"
+    },
+    {
+        "id": 447,
+        "publication_id": "pub.1000956608",
+        "organization_name": "McGill University",
+        "country": "Canada",
+        "contact_email": "info@mcgill.ca",
+        "contact_phone": "+1 514-398-4455"
+    },
+    {
+        "id": 448,
+        "publication_id": "pub.1000966040",
+        "organization_name": "University of Colorado Boulder",
+        "country": "United States",
+        "contact_email": "info@colorado.edu",
+        "contact_phone": "+1 303-492-1411"
+    },
+    {
+        "id": 449,
+        "publication_id": "pub.1000978399",
+        "organization_name": "University of Delaware",
+        "country": "United States",
+        "contact_email": "admissions@udel.edu",
+        "contact_phone": "+1 302-831-2792"
+    },
+    {
+        "id": 450,
+        "publication_id": "pub.1000978399",
+        "organization_name": "University of Auckland",
+        "country": "New Zealand",
+        "contact_email": "info@auckland.ac.nz",
+        "contact_phone": "+64 9 373 7999"
+    },
+    {
+        "id": 451,
+        "publication_id": "pub.1000987831",
+        "organization_name": "Yale University",
+        "country": "United States",
+        "contact_email": "info@yale.edu",
+        "contact_phone": "+1 203-432-4771"
+    },
+    {
+        "id": 452,
+        "publication_id": "pub.1000987831",
+        "organization_name": "Medical College of Wisconsin",
+        "country": "United States",
+        "contact_email": "mcwinfo@mcw.edu",
+        "contact_phone": "+1 414-955-8296"
+    },
+    {
+        "id": 453,
+        "publication_id": "pub.1000987831",
+        "organization_name": "Chiba University",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 454,
+        "publication_id": "pub.1000989048",
+        "organization_name": "University of Utah",
+        "country": "United States",
+        "contact_email": "info@utah.edu",
+        "contact_phone": "+1 801-581-7200"
+    },
+    {
+        "id": 455,
+        "publication_id": "pub.1000989907",
+        "organization_name": "University of Kentucky",
+        "country": "United States",
+        "contact_email": "ukpr@uky.edu",
+        "contact_phone": "+1 859-257-9000"
+    },
+    {
+        "id": 456,
+        "publication_id": "pub.1000993282",
+        "organization_name": "Georgia Institute of Technology",
+        "country": "United States",
+        "contact_email": "ask@gatech.edu",
+        "contact_phone": "+1 404-894-2000"
+    },
+    {
+        "id": 457,
+        "publication_id": "pub.1000993282",
+        "organization_name": "Japan Science and Technology Agency",
+        "country": "Japan",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 458,
+        "publication_id": "pub.1000993282",
+        "organization_name": "University of Tennessee Knoxville",
+        "country": "United States",
+        "contact_email": "utkinfo@utk.edu",
+        "contact_phone": "+1 865-974-1000"
+    },
+    {
+        "id": 459,
+        "publication_id": "pub.1000995945",
+        "organization_name": "Uniformed Services University of the Health Sciences",
+        "country": "United States",
+        "contact_email": "admissions@usuhs.edu",
+        "contact_phone": "+1 800-772-1743"
+    },
+    {
+        "id": 460,
+        "publication_id": "pub.1000995945",
+        "organization_name": "Eunice Kennedy Shriver National Institute of Child Health and Human Development",
+        "country": "United States",
+        "contact_email": "nichdinfo@mail.nih.gov",
+        "contact_phone": "1-800-370-2943"
+    },
+    {
+        "id": 461,
+        "publication_id": "pub.1000997441",
+        "organization_name": "Maxar Space LLC",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 462,
+        "publication_id": "pub.1001003847",
+        "organization_name": "The University of Texas Health Science Center at San Antonio",
+        "country": "United States",
+        "contact_email": "webmaster@uthscsa.edu",
+        "contact_phone": "+1 210-567-7000"
+    },
+    {
+        "id": 463,
+        "publication_id": "pub.1001003847",
+        "organization_name": "Hebrew University of Jerusalem",
+        "country": "Israel",
+        "contact_email": "info@savion.huji.ac.il",
+        "contact_phone": "+972-2-588-2911"
+    },
+    {
+        "id": 464,
+        "publication_id": "pub.1001005985",
+        "organization_name": "University of Pennsylvania",
+        "country": "United States",
+        "contact_email": "info@upenn.edu",
+        "contact_phone": "+1 215-898-5000"
+    },
+    {
+        "id": 465,
+        "publication_id": "pub.1001005985",
+        "organization_name": "Frederick National Laboratory for Cancer Research",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 466,
+        "publication_id": "pub.1001007178",
+        "organization_name": "Harold C. Simmons Comprehensive Cancer Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 467,
+        "publication_id": "pub.1001007178",
+        "organization_name": "The University of Texas Southwestern Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 468,
+        "publication_id": "pub.1001009069",
+        "organization_name": "Rensselaer Polytechnic Institute",
+        "country": "United States",
+        "contact_email": "admissions@rpi.edu",
+        "contact_phone": "+1 518-276-6216"
+    },
+    {
+        "id": 469,
+        "publication_id": "pub.1001012336",
+        "organization_name": "University of North Carolina at Chapel Hill",
+        "country": "United States",
+        "contact_email": "null",
+        "contact_phone": "null"
+    },
+    {
+        "id": 470,
+        "publication_id": "pub.1001019225",
+        "organization_name": "East Carolina University",
+        "country": "United States",
+        "contact_email": "contact@ecu.edu",
+        "contact_phone": "+1 252-328-6131"
+    },
+    {
+        "id": 471,
+        "publication_id": "pub.1001019225",
+        "organization_name": "Zhejiang University",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 472,
+        "publication_id": "pub.1001019225",
+        "organization_name": "Vanderbilt University Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 473,
+        "publication_id": "pub.1001023767",
+        "organization_name": "Northwestern University",
+        "country": "United States",
+        "contact_email": "nu-registrar@northwestern.edu",
+        "contact_phone": "+1 847-491-5234"
+    },
+    {
+        "id": 474,
+        "publication_id": "pub.1001023767",
+        "organization_name": "Argonne National Laboratory",
+        "country": "United States",
+        "contact_email": "ask@anl.gov",
+        "contact_phone": "+1 630-252-2000"
+    },
+    {
+        "id": 475,
+        "publication_id": "pub.1001031144",
+        "organization_name": "Thomson and McKinnon, Auchincloss, Kohlmeyer, Inc. Palo Alto, California",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 476,
+        "publication_id": "pub.1001031144",
+        "organization_name": "Management Science Associates (United States)",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 477,
+        "publication_id": "pub.1001033184",
+        "organization_name": "University of South Carolina",
+        "country": "United States",
+        "contact_email": "info@sc.edu",
+        "contact_phone": "+1 803-777-7000"
+    },
+    {
+        "id": 478,
+        "publication_id": "pub.1001041466",
+        "organization_name": "Hanscom Air Force Base",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 479,
+        "publication_id": "pub.1001045404",
+        "organization_name": "University of Massachusetts Amherst",
+        "country": "United States",
+        "contact_email": "umassadmissions@umass.edu",
+        "contact_phone": "+1 413-545-0111"
+    },
+    {
+        "id": 480,
+        "publication_id": "pub.1001050153",
+        "organization_name": "State University of New York at Buffalo",
+        "country": "United States",
+        "contact_email": "ub-info@buffalo.edu",
+        "contact_phone": "+1 716-645-2000"
+    },
+    {
+        "id": 481,
+        "publication_id": "pub.1001050153",
+        "organization_name": "United States Air Force Research Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 482,
+        "publication_id": "pub.1001051301",
+        "organization_name": "Toronto General Hospital",
+        "country": "Canada",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 483,
+        "publication_id": "pub.1001051301",
+        "organization_name": "University of Toronto",
+        "country": "Canada",
+        "contact_email": "info.utoronto@utoronto.ca",
+        "contact_phone": "+1 416-978-2011"
+    },
+    {
+        "id": 484,
+        "publication_id": "pub.1001051301",
+        "organization_name": "Key Laboratory of Chemistry for Natural Products of Guizhou Province and Chinese Academy of Sciences",
+        "country": "China",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 485,
+        "publication_id": "pub.1001057012",
+        "organization_name": "Brandeis University",
+        "country": "United States",
+        "contact_email": "admissions@brandeis.edu",
+        "contact_phone": "+1 781-736-2000"
+    },
+    {
+        "id": 486,
+        "publication_id": "pub.1001058005",
+        "organization_name": "Air Force Research Laboratory Aerospace Systems Directorate",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 487,
+        "publication_id": "pub.1001058005",
+        "organization_name": "Edwards Air Force Base",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 488,
+        "publication_id": "pub.1001062922",
+        "organization_name": "Baylor College of Medicine",
+        "country": "United States",
+        "contact_email": "null",
+        "contact_phone": "null"
+    },
+    {
+        "id": 489,
+        "publication_id": "pub.1001066879",
+        "organization_name": "University of North Carolina at Chapel Hill",
+        "country": "United States",
+        "contact_email": "null",
+        "contact_phone": "null"
+    },
+    {
+        "id": 490,
+        "publication_id": "pub.1001068903",
+        "organization_name": "Clemson University",
+        "country": "United States",
+        "contact_email": "info@clemson.edu",
+        "contact_phone": "+1 864-656-3311"
+    },
+    {
+        "id": 491,
+        "publication_id": "pub.1001073005",
+        "organization_name": "Wayne State University",
+        "country": "United States",
+        "contact_email": "admissions@wayne.edu",
+        "contact_phone": "+1 313-577-2424"
+    },
+    {
+        "id": 492,
+        "publication_id": "pub.1001074857",
+        "organization_name": "University of Tennessee Knoxville",
+        "country": "United States",
+        "contact_email": "utkinfo@utk.edu",
+        "contact_phone": "+1 865-974-1000"
+    },
+    {
+        "id": 493,
+        "publication_id": "pub.1001079626",
+        "organization_name": "Hunter College",
+        "country": "United States",
+        "contact_email": "info@hunter.cuny.edu",
+        "contact_phone": "+1 212-772-4000"
+    },
+    {
+        "id": 494,
+        "publication_id": "pub.1001079626",
+        "organization_name": "NewYork–Presbyterian Hospital",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 495,
+        "publication_id": "pub.1001100958",
+        "organization_name": "United States Naval Research Laboratory",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 496,
+        "publication_id": "pub.1001112053",
+        "organization_name": "Walter Reed Army Institute of Research",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 497,
+        "publication_id": "pub.1001116158",
+        "organization_name": "Washington University in St. Louis",
+        "country": "United States",
+        "contact_email": "admissions@wustl.edu",
+        "contact_phone": "+1 314-935-5000"
+    },
+    {
+        "id": 498,
+        "publication_id": "pub.1001116158",
+        "organization_name": "Array Information Technology (United States)",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    },
+    {
+        "id": 499,
+        "publication_id": "pub.1001126106",
+        "organization_name": "University of Glasgow",
+        "country": "United Kingdom",
+        "contact_email": "info@glasgow.ac.uk",
+        "contact_phone": "+44 (0)141 330 2000"
+    },
+    {
+        "id": 500,
+        "publication_id": "pub.1001127207",
+        "organization_name": "Beth Israel Deaconess Medical Center",
+        "country": "United States",
+        "contact_email": null,
+        "contact_phone": null
+    }
+]
