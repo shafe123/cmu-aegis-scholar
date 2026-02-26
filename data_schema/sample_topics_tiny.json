@@ -1,0 +1,30 @@
+[
+    {
+        "id": "topic_f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+        "name": "Network Security and Intrusion Detection",
+        "field": "Computer Science",
+        "subfield": "Computer Networks and Communications",
+        "domain": "Physical Sciences",
+        "sources": [
+            {
+                "source": "openalex",
+                "id": "T10199"
+            }
+        ],
+        "last_updated": "2024-01-20T12:00:00Z"
+    },
+    {
+        "id": "topic_a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d",
+        "name": "Machine Learning for Cybersecurity",
+        "field": "Computer Science",
+        "subfield": "Artificial Intelligence",
+        "domain": "Physical Sciences",
+        "sources": [
+            {
+                "source": "openalex",
+                "id": "T11302"
+            }
+        ],
+        "last_updated": "2024-01-20T12:00:00Z"
+    }
+]

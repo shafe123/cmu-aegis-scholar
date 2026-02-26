@@ -1,0 +1,358 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AEGIS Scholar Database Schemas",
+    "definitions": {
+        "Organization": {
+            "type": "object",
+            "description": "Research institutions, funders, and publishers",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "pattern": "^org_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "description": "Primary identifier: GUID prefixed with 'org_'"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Official display name of the organization"
+                },
+                "country": {
+                    "type": "string",
+                    "description": "ISO country code (e.g., 'US', 'GB') or full country name"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "institution",
+                        "funder",
+                        "publisher",
+                        "other"
+                    ],
+                    "description": "Type of organization"
+                },
+                "sources": {
+                    "type": "array",
+                    "description": "Array of source identifiers from different databases",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "source": {
+                                "type": "string",
+                                "enum": [
+                                    "ror",
+                                    "openalex",
+                                    "crossref",
+                                    "dtic",
+                                    "other"
+                                ],
+                                "description": "Name of the data source"
+                            },
+                            "id": {
+                                "type": "string",
+                                "description": "The organization ID from this specific source"
+                            }
+                        },
+                        "required": [
+                            "source",
+                            "id"
+                        ]
+                    }
+                },
+                "last_updated": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp of last update in ISO 8601 format"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "Author": {
+            "type": "object",
+            "description": "Individual researchers and authors",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "pattern": "^author_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "description": "Primary identifier: GUID prefixed with 'author_'"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Full display name of the author"
+                },
+                "org_ids": {
+                    "type": "array",
+                    "description": "Array of organization IDs for current and past affiliations",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                },
+                "h_index": {
+                    "type": "integer",
+                    "description": "Author's h-index metric",
+                    "minimum": 0
+                },
+                "citation_count": {
+                    "type": "integer",
+                    "description": "Total citations across all works",
+                    "minimum": 0
+                },
+                "works_count": {
+                    "type": "integer",
+                    "description": "Total number of published works",
+                    "minimum": 0
+                },
+                "sources": {
+                    "type": "array",
+                    "description": "Array of source identifiers from different databases",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "source": {
+                                "type": "string",
+                                "enum": [
+                                    "orcid",
+                                    "openalex",
+                                    "other"
+                                ],
+                                "description": "Name of the data source"
+                            },
+                            "id": {
+                                "type": "string",
+                                "description": "The author ID from this specific source"
+                            }
+                        },
+                        "required": [
+                            "source",
+                            "id"
+                        ]
+                    }
+                },
+                "last_updated": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp of last update in ISO 8601 format"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "Topic": {
+            "type": "object",
+            "description": "Research topics and subject areas",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "pattern": "^topic_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "description": "Primary identifier: GUID prefixed with 'topic_'"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Topic name or label"
+                },
+                "field": {
+                    "type": "string",
+                    "description": "Broad research area (mid-level category)"
+                },
+                "subfield": {
+                    "type": "string",
+                    "description": "Specific specialty or subcategory"
+                },
+                "domain": {
+                    "type": "string",
+                    "description": "Highest level category (e.g., 'Physical Sciences', 'Social Sciences')"
+                },
+                "sources": {
+                    "type": "array",
+                    "description": "Array of source identifiers from different databases",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "source": {
+                                "type": "string",
+                                "enum": [
+                                    "openalex",
+                                    "other"
+                                ],
+                                "description": "Name of the data source"
+                            },
+                            "id": {
+                                "type": "string",
+                                "description": "The topic ID from this specific source"
+                            }
+                        },
+                        "required": [
+                            "source",
+                            "id"
+                        ]
+                    }
+                },
+                "last_updated": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp of last update in ISO 8601 format"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "Work": {
+            "type": "object",
+            "description": "Published research works, papers, and reports",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "pattern": "^work_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "description": "Primary identifier: GUID prefixed with 'work_'"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Full title of the work"
+                },
+                "abstract": {
+                    "type": "string",
+                    "description": "Full abstract text (reconstructed from OpenAlex or raw from Crossref/DTIC)"
+                },
+                "publication_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Publication date in ISO 8601 format (YYYY-MM-DD)"
+                },
+                "citation_count": {
+                    "type": "integer",
+                    "description": "Number of citations received",
+                    "minimum": 0
+                },
+                "authors": {
+                    "type": "array",
+                    "description": "Array of authors who contributed to this work",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "author_id": {
+                                "type": "string",
+                                "description": "ORCID or OpenAlex author ID"
+                            },
+                            "org_id": {
+                                "type": "string",
+                                "description": "Organization ID for author's affiliation at time of publication"
+                            }
+                        },
+                        "required": [
+                            "author_id"
+                        ]
+                    }
+                },
+                "orgs": {
+                    "type": "array",
+                    "description": "Array of organizations associated with this work",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "org_id": {
+                                "type": "string",
+                                "description": "Organization ID (ROR, Funder ID, etc.)"
+                            },
+                            "role": {
+                                "type": "string",
+                                "enum": [
+                                    "funder",
+                                    "publisher",
+                                    "affiliation",
+                                    "other"
+                                ],
+                                "description": "Role of the organization in relation to this work"
+                            }
+                        },
+                        "required": [
+                            "org_id",
+                            "role"
+                        ]
+                    }
+                },
+                "topics": {
+                    "type": "array",
+                    "description": "Array of topics categorizing this work",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "topic_id": {
+                                "type": "string",
+                                "description": "OpenAlex Topic ID"
+                            },
+                            "score": {
+                                "type": "number",
+                                "description": "Relevance score for this topic",
+                                "minimum": 0.0,
+                                "maximum": 1.0
+                            }
+                        },
+                        "required": [
+                            "topic_id",
+                            "score"
+                        ]
+                    }
+                },
+                "sources": {
+                    "type": "array",
+                    "description": "Array of source identifiers from different databases",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "source": {
+                                "type": "string",
+                                "enum": [
+                                    "openalex",
+                                    "crossref",
+                                    "dtic",
+                                    "other"
+                                ],
+                                "description": "Name of the data source"
+                            },
+                            "id": {
+                                "type": "string",
+                                "description": "The work ID from this specific source"
+                            }
+                        },
+                        "required": [
+                            "source",
+                            "id"
+                        ]
+                    }
+                },
+                "venue": {
+                    "type": "string",
+                    "description": "Publication venue (journal, conference, etc.)"
+                },
+                "doi": {
+                    "type": "string",
+                    "description": "Digital Object Identifier"
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Full URL to the work"
+                },
+                "last_updated": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp of last update in ISO 8601 format"
+                }
+            },
+            "required": [
+                "id",
+                "title"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

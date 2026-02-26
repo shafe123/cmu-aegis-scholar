@@ -228,9 +228,12 @@
     "openalex/works/updated_date=2025-10-10/part_0004.gz",
     "openalex/works/updated_date=2025-10-10/part_0005.gz",
     "openalex/works/updated_date=2025-10-10/part_0006.gz",
-    "openalex/works/updated_date=2025-10-10/part_0007.gz"
+    "openalex/works/updated_date=2025-10-10/part_0007.gz",
+    "openalex/works/updated_date=2025-10-10/part_0008.gz",
+    "openalex/works/updated_date=2025-10-10/part_0009.gz",
+    "openalex/works/updated_date=2025-10-10/part_0010.gz"
   ],
   "failed_files": [],
-  "last_updated": "2026-02-22T17:29:10.448497",
-  "total_documents": 229
+  "last_updated": "2026-02-23T13:24:06.257812",
+  "total_documents": 232
 }

@@ -1,0 +1,83 @@
+[
+    {
+        "id": "work_b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
+        "title": "Adversarial Machine Learning in Network Security Systems",
+        "abstract": "This paper presents a comprehensive study of adversarial attacks against machine learning-based network security systems. We demonstrate novel attack vectors and propose robust defense mechanisms.",
+        "publication_date": "2023-05-15",
+        "citation_count": 247,
+        "authors": [
+            {
+                "author_id": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+                "org_id": "org_a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
+            },
+            {
+                "author_id": "author_e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+                "org_id": "org_b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"
+            }
+        ],
+        "orgs": [
+            {
+                "org_id": "org_c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+                "role": "funder"
+            }
+        ],
+        "topics": [
+            {
+                "topic_id": "topic_f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+                "score": 0.95
+            },
+            {
+                "topic_id": "topic_a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d",
+                "score": 0.88
+            }
+        ],
+        "sources": [
+            {
+                "source": "openalex",
+                "id": "W3124567890"
+            },
+            {
+                "source": "crossref",
+                "id": "10.1234/example.2023.001"
+            }
+        ],
+        "venue": "IEEE Symposium on Security and Privacy",
+        "doi": "10.1234/example.2023.001",
+        "url": "https://doi.org/10.1234/example.2023.001",
+        "last_updated": "2024-02-15T16:45:00Z"
+    },
+    {
+        "id": "work_c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+        "title": "Deep Learning Approaches for Intrusion Detection Systems",
+        "abstract": "We explore the application of deep neural networks for real-time intrusion detection in enterprise networks. Our models achieve 98.7% accuracy with low false positive rates.",
+        "publication_date": "2023-11-20",
+        "citation_count": 189,
+        "authors": [
+            {
+                "author_id": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+                "org_id": "org_a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
+            }
+        ],
+        "orgs": [],
+        "topics": [
+            {
+                "topic_id": "topic_a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d",
+                "score": 0.92
+            }
+        ],
+        "sources": [
+            {
+                "source": "openalex",
+                "id": "W3124567890"
+            },
+            {
+                "source": "dtic",
+                "id": "ADA489752"
+            }
+        ],
+        "venue": "ACM Conference on Computer and Communications Security",
+        "doi": "10.1145/example.2023.456",
+        "url": "https://dl.acm.org/doi/10.1145/example.2023.456",
+        "last_updated": "2024-02-12T11:30:00Z"
+    }
+]
