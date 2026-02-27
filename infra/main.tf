@@ -58,3 +58,10 @@ module "example_service" {
   acr_base    = azurerm_container_registry.aegis_scholar_acr.name
   acr_id      = azurerm_container_registry.aegis_scholar_acr.id
 }
+
+module "vector_db" {
+  source      = "./vector-db"
+  environment = var.environment
+  acr_base    = azurerm_container_registry.aegis_scholar_acr.name
+  acr_id      = azurerm_container_registry.aegis_scholar_acr.id
+}
