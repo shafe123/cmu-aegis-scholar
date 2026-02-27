@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "dtic"
+version = "0.1.0"
+description = "dtic utils for aegis scholar"
+authors = ["shafe123 <ethan.h.shafer@gmail.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.13"
+selenium = "^4.40.0"
+azure-storage-blob = "^12.24.0"
+requests = "^2.31.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

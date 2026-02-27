@@ -114,8 +114,10 @@
                             "source": {
                                 "type": "string",
                                 "enum": [
-                                    "orcid",
+                                    "ror",
                                     "openalex",
+                                    "crossref",
+                                    "dtic",
                                     "other"
                                 ],
                                 "description": "Name of the data source"
@@ -177,7 +179,10 @@
                             "source": {
                                 "type": "string",
                                 "enum": [
+                                    "ror",
                                     "openalex",
+                                    "crossref",
+                                    "dtic",
                                     "other"
                                 ],
                                 "description": "Name of the data source"
@@ -311,6 +316,7 @@
                             "source": {
                                 "type": "string",
                                 "enum": [
+                                    "ror",
                                     "openalex",
                                     "crossref",
                                     "dtic",
