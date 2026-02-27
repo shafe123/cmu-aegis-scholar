@@ -78,11 +78,30 @@ class ExtractionStateManager:
         }
     
     def save_state(self):
-        """Save current state to file."""
+        """Save current state to file with retry logic for Windows file locking."""
         self.state['last_updated'] = datetime.now().isoformat()
-        with open(self.state_file, 'w', encoding='utf-8') as f:
-            json.dump(self.state, f, indent=2)
-        logger.debug("Extraction state saved")
+        
+        # Retry logic for occasional Windows file locking issues
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # Write to temp file first, then rename (atomic operation)
+                temp_file = self.state_file.with_suffix('.tmp')
+                with open(temp_file, 'w', encoding='utf-8') as f:
+                    json.dump(self.state, f, indent=2)
+                
+                # Atomic rename
+                temp_file.replace(self.state_file)
+                logger.debug("Extraction state saved")
+                return
+                
+            except (OSError, IOError) as e:
+                if attempt < max_retries - 1:
+                    logger.debug(f"Save state attempt {attempt + 1} failed, retrying: {e}")
+                    time.sleep(0.1)  # Brief delay before retry
+                else:
+                    logger.warning(f"Failed to save state after {max_retries} attempts: {e}")
+                    # Don't raise - continue processing without saving state
     
     def mark_processed(self, blob_name: str):
         """Mark a blob as successfully processed."""
