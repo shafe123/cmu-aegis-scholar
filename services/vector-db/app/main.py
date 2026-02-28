@@ -385,11 +385,17 @@ async def vector_search(request: VectorSearchRequest):
         all_results = []
         for hits in results:
             for hit in hits:
+                # Build entity dict from individual fields to avoid double-nesting
+                entity_dict = {}
+                if hasattr(hit, 'entity'):
+                    for field_name in hit.entity.fields:
+                        entity_dict[field_name] = hit.entity.get(field_name)
+                
                 all_results.append(
                     VectorSearchResult(
                         id=str(hit.id),
                         distance=hit.distance,
-                        entity=hit.entity.to_dict()
+                        entity=entity_dict
                     )
                 )
         
@@ -488,11 +494,17 @@ async def text_search(request: TextSearchRequest):
         all_results = []
         for hits in results:
             for hit in hits:
+                # Build entity dict from individual fields to avoid double-nesting
+                entity_dict = {}
+                if hasattr(hit, 'entity'):
+                    for field_name in hit.entity.fields:
+                        entity_dict[field_name] = hit.entity.get(field_name)
+                
                 all_results.append(
                     VectorSearchResult(
                         id=str(hit.id),
                         distance=hit.distance,
-                        entity=hit.entity.to_dict()
+                        entity=entity_dict
                     )
                 )
         
@@ -710,7 +722,8 @@ async def create_author_vector(request: CreateAuthorVectorRequest):
             )
         
         # Check if author already exists (optional, for logging purposes)
-        author_pk = f"author_{request.author_id}"
+        # Use author_id directly as primary key (it already has the prefix)
+        author_pk = request.author_id
         try:
             existing_entities = collection.query(
                 expr=f'id == "{author_pk}"',
