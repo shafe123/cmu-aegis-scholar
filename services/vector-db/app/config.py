@@ -1,8 +1,13 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 
 
 class Settings(BaseSettings):
     """Application settings."""
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8"
+    )
     
     # Milvus Configuration
     milvus_host: str = "localhost"
@@ -25,10 +30,6 @@ class Settings(BaseSettings):
     api_title: str = "AEGIS Scholar Vector DB Service"
     api_version: str = "0.1.0"
     api_description: str = "FastAPI service for Milvus vector search operations"
-    
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
 
 settings = Settings()

@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from pymilvus import connections, Collection, utility, DataType, FieldSchema, CollectionSchema
 from sentence_transformers import SentenceTransformer
+from contextlib import asynccontextmanager
 import numpy as np
 import logging
 
@@ -11,13 +12,6 @@ from app.config import settings
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Initialize FastAPI app
-app = FastAPI(
-    title=settings.api_title,
-    version=settings.api_version,
-    description=settings.api_description,
-)
 
 # Global variables (initialized on startup)
 embedding_model = None
@@ -199,9 +193,10 @@ def initialize_default_collection():
 
 
 # Application lifecycle events
-@app.on_event("startup")
-async def startup_event():
-    """Initialize Milvus connection and embedding model on startup."""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifecycle (startup and shutdown)."""
+    # Startup
     global embedding_model, _loaded_collections, _collection_schema_cache
     logger.info("Starting Vector DB Service...")
     get_milvus_connection()
@@ -236,13 +231,133 @@ async def startup_event():
             logger.info(f"Pre-loaded collection '{collection_name}' into memory")
     except Exception as e:
         logger.error(f"Error pre-loading default collection: {e}")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Clean up on shutdown."""
+    
+    yield
+    
+    # Shutdown
     logger.info("Shutting down Vector DB Service...")
     disconnect_milvus()
+
+
+# Initialize FastAPI app with lifespan
+app = FastAPI(
+    title=settings.api_title,
+    version=settings.api_version,
+    description=settings.api_description,
+    lifespan=lifespan,
+)
+
+
+# Helper Functions
+def _upsert_author_embedding(
+    collection_name: str,
+    author_id: str,
+    author_name: str,
+    embedding: list,
+    num_abstracts: int
+) -> tuple[bool, str]:
+    """
+    Shared helper function to upsert author embedding into collection.
+    
+    Args:
+        collection_name: Name of the collection
+        author_id: Author's ID (should already include any prefix)
+        author_name: Author's display name
+        embedding: Embedding vector as a list
+        num_abstracts: Number of abstracts used to create the embedding
+        
+    Returns:
+        Tuple of (is_update, action_description)
+        
+    Raises:
+        HTTPException: If collection not found or validation fails
+    """
+    # Validate embedding
+    if not embedding:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Embedding vector is required"
+        )
+    
+    embedding_dim = len(embedding)
+    
+    # Get collection from cache or load it
+    if collection_name in _loaded_collections:
+        collection = _loaded_collections[collection_name]
+        # Ensure collection is still loaded (connection might have been lost)
+        try:
+            # Test if collection is accessible
+            collection.num_entities
+        except Exception as e:
+            # Collection lost connection, reload it
+            logger.warning(f"Collection '{collection_name}' lost connection, reloading: {e}")
+            collection = Collection(collection_name)
+            collection.load()
+            _loaded_collections[collection_name] = collection
+    else:
+        # Collection not cached, load it now
+        if not utility.has_collection(collection_name):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Collection '{collection_name}' not found. Use the default collection or create it first."
+            )
+        collection = Collection(collection_name)
+        collection.load()
+        _loaded_collections[collection_name] = collection
+        logger.info(f"Loaded collection '{collection_name}' into memory (not in cache)")
+    
+    # Validate embedding dimension using cached schema or fetch it
+    if collection_name in _collection_schema_cache:
+        expected_dim = _collection_schema_cache[collection_name]['embedding_dim']
+    else:
+        # Schema not cached, fetch and cache it
+        schema_dict = collection.schema.to_dict()
+        embedding_field = next((f for f in schema_dict['fields'] if f['name'] == 'embedding'), None)
+        if embedding_field:
+            expected_dim = embedding_field['params']['dim']
+            _collection_schema_cache[collection_name] = {'embedding_dim': expected_dim}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Collection schema missing embedding field"
+            )
+    
+    if embedding_dim != expected_dim:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Embedding dimension mismatch. Expected {expected_dim}, got {embedding_dim}"
+        )
+    
+    # Check if author already exists (optional, for logging purposes)
+    author_pk = author_id
+    try:
+        existing_entities = collection.query(
+            expr=f'id == "{author_pk}"',
+            output_fields=["id"],
+            limit=1
+        )
+        is_update = len(existing_entities) > 0
+    except Exception as e:
+        # If query fails, assume it's a new insert
+        logger.warning(f"Could not check existence for {author_pk}: {e}")
+        is_update = False
+    
+    # Prepare entity data
+    entity_data = [
+        [author_pk],                          # id
+        [author_id],                          # author_id
+        [author_name],                        # author_name
+        [embedding],                          # embedding
+        [num_abstracts],                      # num_abstracts
+    ]
+    
+    # Upsert the data (insert if new, update if exists)
+    collection.upsert(entity_data)
+    # Note: Removed flush() - Milvus will batch writes automatically for better performance
+    # Data will be persisted naturally. For immediate persistence, flush can be called periodically.
+    
+    action = "updated" if is_update else "created"
+    return is_update, action
 
 
 # API Endpoints
@@ -589,38 +704,15 @@ async def create_author_embedding(request: CreateAuthorEmbeddingRequest):
         averaged_embedding = np.mean(abstract_embeddings, axis=0)
         embedding_dim = len(averaged_embedding)
         
-        # Get the collection (should already exist from startup initialization)
-        if not utility.has_collection(collection_name):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Collection '{collection_name}' not found. Use the default collection or create it first."
-            )
-        
-        collection = Collection(collection_name)
-        
-        # Check if author already exists
-        author_pk = f"author_{request.author_id}"
-        existing_entities = collection.query(
-            expr=f'id == "{author_pk}"',
-            output_fields=["id"],
-            limit=1
+        # Use shared helper to upsert the embedding
+        is_update, action = _upsert_author_embedding(
+            collection_name=collection_name,
+            author_id=request.author_id,
+            author_name=request.author_name,
+            embedding=averaged_embedding.tolist(),
+            num_abstracts=len(valid_abstracts)
         )
-        is_update = len(existing_entities) > 0
         
-        # Prepare entity data
-        entity_data = [
-            [author_pk],                      # id
-            [request.author_id],              # author_id
-            [request.author_name],            # author_name
-            [averaged_embedding.tolist()],    # embedding
-            [len(valid_abstracts)],           # num_abstracts
-        ]
-        
-        # Upsert the data (insert if new, update if exists)
-        collection.upsert(entity_data)
-        collection.flush()
-        
-        action = "updated" if is_update else "created"
         logger.info(f"Successfully {action} embedding for author {request.author_id} in collection '{collection_name}'")
         
         return CreateAuthorEmbeddingResponse(
@@ -674,83 +766,15 @@ async def create_author_vector(request: CreateAuthorVectorRequest):
         
         embedding_dim = len(request.embedding)
         
-        # Get collection from cache or load it
-        if collection_name in _loaded_collections:
-            collection = _loaded_collections[collection_name]
-            # Ensure collection is still loaded (connection might have been lost)
-            try:
-                # Test if collection is accessible
-                collection.num_entities
-            except Exception as e:
-                # Collection lost connection, reload it
-                logger.warning(f"Collection '{collection_name}' lost connection, reloading: {e}")
-                collection = Collection(collection_name)
-                collection.load()
-                _loaded_collections[collection_name] = collection
-        else:
-            # Collection not cached, load it now
-            if not utility.has_collection(collection_name):
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Collection '{collection_name}' not found. Use the default collection or create it first."
-                )
-            collection = Collection(collection_name)
-            collection.load()
-            _loaded_collections[collection_name] = collection
-            logger.info(f"Loaded collection '{collection_name}' into memory (not in cache)")
+        # Use shared helper to upsert the embedding
+        is_update, action = _upsert_author_embedding(
+            collection_name=collection_name,
+            author_id=request.author_id,
+            author_name=request.author_name,
+            embedding=request.embedding,
+            num_abstracts=request.num_abstracts or 0
+        )
         
-        # Validate embedding dimension using cached schema or fetch it
-        if collection_name in _collection_schema_cache:
-            expected_dim = _collection_schema_cache[collection_name]['embedding_dim']
-        else:
-            # Schema not cached, fetch and cache it
-            schema_dict = collection.schema.to_dict()
-            embedding_field = next((f for f in schema_dict['fields'] if f['name'] == 'embedding'), None)
-            if embedding_field:
-                expected_dim = embedding_field['params']['dim']
-                _collection_schema_cache[collection_name] = {'embedding_dim': expected_dim}
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Collection schema missing embedding field"
-                )
-        
-        if embedding_dim != expected_dim:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Embedding dimension mismatch. Expected {expected_dim}, got {embedding_dim}"
-            )
-        
-        # Check if author already exists (optional, for logging purposes)
-        # Use author_id directly as primary key (it already has the prefix)
-        author_pk = request.author_id
-        try:
-            existing_entities = collection.query(
-                expr=f'id == "{author_pk}"',
-                output_fields=["id"],
-                limit=1
-            )
-            is_update = len(existing_entities) > 0
-        except Exception as e:
-            # If query fails, assume it's a new insert
-            logger.warning(f"Could not check existence for {author_pk}: {e}")
-            is_update = False
-        
-        # Prepare entity data
-        entity_data = [
-            [author_pk],                          # id
-            [request.author_id],                  # author_id
-            [request.author_name],                # author_name
-            [request.embedding],                  # embedding (pre-computed)
-            [request.num_abstracts or 0],         # num_abstracts
-        ]
-        
-        # Upsert the data (insert if new, update if exists)
-        collection.upsert(entity_data)
-        # Note: Removed flush() - Milvus will batch writes automatically for better performance
-        # Data will be persisted naturally. For immediate persistence, flush can be called periodically.
-        
-        action = "updated" if is_update else "created"
         logger.info(f"Successfully {action} vector for author {request.author_id} in collection '{collection_name}'")
         
         return CreateAuthorVectorResponse(
