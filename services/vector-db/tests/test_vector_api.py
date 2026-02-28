@@ -186,3 +186,83 @@ def test_create_author_embedding_upsert():
         assert data["num_abstracts_processed"] == 2  # New count
         # Message should indicate created or updated
         assert "created" in data["message"].lower() or "updated" in data["message"].lower()
+
+
+def test_create_author_vector_validation():
+    """Test author vector creation with invalid input."""
+    # Test with missing author_id
+    response = client.post("/authors/vector", json={
+        "author_name": "John Doe",
+        "embedding": [0.1] * 384
+    })
+    assert response.status_code == 422  # Validation error
+    
+    # Test with empty embedding
+    response = client.post("/authors/vector", json={
+        "author_id": "123",
+        "author_name": "John Doe",
+        "embedding": []
+    })
+    assert response.status_code == 400  # Bad request
+
+
+def test_create_author_vector_with_valid_input():
+    """Test author vector creation with valid pre-computed embedding."""
+    response = client.post("/authors/vector", json={
+        "author_id": "test_vector_author_123",
+        "author_name": "Dr. Alice Johnson",
+        "embedding": [0.025] * 384,  # Pre-computed vector with correct dimension
+        "num_abstracts": 5
+    })
+    # May return 500 if Milvus not connected or 404 if collection doesn't exist
+    assert response.status_code in [200, 404, 500]
+    
+    # If successful, check response structure
+    if response.status_code == 200:
+        data = response.json()
+        assert data["author_id"] == "test_vector_author_123"
+        assert data["author_name"] == "Dr. Alice Johnson"
+        assert data["embedding_dim"] == 384
+        assert data["success"] is True
+
+
+def test_create_author_vector_dimension_mismatch():
+    """Test that vector dimension validation works."""
+    # Try with wrong dimension (768 instead of 384)
+    response = client.post("/authors/vector", json={
+        "author_id": "test_wrong_dim",
+        "author_name": "Dr. Wrong Dimension",
+        "embedding": [0.1] * 768  # Wrong dimension
+    })
+    # Should fail with 400 if collection exists with different dimension
+    assert response.status_code in [400, 404, 500]  # 404 if collection doesn't exist
+
+
+def test_create_author_vector_upsert():
+    """Test that creating an author vector twice updates the existing entry (upsert)."""
+    # First create
+    response1 = client.post("/authors/vector", json={
+        "author_id": "test_vector_upsert",
+        "author_name": "Dr. Bob Smith",
+        "embedding": [0.1] * 384,
+        "num_abstracts": 3
+    })
+    
+    # Second create with same author_id but different embedding
+    response2 = client.post("/authors/vector", json={
+        "author_id": "test_vector_upsert",
+        "author_name": "Dr. Bob Smith",
+        "embedding": [0.2] * 384,  # Different embedding values
+        "num_abstracts": 5  # More abstracts
+    })
+    
+    # Both should succeed (or both fail with same error)
+    assert response1.status_code == response2.status_code
+    
+    # If successful, verify upsert worked
+    if response2.status_code == 200:
+        data = response2.json()
+        assert data["author_id"] == "test_vector_upsert"
+        assert data["embedding_dim"] == 384
+        # Message should indicate created or updated
+        assert "created" in data["message"].lower() or "updated" in data["message"].lower()

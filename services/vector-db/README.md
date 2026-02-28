@@ -191,6 +191,7 @@ For natural language text queries (automatically converted to embeddings):
 
 ### Authors
 - `POST /authors/embeddings` - Create or update author embedding from abstracts (upsert operation)
+- `POST /authors/vector` - Create or update author with pre-computed embedding vector (upsert operation)
 
 #### Create Author Embedding Request Example
 
@@ -245,6 +246,58 @@ For natural language text queries (automatically converted to embeddings):
 - If the author doesn't exist, a new entry is created
 - If the author already exists (same `author_id`), their embedding is updated with the new averaged values
 - This allows you to refresh author embeddings as new papers become available
+
+#### Create Author Vector Request Example
+
+For uploading pre-computed embedding vectors:
+
+```json
+{
+  "author_id": "A123456",
+  "author_name": "Dr. Jane Smith",
+  "embedding": [0.025, -0.134, 0.892, ...],
+  "num_abstracts": 15,
+  "collection_name": "aegis_vectors",
+  "metadata": {
+    "source": "external_system",
+    "computed_date": "2024-01-15"
+  }
+}
+```
+
+**Parameters:**
+- `author_id` (required): Unique identifier for the author
+- `author_name` (required): Name of the author
+- `embedding` (required): Pre-computed embedding vector (must match collection dimension)
+- `num_abstracts` (optional): Number of abstracts used to compute the embedding
+- `collection_name` (optional): Target collection (defaults to `aegis_vectors`)
+- `metadata` (optional): Additional metadata
+
+#### Create Author Vector Response Example
+
+```json
+{
+  "author_id": "A123456",
+  "author_name": "Dr. Jane Smith",
+  "embedding_dim": 384,
+  "collection_name": "aegis_vectors",
+  "success": true,
+  "message": "Author vector created and stored successfully"
+}
+```
+
+**When to use:**
+- `/authors/embeddings`: When you have raw abstracts and want the service to compute embeddings
+- `/authors/vector`: When you already have pre-computed embeddings from external models or processes
+
+**Use Cases for `/authors/vector`:**
+- Batch uploads from externally computed embeddings
+- Integration with different embedding models
+- Migration from other vector databases
+- Custom embedding pipelines
+
+**Note:** The vector dimension must match the collection schema (384 for default `all-MiniLM-L6-v2` model). The endpoint validates the dimension before insertion.
+
 
 **Note:** If using a custom collection name (not the default), ensure the collection exists and has the correct schema before calling this endpoint.
 
