@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import app
+from app.config import AVAILABLE_MODELS
 
 client = TestClient(app)
 
@@ -28,6 +29,33 @@ def test_list_collections_endpoint():
     """Test the list collections endpoint."""
     response = client.get("/collections")
     assert response.status_code in [200, 500]  # May fail if Milvus not connected
+
+
+def test_models_endpoint():
+    """Test the GET /models endpoint."""
+    response = client.get("/models")
+    assert response.status_code == 200
+    
+    data = response.json()
+    assert "models" in data
+    assert "default_model" in data
+    assert isinstance(data["models"], list)
+    assert len(data["models"]) > 0
+    
+    # Verify each model has required fields
+    for model in data["models"]:
+        assert "name" in model
+        assert "description" in model
+        assert "loaded" in model
+        assert isinstance(model["loaded"], bool)
+        # dimension can be None for some models before loading
+    
+    # Verify default model is in the list
+    model_names = [m["name"] for m in data["models"]]
+    assert data["default_model"] in model_names
+    
+    # Verify default model structure matches config
+    assert data["default_model"] in AVAILABLE_MODELS
 
 
 def test_vector_search_validation():
@@ -116,6 +144,32 @@ def test_text_search_with_valid_input():
         assert data["pagination"]["limit"] == 5
 
 
+def test_text_search_with_model_name():
+    """Test text search with explicit model_name parameter."""
+    # Test with default model explicitly specified
+    response = client.post("/search/text", json={
+        "query_text": "artificial intelligence and neural networks",
+        "model_name": "sentence-transformers/all-MiniLM-L6-v2",
+        "limit": 3
+    })
+    assert response.status_code in [200, 404, 500, 503]
+    
+    if response.status_code == 200:
+        data = response.json()
+        assert "results" in data
+        assert data["pagination"]["limit"] == 3
+
+
+def test_text_search_with_invalid_model():
+    """Test text search with invalid model name."""
+    response = client.post("/search/text", json={
+        "query_text": "test query",
+        "model_name": "nonexistent/model"
+    })
+    # Should return 400 for invalid model
+    assert response.status_code in [400, 404, 500]
+
+
 def test_create_author_embedding_validation():
     """Test author embedding creation with invalid input."""
     # Test with missing author_id
@@ -155,6 +209,38 @@ def test_create_author_embedding_with_valid_input():
         assert data["num_abstracts_processed"] == 2
         assert data["success"] is True
         assert "embedding_dim" in data
+
+
+def test_create_author_embedding_with_model_name():
+    """Test author embedding creation with explicit model_name."""
+    response = client.post("/authors/embeddings", json={
+        "author_id": "test_author_model_explicit",
+        "author_name": "Dr. Model Test",
+        "abstracts": [
+            "Testing with explicit model specification.",
+            "This should use the specified embedding model."
+        ],
+        "model_name": "sentence-transformers/all-MiniLM-L6-v2"
+    })
+    assert response.status_code in [200, 500, 503]
+    
+    if response.status_code == 200:
+        data = response.json()
+        assert data["author_id"] == "test_author_model_explicit"
+        assert data["embedding_dim"] == 384  # all-MiniLM-L6-v2 dimension
+        assert data["success"] is True
+
+
+def test_create_author_embedding_with_invalid_model():
+    """Test author embedding creation with invalid model name."""
+    response = client.post("/authors/embeddings", json={
+        "author_id": "test_author_invalid_model",
+        "author_name": "Dr. Invalid Model",
+        "abstracts": ["Test abstract"],
+        "model_name": "invalid/nonexistent-model"
+    })
+    # Should return 400 for invalid model
+    assert response.status_code in [400, 500]
 
 
 def test_create_author_embedding_upsert():
@@ -238,6 +324,40 @@ def test_create_author_vector_dimension_mismatch():
     assert response.status_code in [400, 404, 500]  # 404 if collection doesn't exist
 
 
+def test_create_author_vector_with_model_name_validation():
+    """Test vector dimension validation with explicit model_name."""
+    # Test with correct dimension for specified model
+    response = client.post("/authors/vector", json={
+        "author_id": "test_vector_model_match",
+        "author_name": "Dr. Model Match",
+        "embedding": [0.1] * 384,  # Correct dimension for all-MiniLM-L6-v2
+        "model_name": "sentence-transformers/all-MiniLM-L6-v2"
+    })
+    assert response.status_code in [200, 404, 500]
+    
+    # Test with dimension mismatch for specified model
+    response = client.post("/authors/vector", json={
+        "author_id": "test_vector_model_mismatch",
+        "author_name": "Dr. Model Mismatch",
+        "embedding": [0.1] * 768,  # Wrong dimension for all-MiniLM-L6-v2 (384)
+        "model_name": "sentence-transformers/all-MiniLM-L6-v2"
+    })
+    # Should return 400 for dimension mismatch
+    assert response.status_code in [400, 404, 500]
+
+
+def test_create_author_vector_with_invalid_model():
+    """Test vector upload with invalid model name."""
+    response = client.post("/authors/vector", json={
+        "author_id": "test_vector_invalid_model",
+        "author_name": "Dr. Invalid Vector Model",
+        "embedding": [0.1] * 384,
+        "model_name": "invalid/model-name"
+    })
+    # Should return 400 for invalid model
+    assert response.status_code in [400, 404, 500]
+
+
 def test_create_author_vector_upsert():
     """Test that creating an author vector twice updates the existing entry (upsert)."""
     # First create
@@ -266,3 +386,102 @@ def test_create_author_vector_upsert():
         assert data["embedding_dim"] == 384
         # Message should indicate created or updated
         assert "created" in data["message"].lower() or "updated" in data["message"].lower()
+
+
+def test_model_consistency_workflow():
+    """Test that using the same model for embedding and searching works consistently."""
+    test_author_id = "test_consistency_author"
+    test_model = "sentence-transformers/all-MiniLM-L6-v2"
+    
+    # Create an author embedding with specific model
+    create_response = client.post("/authors/embeddings", json={
+        "author_id": test_author_id,
+        "author_name": "Dr. Consistency Test",
+        "abstracts": [
+            "Machine learning and artificial intelligence research.",
+            "Deep learning applications in computer vision."
+        ],
+        "model_name": test_model
+    })
+    
+    # If creation succeeded, try searching with same model
+    if create_response.status_code == 200:
+        search_response = client.post("/search/text", json={
+            "query_text": "machine learning deep learning",
+            "model_name": test_model,
+            "limit": 5
+        })
+        
+        # Search should also succeed
+        assert search_response.status_code == 200
+        
+        data = search_response.json()
+        assert "results" in data
+        # We may or may not find our specific author depending on similarity
+
+
+def test_multiple_models_different_dimensions():
+    """Test that different models can be used (if they support different dimensions)."""
+    # Get available models
+    models_response = client.get("/models")
+    if models_response.status_code != 200:
+        return  # Skip if can't get models
+    
+    models_data = models_response.json()
+    available_models = models_data["models"]
+    
+    # Find models with different dimensions (if available)
+    dimensions_found = {}
+    for model in available_models:
+        if "dimension" in model and model["dimension"] is not None:
+            dim = model["dimension"]
+            if dim not in dimensions_found:
+                dimensions_found[dim] = model["name"]
+    
+    # If we have at least one model, test it
+    if len(dimensions_found) > 0:
+        for dim, model_name in dimensions_found.items():
+            # Test creating embedding with this model
+            response = client.post("/authors/embeddings", json={
+                "author_id": f"test_multi_model_{dim}",
+                "author_name": f"Dr. Test {dim}D",
+                "abstracts": ["Test abstract for multi-model support"],
+                "model_name": model_name
+            })
+            
+            # Should succeed or fail gracefully (model might need loading)
+            assert response.status_code in [200, 400, 500, 503]
+            
+            if response.status_code == 200:
+                data = response.json()
+                assert data["embedding_dim"] == dim
+
+
+def test_default_model_fallback():
+    """Test that endpoints use default model when model_name is not specified."""
+    # Get the default model
+    models_response = client.get("/models")
+    if models_response.status_code != 200:
+        return
+    
+    default_model = models_response.json()["default_model"]
+    default_dim = None
+    for model in models_response.json()["models"]:
+        if model["name"] == default_model and model.get("dimension"):
+            default_dim = model["dimension"]
+            break
+    
+    if default_dim is None:
+        return  # Can't verify without dimension info
+    
+    # Create embedding without specifying model (should use default)
+    response = client.post("/authors/embeddings", json={
+        "author_id": "test_default_fallback",
+        "author_name": "Dr. Default Test",
+        "abstracts": ["Testing default model fallback behavior"]
+    })
+    
+    if response.status_code == 200:
+        data = response.json()
+        # Should use default model's dimension
+        assert data["embedding_dim"] == default_dim

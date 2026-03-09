@@ -1,343 +1,110 @@
 from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from pymilvus import connections, Collection, utility, DataType, FieldSchema, CollectionSchema
 from sentence_transformers import SentenceTransformer
 from contextlib import asynccontextmanager
 import numpy as np
 import logging
 
-from app.config import settings
+from app.config import settings, AVAILABLE_MODELS
+from app.schemas import (
+    VectorSearchRequest,
+    TextSearchRequest,
+    CreateAuthorEmbeddingRequest,
+    CreateAuthorVectorRequest,
+    VectorSearchResult,
+    PaginationMetadata,
+    VectorSearchResponse,
+    HealthResponse,
+    CollectionInfo,
+    ModelInfo,
+    ModelsResponse,
+    CreateAuthorEmbeddingResponse,
+    CreateAuthorVectorResponse,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Global variables (initialized on startup)
-embedding_model = None
+embedding_models: Dict[str, SentenceTransformer] = {}  # Cache of loaded models
+model_dimensions: Dict[str, int] = {}  # Cache of model dimensions
 
 # Cache for loaded collections and their schema info
 _loaded_collections: Dict[str, Collection] = {}
 _collection_schema_cache: Dict[str, Dict[str, Any]] = {}
 
 
-# Pydantic models for request/response
-class VectorSearchRequest(BaseModel):
-    """Request model for vector search."""
-    query_vector: List[float] = Field(
-        ..., 
-        description="Query vector for similarity search",
-        json_schema_extra={"example": [0.023, -0.145, 0.089] + [0.0] * 381}  # 384-dim vector
-    )
-    collection_name: Optional[str] = Field(
-        None, 
-        description="Collection to search in",
-        json_schema_extra={"example": "aegis_vectors"}
-    )
-    limit: int = Field(
-        10, 
-        ge=1, 
-        le=100, 
-        description="Maximum number of results to return per page",
-        json_schema_extra={"example": 10}
-    )
-    offset: int = Field(
-        0, 
-        ge=0, 
-        description="Number of results to skip for pagination",
-        json_schema_extra={"example": 0}
-    )
-    output_fields: Optional[List[str]] = Field(
-        None, 
-        description="Fields to include in results",
-        json_schema_extra={"example": ["author_id", "author_name", "num_abstracts"]}
-    )
-    filter_expr: Optional[str] = Field(
-        None, 
-        description="Filter expression for search",
-        json_schema_extra={"example": "num_abstracts > 10"}
-    )
+# Model management functions
+def get_or_load_model(model_name: str) -> SentenceTransformer:
+    """
+    Get a model from cache or load it if not already loaded.
+    
+    Args:
+        model_name: Name of the model to load
+        
+    Returns:
+        SentenceTransformer: The loaded model
+        
+    Raises:
+        ValueError: If model_name is not in AVAILABLE_MODELS
+        RuntimeError: If model fails to load
+    """
+    if model_name not in AVAILABLE_MODELS:
+        available = ", ".join(AVAILABLE_MODELS.keys())
+        raise ValueError(f"Model '{model_name}' is not available. Available models: {available}")
+    
+    # Return from cache if already loaded
+    if model_name in embedding_models:
+        return embedding_models[model_name]
+    
+    # Load the model
+    try:
+        logger.info(f"Loading model: {model_name}")
+        
+        # Check if model requires trust_remote_code
+        trust_remote_code = AVAILABLE_MODELS[model_name].get("trust_remote_code", False)
+        model = SentenceTransformer(model_name, trust_remote_code=trust_remote_code)
+        
+        embedding_models[model_name] = model
+        
+        # Cache the dimension
+        dim = model.get_sentence_embedding_dimension()
+        model_dimensions[model_name] = dim
+        
+        # Update AVAILABLE_MODELS with actual dimension if it was None
+        if AVAILABLE_MODELS[model_name]["dimension"] is None:
+            AVAILABLE_MODELS[model_name]["dimension"] = dim
+        
+        logger.info(f"Model '{model_name}' loaded successfully (dimension: {dim})")
+        return model
+    except Exception as e:
+        logger.error(f"Failed to load model '{model_name}': {e}")
+        raise RuntimeError(f"Failed to load model '{model_name}': {str(e)}")
 
 
-class TextSearchRequest(BaseModel):
-    """Request model for text-based search."""
-    query_text: str = Field(
-        ..., 
-        min_length=1, 
-        description="Query text to search for",
-        json_schema_extra={"example": "adversarial machine learning network security"}
-    )
-    collection_name: Optional[str] = Field(
-        None, 
-        description="Collection to search in",
-        json_schema_extra={"example": "aegis_vectors"}
-    )
-    limit: int = Field(
-        10, 
-        ge=1, 
-        le=100, 
-        description="Maximum number of results to return per page",
-        json_schema_extra={"example": 5}
-    )
-    offset: int = Field(
-        0, 
-        ge=0, 
-        description="Number of results to skip for pagination",
-        json_schema_extra={"example": 0}
-    )
-    output_fields: Optional[List[str]] = Field(
-        None, 
-        description="Fields to include in results",
-        json_schema_extra={"example": ["author_id", "author_name", "num_abstracts"]}
-    )
-    filter_expr: Optional[str] = Field(
-        None, 
-        description="Filter expression for search",
-        json_schema_extra={"example": "num_abstracts >= 5"}
-    )
-
-
-class VectorSearchResult(BaseModel):
-    """Single search result."""
-    id: str = Field(
-        ...,
-        json_schema_extra={"example": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"}
-    )
-    distance: float = Field(
-        ...,
-        json_schema_extra={"example": 0.4523}
-    )
-    entity: Dict[str, Any] = Field(
-        ...,
-        json_schema_extra={"example": {
-            "author_id": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
-            "author_name": "Dr. Sarah Chen",
-            "num_abstracts": 124
-        }}
-    )
-
-
-class PaginationMetadata(BaseModel):
-    """Pagination metadata."""
-    offset: int = Field(
-        ...,
-        json_schema_extra={"example": 0}
-    )
-    limit: int = Field(
-        ...,
-        json_schema_extra={"example": 10}
-    )
-    returned: int = Field(
-        ...,
-        json_schema_extra={"example": 5}
-    )
-    has_more: bool = Field(
-        ...,
-        json_schema_extra={"example": True}
-    )
-
-
-class VectorSearchResponse(BaseModel):
-    """Response model for vector search."""
-    results: List[VectorSearchResult] = Field(
-        ...,
-        json_schema_extra={"example": [
-            {
-                "id": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
-                "distance": 0.4523,
-                "entity": {
-                    "author_id": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
-                    "author_name": "Dr. Sarah Chen",
-                    "num_abstracts": 124
-                }
-            },
-            {
-                "id": "author_e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
-                "distance": 0.5891,
-                "entity": {
-                    "author_id": "author_e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
-                    "author_name": "Dr. Michael Rodriguez",
-                    "num_abstracts": 98
-                }
-            }
-        ]}
-    )
-    collection_name: str = Field(
-        ...,
-        json_schema_extra={"example": "aegis_vectors"}
-    )
-    search_time_ms: float = Field(
-        ...,
-        json_schema_extra={"example": 45.23}
-    )
-    pagination: PaginationMetadata = Field(
-        ...,
-        json_schema_extra={"example": {
-            "offset": 0,
-            "limit": 10,
-            "returned": 5,
-            "has_more": True
-        }}
-    )
-
-
-class HealthResponse(BaseModel):
-    """Health check response."""
-    status: str = Field(
-        ...,
-        json_schema_extra={"example": "healthy"}
-    )
-    milvus_connected: bool = Field(
-        ...,
-        json_schema_extra={"example": True}
-    )
-    collections: List[str] = Field(
-        ...,
-        json_schema_extra={"example": ["aegis_vectors", "test_collection"]}
-    )
-
-
-class CollectionInfo(BaseModel):
-    """Collection information."""
-    name: str = Field(
-        ...,
-        json_schema_extra={"example": "aegis_vectors"}
-    )
-    num_entities: int = Field(
-        ...,
-        json_schema_extra={"example": 15427}
-    )
-    description: Optional[str] = Field(
-        None,
-        json_schema_extra={"example": "Author embeddings from averaged paper abstracts"}
-    )
-
-
-class CreateAuthorEmbeddingRequest(BaseModel):
-    """Request model for creating or updating author embedding from abstracts."""
-    author_id: str = Field(
-        ..., 
-        description="Unique identifier for the author",
-        json_schema_extra={"example": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"}
-    )
-    author_name: str = Field(
-        ..., 
-        description="Name of the author",
-        json_schema_extra={"example": "Dr. Sarah Chen"}
-    )
-    abstracts: List[str] = Field(
-        ..., 
-        min_length=1, 
-        description="List of paper abstracts by the author",
-        json_schema_extra={"example": [
-            "This paper presents a comprehensive study of adversarial attacks against machine learning-based network security systems. We demonstrate novel attack vectors and propose robust defense mechanisms.",
-            "We explore the application of deep neural networks for real-time intrusion detection in enterprise networks. Our models achieve 98.7% accuracy with low false positive rates."
-        ]}
-    )
-    collection_name: Optional[str] = Field(
-        None, 
-        description="Collection to store the embedding in",
-        json_schema_extra={"example": "aegis_vectors"}
-    )
-    metadata: Optional[Dict[str, Any]] = Field(
-        default_factory=dict, 
-        description="Additional metadata for the author",
-        json_schema_extra={"example": {"h_index": 42, "citation_count": 8924, "works_count": 156}}
-    )
-
-
-class CreateAuthorEmbeddingResponse(BaseModel):
-    """Response model for author embedding creation."""
-    author_id: str = Field(
-        ...,
-        json_schema_extra={"example": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"}
-    )
-    author_name: str = Field(
-        ...,
-        json_schema_extra={"example": "Dr. Sarah Chen"}
-    )
-    embedding_dim: int = Field(
-        ...,
-        json_schema_extra={"example": 384}
-    )
-    num_abstracts_processed: int = Field(
-        ...,
-        json_schema_extra={"example": 2}
-    )
-    collection_name: str = Field(
-        ...,
-        json_schema_extra={"example": "aegis_vectors"}
-    )
-    success: bool = Field(
-        ...,
-        json_schema_extra={"example": True}
-    )
-    message: str = Field(
-        ...,
-        json_schema_extra={"example": "Author embedding created and stored successfully"}
-    )
-
-
-class CreateAuthorVectorRequest(BaseModel):
-    """Request model for creating or updating author with pre-computed vector."""
-    author_id: str = Field(
-        ..., 
-        description="Unique identifier for the author",
-        json_schema_extra={"example": "author_e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"}
-    )
-    author_name: str = Field(
-        ..., 
-        description="Name of the author",
-        json_schema_extra={"example": "Dr. Michael Rodriguez"}
-    )
-    embedding: List[float] = Field(
-        ..., 
-        description="Pre-computed embedding vector for the author",
-        json_schema_extra={"example": [0.025, -0.134, 0.078] + [0.0] * 381}  # 384-dim vector
-    )
-    num_abstracts: Optional[int] = Field(
-        None, 
-        description="Number of abstracts used to compute the embedding",
-        json_schema_extra={"example": 132}
-    )
-    collection_name: Optional[str] = Field(
-        None, 
-        description="Collection to store the embedding in",
-        json_schema_extra={"example": "aegis_vectors"}
-    )
-    metadata: Optional[Dict[str, Any]] = Field(
-        default_factory=dict, 
-        description="Additional metadata for the author",
-        json_schema_extra={"example": {"h_index": 38, "citation_count": 7234, "works_count": 132}}
-    )
-
-
-class CreateAuthorVectorResponse(BaseModel):
-    """Response model for author vector upload."""
-    author_id: str = Field(
-        ...,
-        json_schema_extra={"example": "author_e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"}
-    )
-    author_name: str = Field(
-        ...,
-        json_schema_extra={"example": "Dr. Michael Rodriguez"}
-    )
-    embedding_dim: int = Field(
-        ...,
-        json_schema_extra={"example": 384}
-    )
-    collection_name: str = Field(
-        ...,
-        json_schema_extra={"example": "aegis_vectors"}
-    )
-    success: bool = Field(
-        ...,
-        json_schema_extra={"example": True}
-    )
-    message: str = Field(
-        ...,
-        json_schema_extra={"example": "Author vector created and stored successfully"}
-    )
+def get_model_dimension(model_name: str) -> int:
+    """
+    Get the dimension of a model without loading it if possible.
+    
+    Args:
+        model_name: Name of the model
+        
+    Returns:
+        int: Dimension of the model's embeddings
+    """
+    # Check cache first
+    if model_name in model_dimensions:
+        return model_dimensions[model_name]
+    
+    # Check config
+    if model_name in AVAILABLE_MODELS and AVAILABLE_MODELS[model_name]["dimension"] is not None:
+        return AVAILABLE_MODELS[model_name]["dimension"]
+    
+    # Need to load the model to determine dimension
+    model = get_or_load_model(model_name)
+    return model.get_sentence_embedding_dimension()
 
 
 # Milvus connection management
@@ -375,13 +142,14 @@ def initialize_default_collection():
         if not utility.has_collection(collection_name):
             logger.info(f"Collection '{collection_name}' does not exist. Creating it...")
             
-            # Get embedding dimension from the model
-            if embedding_model is None:
-                logger.warning("Embedding model not loaded. Skipping collection initialization.")
+            # Get or load the default embedding model to determine dimension
+            try:
+                default_model = get_or_load_model(settings.default_embedding_model)
+                embedding_dim = default_model.get_sentence_embedding_dimension()
+            except Exception as e:
+                logger.warning(f"Could not load default model for collection initialization: {e}")
+                logger.warning("Skipping collection initialization.")
                 return
-            
-            # Use the model's actual dimension
-            embedding_dim = embedding_model.get_sentence_embedding_dimension()
             
             # Define schema
             fields = [
@@ -418,18 +186,18 @@ def initialize_default_collection():
 async def lifespan(app: FastAPI):
     """Manage application lifecycle (startup and shutdown)."""
     # Startup
-    global embedding_model, _loaded_collections, _collection_schema_cache
+    global embedding_models, model_dimensions, _loaded_collections, _collection_schema_cache
     logger.info("Starting Vector DB Service...")
     get_milvus_connection()
     
-    # Initialize embedding model
-    logger.info(f"Loading embedding model: {settings.embedding_model_name}")
+    # Preload default embedding model
+    logger.info(f"Preloading default embedding model: {settings.default_embedding_model}")
     try:
-        embedding_model = SentenceTransformer(settings.embedding_model_name)
-        logger.info("Embedding model loaded successfully")
+        # Load model into cache (side effect is the purpose)
+        get_or_load_model(settings.default_embedding_model)
+        logger.info(f"Default model loaded successfully (dimension: {model_dimensions[settings.default_embedding_model]})")
     except Exception as e:
-        logger.error(f"Failed to load embedding model: {e}")
-        embedding_model = None
+        logger.error(f"Failed to load default embedding model: {e}")
     
     # Initialize default collection
     initialize_default_collection()
@@ -672,6 +440,42 @@ async def get_collection_info(collection_name: str):
         )
 
 
+@app.get("/models", response_model=ModelsResponse, tags=["Models"])
+async def list_models():
+    """
+    List all available embedding models.
+    
+    Returns information about each model including:
+    - Model name
+    - Embedding dimension (if known)
+    - Description
+    - Whether the model is currently loaded in memory
+    """
+    try:
+        models_list = []
+        
+        for model_name, model_config in AVAILABLE_MODELS.items():
+            models_list.append(
+                ModelInfo(
+                    name=model_name,
+                    dimension=model_config["dimension"],
+                    description=model_config["description"],
+                    loaded=model_name in embedding_models
+                )
+            )
+        
+        return ModelsResponse(
+            models=models_list,
+            default_model=settings.default_embedding_model
+        )
+    except Exception as e:
+        logger.error(f"Error listing models: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list models: {str(e)}"
+        )
+
+
 @app.post("/search/vector", response_model=VectorSearchResponse, tags=["Search"])
 async def vector_search(request: VectorSearchRequest):
     """
@@ -768,11 +572,11 @@ async def text_search(request: TextSearchRequest):
     
     This endpoint:
     1. Takes a text query
-    2. Converts the text to an embedding vector using the sentence transformer model
+    2. Converts the text to an embedding vector using the specified (or default) model
     3. Performs vector similarity search with the generated embedding
     
     Args:
-        request: TextSearchRequest containing query text and search parameters
+        request: TextSearchRequest containing query text, model name, and search parameters
     
     Returns:
         VectorSearchResponse with search results
@@ -780,13 +584,16 @@ async def text_search(request: TextSearchRequest):
     import time
     
     collection_name = request.collection_name or settings.default_collection
+    model_name = request.model_name or settings.default_embedding_model
     
     try:
-        # Check if embedding model is loaded
-        if embedding_model is None:
+        # Get or load the embedding model
+        try:
+            model = get_or_load_model(model_name)
+        except (ValueError, RuntimeError) as e:
             raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Embedding model not available. Service may still be initializing."
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
             )
         
         # Check if collection exists
@@ -801,8 +608,8 @@ async def text_search(request: TextSearchRequest):
         collection.load()
         
         # Convert text query to embedding
-        logger.info(f"Converting query text to embedding: '{request.query_text[:50]}...'")
-        query_embedding = embedding_model.encode(
+        logger.info(f"Converting query text to embedding using model '{model_name}': '{request.query_text[:50]}...'")
+        query_embedding = model.encode(
             [request.query_text],
             show_progress_bar=False,
             convert_to_numpy=True
@@ -877,24 +684,27 @@ async def create_author_embedding(request: CreateAuthorEmbeddingRequest):
     
     This endpoint:
     1. Takes a list of paper abstracts for an author
-    2. Converts each abstract into an embedding vector
+    2. Converts each abstract into an embedding vector using the specified (or default) model
     3. Averages the embeddings to create a single author representation
     4. Upserts the averaged embedding in the vector database (creates new or updates existing)
     
     Args:
-        request: CreateAuthorEmbeddingRequest containing author info and abstracts
+        request: CreateAuthorEmbeddingRequest containing author info, abstracts, and optional model name
     
     Returns:
         CreateAuthorEmbeddingResponse with success status
     """
     collection_name = request.collection_name or settings.default_collection
+    model_name = request.model_name or settings.default_embedding_model
     
     try:
-        # Check if embedding model is loaded
-        if embedding_model is None:
+        # Get or load the embedding model
+        try:
+            model = get_or_load_model(model_name)
+        except (ValueError, RuntimeError) as e:
             raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Embedding model not available. Service may still be initializing."
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
             )
         
         # Validate abstracts
@@ -912,10 +722,10 @@ async def create_author_embedding(request: CreateAuthorEmbeddingRequest):
                 detail="No valid abstracts provided (all were empty)"
             )
         
-        logger.info(f"Processing {len(valid_abstracts)} abstracts for author {request.author_id}")
+        logger.info(f"Processing {len(valid_abstracts)} abstracts for author {request.author_id} using model '{model_name}'")
         
         # Generate embeddings for all abstracts
-        abstract_embeddings = embedding_model.encode(
+        abstract_embeddings = model.encode(
             valid_abstracts,
             show_progress_bar=False,
             convert_to_numpy=True
@@ -963,14 +773,14 @@ async def create_author_vector(request: CreateAuthorVectorRequest):
     
     This endpoint:
     1. Takes a pre-computed embedding vector for an author
-    2. Validates the vector dimension matches the collection schema
+    2. Validates the vector dimension matches the specified model or collection schema
     3. Upserts the embedding in the vector database (creates new or updates existing)
     
     This is useful when you already have embeddings computed externally and want to
     upload them directly without computing from abstracts.
     
     Args:
-        request: CreateAuthorVectorRequest containing author info and pre-computed vector
+        request: CreateAuthorVectorRequest containing author info, pre-computed vector, and optional model name
     
     Returns:
         CreateAuthorVectorResponse with success status
@@ -987,7 +797,22 @@ async def create_author_vector(request: CreateAuthorVectorRequest):
         
         embedding_dim = len(request.embedding)
         
-        # Use shared helper to upsert the embedding
+        # If model_name is provided, validate dimension against the model
+        if request.model_name:
+            try:
+                expected_dim = get_model_dimension(request.model_name)
+                if embedding_dim != expected_dim:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Embedding dimension mismatch for model '{request.model_name}'. Expected {expected_dim}, got {embedding_dim}"
+                    )
+            except (ValueError, RuntimeError) as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Error validating model dimension: {str(e)}"
+                )
+        
+        # Use shared helper to upsert the embedding (also validates against collection schema)
         is_update, action = _upsert_author_embedding(
             collection_name=collection_name,
             author_id=request.author_id,

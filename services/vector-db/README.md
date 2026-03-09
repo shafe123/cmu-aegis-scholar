@@ -8,14 +8,41 @@ This service provides RESTful API endpoints for interacting with a Milvus vector
 
 ## Features
 
+- **Multiple Embedding Models**: Support for 6 different embedding models with automatic model loading and caching
 - **Vector Similarity Search**: Perform efficient similarity searches using pre-computed embedding vectors
-- **Text-Based Semantic Search**: Query using natural language - automatically converts text to embeddings
-- **Author Embeddings**: Generate and store author embeddings from paper abstracts using sentence transformers
+- **Text-Based Semantic Search**: Query using natural language - automatically converts text to embeddings using your chosen model
+- **Author Embeddings**: Generate and store author embeddings from paper abstracts using any supported model
 - **Automatic Averaging**: Intelligently average multiple abstract embeddings to create representative author vectors
+- **Model Management**: List available models, check which are loaded, and validate embedding dimensions
 - **Collection Management**: List and inspect Milvus collections
 - **Health Monitoring**: Check service and database connection health
 - **Configurable**: Environment-based configuration for different deployment scenarios
 - **Pagination Support**: Efficiently paginate through large search results
+
+## Available Embedding Models
+
+The service supports the following embedding models:
+
+1. **sentence-transformers/all-MiniLM-L6-v2** (Default)
+   - Dimension: 384
+   - Fast and efficient sentence embeddings
+
+2. **cointegrated/rubert-tiny2**
+   - Tiny Russian BERT model for multilingual support
+
+3. **OrcaDB/gte-base-en-v1.5**
+   - General Text Embeddings base model v1.5
+
+4. **deepvk/USER-bge-m3**
+   - Multilingual BGE-M3 model from DeepVK
+
+5. **Qwen/Qwen3-Embedding-0.6B**
+   - Qwen3 embedding model (0.6B parameters)
+
+6. **jinaai/jina-code-embeddings-1.5b**
+   - Jina AI code embeddings model (1.5B parameters)
+
+Models are loaded on-demand and cached in memory for performance. Use `GET /models` to see which models are currently loaded.
 
 ## Prerequisites
 
@@ -60,7 +87,7 @@ DEFAULT_LIMIT=10
 MAX_LIMIT=100
 
 # Embedding Model Configuration
-EMBEDDING_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
+DEFAULT_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 
 # API Configuration
 API_TITLE=AEGIS Scholar Vector DB Service
@@ -94,8 +121,10 @@ docker compose -f dev/docker-compose.yml up --build -d vector-db
 
 On startup, the service automatically:
 1. **Connects to Milvus** - Establishes connection to the vector database
-2. **Loads the embedding model** - Downloads and initializes the sentence transformer model (first run only)
+2. **Loads the default embedding model** - Downloads and initializes the default model (first run only)
 3. **Creates the default collection** - Automatically creates the `aegis_vectors` collection with the proper schema if it doesn't exist
+
+Additional models are loaded on-demand when first requested and cached for subsequent use. This ensures fast response times while minimizing memory usage.
 
 This ensures the service is ready to accept author embedding requests immediately after startup.
 
@@ -107,13 +136,16 @@ This ensures the service is ready to accept author embedding requests immediatel
 ### Health
 - `GET /health` - Health check with Milvus connection status
 
+### Models
+- `GET /models` - List all available embedding models, their dimensions, and loaded status
+
 ### Collections
 - `GET /collections` - List all available collections
 - `GET /collections/{collection_name}` - Get information about a specific collection
 
 ### Search
 - `POST /search/vector` - Perform vector similarity search with a pre-computed embedding vector
-- `POST /search/text` - Perform semantic search using natural language text queries
+- `POST /search/text` - Perform semantic search using natural language text queries (with optional model selection)
 
 #### Vector Search Request Example
 
@@ -132,11 +164,12 @@ For direct vector search with pre-computed embeddings:
 
 #### Text Search Request Example
 
-For natural language text queries (automatically converted to embeddings):
+For natural language text queries (automatically converted to embeddings using specified model):
 
 ```json
 {
   "query_text": "machine learning applications in healthcare",
+  "model_name": "sentence-transformers/all-MiniLM-L6-v2",
   "collection_name": "aegis_vectors",
   "limit": 10,
   "offset": 0,
@@ -144,6 +177,9 @@ For natural language text queries (automatically converted to embeddings):
   "filter_expr": null
 }
 ```
+
+**Model Selection:**
+- `model_name` (optional): Specify which embedding model to use. If not provided, uses the default model.
 
 **Pagination Parameters:**
 - `limit`: Maximum number of results to return (1-100, default: 10)
@@ -204,6 +240,7 @@ For natural language text queries (automatically converted to embeddings):
     "We investigate deep learning techniques for...",
     "Our research focuses on neural networks..."
   ],
+  "model_name": "sentence-transformers/all-MiniLM-L6-v2",
   "collection_name": "aegis_vectors",
   "metadata": {
     "institution": "MIT",
@@ -216,6 +253,7 @@ For natural language text queries (automatically converted to embeddings):
 - `author_id` (required): Unique identifier for the author
 - `author_name` (required): Name of the author
 - `abstracts` (required): List of paper abstracts (minimum 1)
+- `model_name` (optional): Embedding model to use for encoding abstracts (defaults to default model)
 - `collection_name` (optional): Target collection (defaults to `aegis_vectors`)
 - `metadata` (optional): Additional metadata
 
@@ -238,7 +276,7 @@ For natural language text queries (automatically converted to embeddings):
 **How it works:**
 1. Default collection is automatically created on service startup with the proper schema
 2. Takes a list of paper abstracts for an author
-3. Generates embeddings for each abstract using a sentence transformer model
+3. Generates embeddings for each abstract using the specified embedding model
 4. Averages the embeddings to create a single author representation
 5. Upserts the averaged embedding in the specified collection (creates new or updates existing)
 
@@ -256,6 +294,7 @@ For uploading pre-computed embedding vectors:
   "author_id": "A123456",
   "author_name": "Dr. Jane Smith",
   "embedding": [0.025, -0.134, 0.892, ...],
+  "model_name": "sentence-transformers/all-MiniLM-L6-v2",
   "num_abstracts": 15,
   "collection_name": "aegis_vectors",
   "metadata": {
@@ -268,7 +307,8 @@ For uploading pre-computed embedding vectors:
 **Parameters:**
 - `author_id` (required): Unique identifier for the author
 - `author_name` (required): Name of the author
-- `embedding` (required): Pre-computed embedding vector (must match collection dimension)
+- `embedding` (required): Pre-computed embedding vector
+- `model_name` (optional): Model name for dimension validation (validates that the embedding dimension matches the model)
 - `num_abstracts` (optional): Number of abstracts used to compute the embedding
 - `collection_name` (optional): Target collection (defaults to `aegis_vectors`)
 - `metadata` (optional): Additional metadata
@@ -287,7 +327,7 @@ For uploading pre-computed embedding vectors:
 ```
 
 **When to use:**
-- `/authors/embeddings`: When you have raw abstracts and want the service to compute embeddings
+- `/authors/embeddings`: When you have raw abstracts and want the service to compute embeddings with a specific model
 - `/authors/vector`: When you already have pre-computed embeddings from external models or processes
 
 **Use Cases for `/authors/vector`:**
@@ -296,7 +336,10 @@ For uploading pre-computed embedding vectors:
 - Migration from other vector databases
 - Custom embedding pipelines
 
-**Note:** The vector dimension must match the collection schema (384 for default `all-MiniLM-L6-v2` model). The endpoint validates the dimension before insertion.
+**Dimension Validation:**
+- If `model_name` is provided, the endpoint validates that the embedding dimension matches the model's expected dimension
+- The endpoint also validates against the collection schema to ensure compatibility
+- Use `GET /models` to see available models and their dimensions
 
 
 **Note:** If using a custom collection name (not the default), ensure the collection exists and has the correct schema before calling this endpoint.
