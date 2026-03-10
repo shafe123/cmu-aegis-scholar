@@ -15,6 +15,7 @@ This pipeline evaluates embedding models by:
 
 ### Core Scripts
 
+- **`copy_evaluation_works.py`**: Copies authors and their works from the clean container to the subsets/evaluation folder for testing
 - **`data_loader.py`**: Fetches DTIC papers for specified authors from Azure Blob Storage
 - **`evaluate_embeddings.py`**: Creates embeddings, uploads to Milvus, and evaluates search performance
 - **`run_evaluation.py`**: Orchestrates the complete evaluation pipeline
@@ -93,6 +94,32 @@ $env:AZURE_STORAGE_CONNECTION_STRING = "your-connection-string-here"
 # Or add to .env file
 echo "AZURE_STORAGE_CONNECTION_STRING=your-connection-string" > .env
 ```
+
+## Data Preparation
+
+### Copy Evaluation Data
+
+Before running evaluations, you may want to copy the author and work data to a dedicated evaluation subset:
+
+```powershell
+# Preview what will be copied (dry-run)
+python copy_evaluation_works.py --dry-run
+
+# Copy both authors and their works to subsets/evaluation/
+python copy_evaluation_works.py
+
+# Copy only author files
+python copy_evaluation_works.py --authors-only
+
+# Copy only works
+python copy_evaluation_works.py --works-only
+```
+
+This script:
+- Reads author IDs from `Author Ratings - Overall.csv`
+- Copies author files from `clean/dtic/authors/` to `subsets/evaluation/authors/` (unless `--works-only`)
+- Copies all works by those authors from `clean/dtic/works/` to `subsets/evaluation/works/` (unless `--authors-only`)
+- Provides statistics on files copied and works per author
 
 ## Usage
 

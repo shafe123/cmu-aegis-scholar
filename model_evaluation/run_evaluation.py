@@ -10,10 +10,17 @@ Orchestrates the complete evaluation process:
 """
 
 import os
+# Suppress transformers warnings and progress bars
+os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = '1'
+os.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '1'
+os.environ['TQDM_DISABLE'] = '1'
+
 import sys
 import argparse
 import logging
 import json
+import uuid
 from pathlib import Path
 import pandas as pd
 
@@ -26,6 +33,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Reduce Azure SDK logging verbosity
+logging.getLogger('azure').setLevel(logging.WARNING)
+logging.getLogger('azure.core').setLevel(logging.WARNING)
+logging.getLogger('azure.storage').setLevel(logging.WARNING)
+
+# Reduce ML library logging verbosity
+logging.getLogger('sentence_transformers').setLevel(logging.WARNING)
+logging.getLogger('transformers').setLevel(logging.WARNING)
+logging.getLogger('torch').setLevel(logging.WARNING)
+logging.getLogger('pymilvus').setLevel(logging.WARNING)
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('huggingface_hub').setLevel(logging.WARNING)
+
 
 # Available models with their configurations
 AVAILABLE_MODELS = {
@@ -37,10 +57,10 @@ AVAILABLE_MODELS = {
         "trust_remote_code": False,
         "description": "Tiny Russian BERT model for multilingual support"
     },
-    "OrcaDB/gte-base-en-v1.5": {
-        "trust_remote_code": True,
-        "description": "General Text Embeddings base model v1.5"
-    },
+    # "OrcaDB/gte-base-en-v1.5": {
+    #     "trust_remote_code": True,
+    #     "description": "General Text Embeddings base model v1.5"
+    # },
     "deepvk/USER-bge-m3": {
         "trust_remote_code": False,
         "description": "Multilingual BGE-M3 model from DeepVK"
@@ -71,8 +91,23 @@ def load_ground_truth(csv_path: str):
     return df
 
 
+def convert_researcher_id_to_author_guid(researcher_id: str) -> str:
+    """
+    Convert DTIC researcher ID to author GUID.
+    
+    Args:
+        researcher_id: DTIC researcher ID (e.g., ur.012313314741.93)
+        
+    Returns:
+        Author GUID (e.g., author_a5db27b5-1f1e-5378-90d1-a3af003ebbe0)
+    """
+    namespace = uuid.UUID('00000000-0000-0000-0000-000000000002')
+    author_uuid = uuid.uuid5(namespace, researcher_id)
+    return f"author_{author_uuid}"
+
+
 def fetch_author_papers(
-    author_ids,
+    researcher_ids,
     connection_string,
     output_file,
     max_blobs=None,
@@ -83,17 +118,20 @@ def fetch_author_papers(
     logger.info("STEP 1: Fetching author papers from Azure Blob Storage")
     logger.info("="*70)
     
-    # Initialize data loader
+    # Convert researcher IDs to author GUIDs
+    logger.info("Converting researcher IDs to author GUIDs...")
+    author_guids = [convert_researcher_id_to_author_guid(rid) for rid in researcher_ids]
+    logger.info(f"Converted {len(author_guids)} author IDs")
+    
+    # Initialize data loader (uses subsets/evaluation/works/ by default)
     loader = AuthorDataLoader(
         connection_string=connection_string,
-        container_name="dtic-publications",
-        blob_prefix="dtic/works/",
         cache_dir="cache"
     )
     
     # Fetch papers
     author_papers = loader.fetch_papers_for_authors(
-        author_ids=author_ids,
+        author_ids=author_guids,
         max_blobs=max_blobs,
         use_cache=use_cache
     )
@@ -136,7 +174,11 @@ def evaluate_model(
         
         # Load ground truth to get author names
         df = pd.read_csv(ground_truth_csv)
-        author_names = dict(zip(df['author_id'], df['Name']))
+        # Convert researcher IDs to author GUIDs for the names dict
+        author_names = {
+            convert_researcher_id_to_author_guid(row['author_id']): row['Name']
+            for _, row in df.iterrows()
+        }
         
         # Create embeddings
         author_embeddings = evaluator.create_author_embeddings(author_papers, author_names)
@@ -241,6 +283,11 @@ Examples:
         help="Skip fetching papers (use existing author_papers.json)"
     )
     parser.add_argument(
+        "--skip-upload",
+        action="store_true",
+        help="Skip uploading embeddings to Milvus (use existing collection)"
+    )
+    parser.add_argument(
         "--no-cache",
         action="store_true",
         help="Don't use cached blob data"
@@ -264,14 +311,14 @@ Examples:
         
         # Load ground truth
         df = load_ground_truth(args.ground_truth)
-        author_ids = df['author_id'].tolist()
+        researcher_ids = df['author_id'].tolist()
         
         # Step 1: Fetch author papers (if not skipped)
         author_papers_file = output_dir / "author_papers.json"
         
         if not args.skip_fetch:
             author_papers = fetch_author_papers(
-                author_ids=author_ids,
+                researcher_ids=researcher_ids,
                 connection_string=connection_string,
                 output_file=str(author_papers_file),
                 max_blobs=args.max_blobs,
@@ -292,14 +339,15 @@ Examples:
         logger.info(f"\nEvaluating {len(models_to_evaluate)} model(s)")
         
         all_results = {}
-        for model_name in models_to_evaluate:
+        for idx, model_name in enumerate(models_to_evaluate, 1):
             logger.info(f"\n{'='*70}")
-            logger.info(f"Evaluating: {model_name}")
+            logger.info(f"MODEL {idx} of {len(models_to_evaluate)}: {model_name}")
             logger.info(f"Description: {AVAILABLE_MODELS[model_name]['description']}")
             logger.info(f"{'='*70}")
             
-            # Generate output filename
-            model_safe_name = model_name.replace("/", "_").replace(":", "_")
+            # Generate output filename and collection name
+            # Collection names can only contain numbers, letters, and underscores
+            model_safe_name = model_name.replace("/", "_").replace(":", "_").replace("-", "_").replace(".", "_")
             output_file = output_dir / f"{model_safe_name}_results.json"
             collection_name = f"eval_{model_safe_name}"
             
@@ -312,7 +360,8 @@ Examples:
                 collection_name=collection_name,
                 milvus_host=args.milvus_host,
                 milvus_port=args.milvus_port,
-                output_file=str(output_file)
+                output_file=str(output_file),
+                skip_upload=args.skip_upload
             )
             
             all_results[model_name] = results

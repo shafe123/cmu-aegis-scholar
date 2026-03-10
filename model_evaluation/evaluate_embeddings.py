@@ -5,14 +5,21 @@ Evaluates embedding models on author search/ranking tasks using ground truth CSV
 Calculates Mean Reciprocal Rank (MRR) and Normalized Discounted Cumulative Gain (NDCG).
 """
 
+import os
+# Suppress transformers warnings and progress bars
+os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = '1'
+os.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '1'
+os.environ['TQDM_DISABLE'] = '1'
+
 import json
 import argparse
 import logging
-import csv
-import os
+import uuid
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 import numpy as np
+import torch
 from sentence_transformers import SentenceTransformer
 from pymilvus import connections, Collection, utility, DataType, FieldSchema, CollectionSchema
 import pandas as pd
@@ -22,6 +29,29 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Reduce ML library logging verbosity
+logging.getLogger('sentence_transformers').setLevel(logging.WARNING)
+logging.getLogger('transformers').setLevel(logging.WARNING)
+logging.getLogger('torch').setLevel(logging.WARNING)
+logging.getLogger('pymilvus').setLevel(logging.WARNING)
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('huggingface_hub').setLevel(logging.WARNING)
+
+
+def convert_researcher_id_to_author_guid(researcher_id: str) -> str:
+    """
+    Convert DTIC researcher ID to author GUID.
+    
+    Args:
+        researcher_id: DTIC researcher ID (e.g., ur.012313314741.93)
+        
+    Returns:
+        Author GUID (e.g., author_a5db27b5-1f1e-5378-90d1-a3af003ebbe0)
+    """
+    namespace = uuid.UUID('00000000-0000-0000-0000-000000000002')
+    author_uuid = uuid.uuid5(namespace, researcher_id)
+    return f"author_{author_uuid}"
 
 
 class EmbeddingEvaluator:
@@ -50,9 +80,17 @@ class EmbeddingEvaluator:
         self.milvus_port = milvus_port
         self.trust_remote_code = trust_remote_code
         
+        # Detect device
+        if torch.cuda.is_available():
+            self.device = 'cuda'
+            logger.info(f"GPU detected: {torch.cuda.get_device_name(0)}")
+        else:
+            self.device = 'cpu'
+            logger.info("No GPU detected, using CPU")
+        
         # Load embedding model
         logger.info(f"Loading embedding model: {model_name}")
-        self.model = SentenceTransformer(model_name, trust_remote_code=trust_remote_code)
+        self.model = SentenceTransformer(model_name, trust_remote_code=trust_remote_code, device=self.device)
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
         logger.info(f"Model loaded. Embedding dimension: {self.embedding_dim}")
         
@@ -143,16 +181,7 @@ class EmbeddingEvaluator:
             # Extract abstracts
             abstracts = []
             for paper in papers:
-                abstract = paper.get('abstract') or paper.get('abstract_inverted_index')
-                
-                # Handle inverted index format
-                if isinstance(abstract, dict):
-                    # Reconstruct abstract from inverted index
-                    words = [''] * (max(max(positions) for positions in abstract.values()) + 1)
-                    for word, positions in abstract.items():
-                        for pos in positions:
-                            words[pos] = word
-                    abstract = ' '.join(words)
+                abstract = paper.get('abstract', '')
                 
                 if abstract and isinstance(abstract, str) and len(abstract.strip()) > 0:
                     # Combine title and abstract
@@ -164,12 +193,15 @@ class EmbeddingEvaluator:
                 logger.warning(f"No valid abstracts found for author {author_id}")
                 continue
             
-            # Create embeddings
+            # Create embeddings - encode each paper individually to avoid batching issues
             logger.info(f"  {author_id} ({author_names.get(author_id, 'Unknown')}): {len(abstracts)} papers")
-            embeddings = self.model.encode(abstracts, show_progress_bar=False)
+            paper_embeddings = []
+            for abstract_text in abstracts:
+                embedding = self.model.encode(abstract_text, show_progress_bar=False)
+                paper_embeddings.append(embedding)
             
             # Average embeddings
-            avg_embedding = np.mean(embeddings, axis=0)
+            avg_embedding = np.mean(paper_embeddings, axis=0)
             author_embeddings[author_id] = avg_embedding
         
         logger.info(f"Created embeddings for {len(author_embeddings)} authors")
@@ -229,7 +261,7 @@ class EmbeddingEvaluator:
             raise ValueError("No collection loaded")
         
         # Create query embedding
-        query_embedding = self.model.encode([query])[0]
+        query_embedding = self.model.encode(query)
         
         # Search
         search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
@@ -282,12 +314,14 @@ class EmbeddingEvaluator:
             logger.info(f"\nEvaluating query: {query_col}")
             
             # Get ground truth rankings (lower is better, NaN means not relevant)
+            # Convert researcher IDs to author GUIDs to match Milvus storage
             ground_truth = {}
             for _, row in df.iterrows():
-                author_id = row['author_id']
+                researcher_id = row['author_id']
+                author_guid = convert_researcher_id_to_author_guid(researcher_id)
                 rank = row[query_col]
-                if pd.notna(rank) and rank > 0:  # Valid ranking
-                    ground_truth[author_id] = float(rank)
+                if pd.notna(rank) and rank >= 3:  # Relevant (rating >= 3 on 1-5 scale)
+                    ground_truth[author_guid] = float(rank)
             
             if not ground_truth:
                 logger.warning(f"  No ground truth data for query: {query_col}")

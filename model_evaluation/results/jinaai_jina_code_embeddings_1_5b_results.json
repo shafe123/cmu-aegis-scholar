@@ -1,0 +1,208 @@
+{
+  "model": "jinaai/jina-code-embeddings-1.5b",
+  "embedding_dim": 1536,
+  "avg_mrr": 0.8333333333333334,
+  "avg_ndcg": 0.5574653528544377,
+  "queries": [
+    {
+      "query": "Multimodal latent perceptual loss for high-resolution image synthesis",
+      "mrr": 1.0,
+      "ndcg": 0.5986401670302814,
+      "relevant_authors": 5,
+      "top_results": [
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.8931187391281128
+        ],
+        [
+          "author_c5869a2c-b8e4-5e86-8a82-2185a2a22039",
+          0.9018255472183228
+        ],
+        [
+          "author_a44bce31-6f08-5458-834b-91a40ac7bec4",
+          0.9358938932418823
+        ],
+        [
+          "author_d2b7e0d3-e1ac-5980-9c91-c52acad8736e",
+          0.9545650482177734
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.9727082252502441
+        ]
+      ]
+    },
+    {
+      "query": "Trade-off between representation diversity and realism in generative models",
+      "mrr": 1.0,
+      "ndcg": 0.47673613014961075,
+      "relevant_authors": 2,
+      "top_results": [
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.7137399911880493
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.8513473272323608
+        ]
+      ]
+    },
+    {
+      "query": "How artificial intelligence creates original images from text descriptions",
+      "mrr": 0.5,
+      "ndcg": 0.4349247695282051,
+      "relevant_authors": 2,
+      "top_results": [
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.9728320240974426
+        ],
+        [
+          "author_a44bce31-6f08-5458-834b-91a40ac7bec4",
+          1.0208287239074707
+        ]
+      ]
+    },
+    {
+      "query": "Military deception strategy",
+      "mrr": 1.0,
+      "ndcg": 0.5905175563916907,
+      "relevant_authors": 2,
+      "top_results": [
+        [
+          "author_a5285d4e-1482-508a-ad26-b3c72267b7ab",
+          0.7112429738044739
+        ],
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.7687653303146362
+        ]
+      ]
+    },
+    {
+      "query": "Military deception principles",
+      "mrr": 1.0,
+      "ndcg": 0.6131471927654585,
+      "relevant_authors": 2,
+      "top_results": [
+        [
+          "author_a5285d4e-1482-508a-ad26-b3c72267b7ab",
+          0.7554270029067993
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.7816634774208069
+        ]
+      ]
+    },
+    {
+      "query": "Military deception techniques",
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "relevant_authors": 2,
+      "top_results": [
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.7648065686225891
+        ],
+        [
+          "author_a5285d4e-1482-508a-ad26-b3c72267b7ab",
+          0.80645751953125
+        ]
+      ]
+    },
+    {
+      "query": "Deceptive autonomous agents",
+      "mrr": 1.0,
+      "ndcg": 0.6503199613125027,
+      "relevant_authors": 6,
+      "top_results": [
+        [
+          "author_b69b75ea-077f-52ad-a080-16c019d5c267",
+          0.6186282634735107
+        ],
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.679816484451294
+        ],
+        [
+          "author_00e4d0ff-ff9a-519c-88a9-2d307597e287",
+          0.7152232527732849
+        ],
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.736335039138794
+        ],
+        [
+          "author_8e004942-6f0d-5387-a764-97a0a7144af0",
+          0.7375937700271606
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.7595983743667603
+        ]
+      ]
+    },
+    {
+      "query": "Machine learning of deceptive strategies",
+      "mrr": 1.0,
+      "ndcg": 0.8125526373850849,
+      "relevant_authors": 6,
+      "top_results": [
+        [
+          "author_00e4d0ff-ff9a-519c-88a9-2d307597e287",
+          0.5727220773696899
+        ],
+        [
+          "author_b69b75ea-077f-52ad-a080-16c019d5c267",
+          0.6000896692276001
+        ],
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.6083852052688599
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.674812912940979
+        ],
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.7106645107269287
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.7322636842727661
+        ]
+      ]
+    },
+    {
+      "query": "Detecting deceptive machine behavior",
+      "mrr": 1.0,
+      "ndcg": 0.8403497611271051,
+      "relevant_authors": 5,
+      "top_results": [
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.6011945605278015
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.6325745582580566
+        ],
+        [
+          "author_00e4d0ff-ff9a-519c-88a9-2d307597e287",
+          0.6731259822845459
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.688748836517334
+        ],
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.6968741416931152
+        ]
+      ]
+    }
+  ]
+}

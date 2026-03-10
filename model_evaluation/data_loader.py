@@ -2,7 +2,7 @@
 Data Loader for Model Evaluation
 
 Fetches paper data from Azure Blob Storage for specified authors.
-Handles DTIC works data stored in blob storage.
+Handles cleaned DTIC works data from the evaluation subset.
 """
 
 import json
@@ -10,11 +10,16 @@ import gzip
 import logging
 from pathlib import Path
 from typing import List, Dict, Set, Optional
-from azure.storage.blob import BlobServiceClient, ContainerClient
+from azure.storage.blob import BlobServiceClient
 from collections import defaultdict
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Reduce Azure SDK logging verbosity
+logging.getLogger('azure').setLevel(logging.WARNING)
+logging.getLogger('azure.core').setLevel(logging.WARNING)
+logging.getLogger('azure.storage').setLevel(logging.WARNING)
 
 
 class AuthorDataLoader:
@@ -25,8 +30,8 @@ class AuthorDataLoader:
     def __init__(
         self,
         connection_string: str,
-        container_name: str = "dtic-publications",
-        blob_prefix: str = "dtic/works/",
+        container_name: str = "subsets",
+        blob_prefix: str = "evaluation/works/",
         cache_dir: str = "cache"
     ):
         """
@@ -34,8 +39,8 @@ class AuthorDataLoader:
         
         Args:
             connection_string: Azure Storage connection string
-            container_name: Name of the blob container
-            blob_prefix: Prefix for blob names in container
+            container_name: Name of the blob container (default: subsets)
+            blob_prefix: Prefix for blob names in container (default: evaluation/works/)
             cache_dir: Local directory to cache downloaded data
         """
         self.connection_string = connection_string
@@ -60,7 +65,7 @@ class AuthorDataLoader:
         Fetch papers for the specified authors from blob storage.
         
         Args:
-            author_ids: List of DTIC author IDs (researcher_id format)
+            author_ids: List of author GUIDs (e.g., author_a5db27b5-1f1e-5378-90d1-a3af003ebbe0)
             max_blobs: Maximum number of blob files to process (None for all)
             use_cache: Whether to use locally cached blob data
             
@@ -172,23 +177,23 @@ class AuthorDataLoader:
     
     def _extract_author_ids(self, paper: Dict) -> Set[str]:
         """
-        Extract all author IDs from a DTIC paper.
+        Extract all author IDs from a cleaned work.
         
         Args:
             paper: Paper dictionary
             
         Returns:
-            Set of DTIC author IDs (researcher_id format)
+            Set of author GUIDs (e.g., author_a5db27b5-1f1e-5378-90d1-a3af003ebbe0)
         """
         author_ids = set()
         
-        # DTIC format: authors array with researcher_id field
+        # Clean format: authors array with author_id field (UUID format)
         if "authors" in paper:
             for author in paper["authors"]:
                 if isinstance(author, dict):
-                    researcher_id = author.get("researcher_id")
-                    if researcher_id:
-                        author_ids.add(researcher_id)
+                    author_id = author.get("author_id")
+                    if author_id:
+                        author_ids.add(author_id)
         
         return author_ids
     

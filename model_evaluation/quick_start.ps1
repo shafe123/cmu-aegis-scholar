@@ -21,6 +21,12 @@
 .PARAMETER SkipSetup
     Skip Docker and dependency checks.
 
+.PARAMETER SkipFetch
+    Skip fetching papers from Azure (use existing author_papers.json).
+
+.PARAMETER SkipUpload
+    Skip uploading embeddings to Milvus (use existing collection).
+
 .PARAMETER MaxBlobs
     Maximum number of blob files to process (for testing).
 
@@ -29,6 +35,9 @@
 
 .EXAMPLE
     .\quick_start.ps1 -AllModels -GroundTruth "Author Ratings - Overall.csv"
+
+.EXAMPLE
+    .\quick_start.ps1 -Model "sentence-transformers/all-MiniLM-L6-v2" -SkipFetch -SkipUpload
 #>
 
 [CmdletBinding()]
@@ -44,6 +53,12 @@ param(
     
     [Parameter(Mandatory = $false)]
     [switch]$SkipSetup,
+    
+    [Parameter(Mandatory = $false)]
+    [switch]$SkipFetch,
+    
+    [Parameter(Mandatory = $false)]
+    [switch]$SkipUpload,
     
     [Parameter(Mandatory = $false)]
     [int]$MaxBlobs = 0
@@ -132,7 +147,25 @@ if (-not $SkipSetup) {
     
     # Install dependencies
     Write-Info "Installing/updating dependencies..."
-    pip install -q -r requirements.txt
+    Write-Info "Upgrading pip and setuptools..."
+    pip install --upgrade pip setuptools wheel
+    
+    # Install PyTorch with CUDA support, fallback to CPU if unavailable
+    Write-Info "Installing PyTorch..."
+    Write-Info "Attempting PyTorch with CUDA 11.8 support..."
+    $torchInstall = pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 2>&1
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning-Custom "CUDA installation failed or unavailable, installing CPU version..."
+        pip install torch torchvision torchaudio
+    }
+    
+    # Verify PyTorch installation
+    $torchInfo = python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA: {torch.cuda.is_available()}')"
+    Write-Success "PyTorch installed: $torchInfo"
+    
+    Write-Info "Installing remaining requirements..."
+    pip install -r requirements.txt
     Write-Success "Dependencies installed"
     
     Write-Host ""
@@ -201,6 +234,16 @@ else {
 if ($MaxBlobs -gt 0) {
     $cmd += " --max-blobs $MaxBlobs"
     Write-Info "Limiting to $MaxBlobs blob files (testing mode)"
+}
+
+if ($SkipFetch) {
+    $cmd += " --skip-fetch"
+    Write-Info "Skipping data fetch (using existing author_papers.json)"
+}
+
+if ($SkipUpload) {
+    $cmd += " --skip-upload"
+    Write-Info "Skipping embedding upload (using existing Milvus collection)"
 }
 
 Write-Host ""
