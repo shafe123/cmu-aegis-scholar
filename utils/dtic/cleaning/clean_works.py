@@ -60,12 +60,12 @@ class StateManager:
     """Manages extraction state for works."""
     
     def __init__(self, state_file: str = 'extraction_state_works.json'):
-        self.state_file = state_file
+        self.state_file = Path(state_file)
         self.state = self.load_state()
     
     def load_state(self) -> Dict:
         """Load state from file or create new state."""
-        if os.path.exists(self.state_file):
+        if self.state_file.exists():
             try:
                 with open(self.state_file, 'r', encoding='utf-8') as f:
                     state = json.load(f)

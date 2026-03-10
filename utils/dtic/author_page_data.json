@@ -1,0 +1,3789 @@
+{
+  "application": "https://dtic.dimensions.ai",
+  "page_title": "Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+  "maintenance": false,
+  "minCharsForAutocomplete": {
+    "default": 3,
+    "jurisdiction": 1,
+    "publishing_segment": 1,
+    "publishing_discipline": 1,
+    "sales_format": 1,
+    "publishing_unit": 1
+  },
+  "user": {
+    "isRegistered": false,
+    "currency": "USD",
+    "id": "",
+    "email": "anonymous"
+  },
+  "navigation": {
+    "analytics": {
+      "root": "/analytics/publication",
+      "path": "/analytics/publication"
+    },
+    "discover": {
+      "path": "/discover/publication",
+      "results_json": "/discover/publication/results.json"
+    },
+    "login": {
+      "path": "/auth/login"
+    },
+    "box_entity": {
+      "json": "/details/facets/publication/researcher/ur.012313314741.93/box.json"
+    },
+    "export": {
+      "exportcenter": "/exports"
+    },
+    "go_back": true,
+    "country_json": "/viz/countries.json",
+    "not_supported": "/not_supported",
+    "footer": {
+      "terms": "/legal",
+      "privacy": "",
+      "cookies": "https://www.dimensions.ai/policies-cookie/",
+      "about": "/about",
+      "vpat": "",
+      "linkedin": "",
+      "twitter": ""
+    },
+    "link_logo": "/",
+    "orcid_url": "https://orcid.org",
+    "redshift_log": null,
+    "static": "/static"
+  },
+  "cookie_consent": {
+    "type": "onetrust",
+    "url": "https://cdn.cookielaw.org/scripttemplates/otSDKStub.js",
+    "id": "3329b668-7887-4dba-9bee-c3853a706e6f"
+  },
+  "csrf": "20997b648bcf094a67edd5cbd7ebc585f41fbf51",
+  "route": "/discover/{source:[w-]+}",
+  "product": {
+    "key": "pi.dtic",
+    "name": {
+      "long": "Dimensions for DTIC",
+      "short": "Dimensions for DTIC"
+    }
+  },
+  "variant": {
+    "id": "pi.dtic",
+    "name": "Dimensions for DTIC"
+  },
+  "source": {
+    "key": "publication_plus",
+    "label": "DOD Publication",
+    "parent": null,
+    "plural": "DOD Publications",
+    "alias": "publication"
+  },
+  "supportEmail": "supportfunder@dimensions.ai",
+  "lastActivePath": "/discover/publication",
+  "external_scripts": {
+    "readcube_badge_script_url": "https://content.readcube.com/injectable-button-assets/readcube-subscription-button.min.js",
+    "dimensions_badge_script_url": "https://badge.dimensions.ai/badge.js",
+    "altmetric_badge_script_url": "//d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"
+  },
+  "header_actions": {
+    "title": "",
+    "navigation": {
+      "json": "/menus/header.json"
+    }
+  },
+  "sidebar_actions": {
+    "title": "",
+    "navigation": {
+      "json": "/sidebar.json"
+    }
+  },
+  "custom_logo": null,
+  "intercomSettings": {
+    "app_id": "ilx5k1fm",
+    "user_role": "anonymous users",
+    "application": "dtic.dimensions.ai",
+    "altmetric_advanced": false,
+    "product": "Dimensions for DTIC",
+    "workflow": false,
+    "api": false,
+    "user_id": "2600:4041:2d3:1900:6cd5:5dd2:dc3f:9b72",
+    "sources": "publication_plus,project_plus,patent_plus,technical_report,application"
+  },
+  "counterSettings": null,
+  "sentry_settings": {
+    "dsn": "https://55852aa9acda40bab118a916cc795c20@o6546.ingest.sentry.io/202199",
+    "origin": "https://o6546.ingest.sentry.io",
+    "release": "26.4.0-13dc37ac8d"
+  },
+  "notifications": [],
+  "filters": {
+    "selected_facets": {
+      "researcher": [
+        {
+          "operator": "and",
+          "values": [
+            "ur.012313314741.93"
+          ]
+        }
+      ]
+    },
+    "expanded_facets": [
+      "researcher"
+    ],
+    "facet_bags": [
+      {
+        "key": "year",
+        "label": "Publication Year",
+        "label_plural": "Publication Years",
+        "is_literal": true,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "year",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Exclude from search",
+                    "facet": "year",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/year.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": false,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "researcher",
+        "label": "Researcher",
+        "label_plural": "Researchers",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": [
+              {
+                "label": "Current affiliation",
+                "subset": "organization",
+                "source": "researcher",
+                "subset_value": "id",
+                "navigation": {
+                  "json": "/completion/organization.json"
+                },
+                "type": "autocomplete",
+                "id": "affiliation",
+                "tag": null
+              },
+              {
+                "label": "Country (affiliation)",
+                "source": "researcher",
+                "subset": "country",
+                "subset_value": "name",
+                "navigation": {
+                  "json": "/completion/country.json"
+                },
+                "type": "autocomplete",
+                "id": "country",
+                "tag": null
+              }
+            ]
+          },
+          "input_sublabel": "Search by full or partial name (including initials) or by ORCID",
+          "context_menu": {
+            "facet": "researcher",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "researcher",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "researcher",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/researcher.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "funder",
+        "label": "Funder",
+        "label_plural": "Funders",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": [
+              {
+                "label": "Organization type",
+                "choices": [
+                  "Archive",
+                  "Company",
+                  "Education",
+                  "Facility",
+                  "Government",
+                  "Healthcare",
+                  "Nonprofit",
+                  "Other"
+                ],
+                "source": "organization",
+                "subset": "org_type",
+                "type": "static",
+                "id": "org_type",
+                "tag": null,
+                "navigation": null
+              },
+              {
+                "label": "Country",
+                "source": "organization",
+                "subset": "country",
+                "subset_value": "name",
+                "navigation": {
+                  "json": "/completion/country.json"
+                },
+                "type": "autocomplete",
+                "id": "country",
+                "tag": null
+              }
+            ]
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "funder",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "funder",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "funder",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/funder.json"
+          }
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "funder_country",
+        "label": "Country of Funder",
+        "label_plural": "Country of Funders",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "funder_country",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "funder_country",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "funder_country",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/funder_country.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "research_org",
+        "label": "Research Organization",
+        "label_plural": "Research Organizations",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": [
+              {
+                "label": "Organization type",
+                "choices": [
+                  "Archive",
+                  "Company",
+                  "Education",
+                  "Facility",
+                  "Government",
+                  "Healthcare",
+                  "Nonprofit",
+                  "Other"
+                ],
+                "source": "organization",
+                "subset": "org_type",
+                "type": "static",
+                "id": "org_type",
+                "tag": null,
+                "navigation": null
+              },
+              {
+                "label": "Country",
+                "source": "organization",
+                "subset": "country",
+                "subset_value": "name",
+                "navigation": {
+                  "json": "/completion/country.json"
+                },
+                "type": "autocomplete",
+                "id": "country",
+                "tag": null
+              }
+            ]
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "research_org",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "research_org",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "research_org",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/research_org.json"
+          }
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "research_org_country",
+        "label": "Country/Territory",
+        "label_plural": "Countries/Territories",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-org-location",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "research_org_country",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "research_org_country",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "research_org_country",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/research_org_country.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "research_org_state",
+        "label": "State/Region",
+        "label_plural": "States/Regions",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-org-location",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "research_org_state",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "research_org_state",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "research_org_state",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/research_org_state.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "research_org_city",
+        "label": "City",
+        "label_plural": "Cities",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-org-location",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "research_org_city",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "research_org_city",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "research_org_city",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/research_org_city.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "for",
+        "label": "Fields of Research (ANZSRC 2020)",
+        "label_plural": "Fields of Research (ANZSRC 2020)",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-categories",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "for",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "for",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "for",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/for.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": "/browse/categories/publication/for"
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "rcdc",
+        "label": "Research, Condition, and Disease Categorization",
+        "label_plural": "Research, Condition, and Disease Categorizations",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-categories",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "rcdc",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "rcdc",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "rcdc",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/rcdc.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": "/browse/categories/publication/rcdc"
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "hrcs_hc",
+        "label": "Health Category (HRCS)",
+        "label_plural": "Health Category (HRCS)",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-categories",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "hrcs_hc",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "hrcs_hc",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "hrcs_hc",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/hrcs_hc.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": "/browse/categories/publication/hrcs_hc"
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "hrcs_rac",
+        "label": "Research Activity Codes (HRCS)",
+        "label_plural": "Research Activity Codes (HRCS)",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-categories",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "hrcs_rac",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "hrcs_rac",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "hrcs_rac",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/hrcs_rac.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": "/browse/categories/publication/hrcs_rac"
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "cancer_types",
+        "label": "Cancer Types",
+        "label_plural": "Cancer Types",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-categories",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "cancer_types",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "cancer_types",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "cancer_types",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/cancer_types.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": "/browse/categories/publication/cancer_types"
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "cso",
+        "label": "Common Scientific Outline (CSO)",
+        "label_plural": "Common Scientific Outline (CSO)",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-categories",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "cso",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "cso",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "cso",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/cso.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": "/browse/categories/publication/cso"
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "uoa",
+        "label": "Units of Assessment",
+        "label_plural": "Units of Assessments",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-categories",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "uoa",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "uoa",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "uoa",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/uoa.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": "/browse/categories/publication/uoa"
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "sdg",
+        "label": "Sustainable Development Goals",
+        "label_plural": "Sustainable Development Goals",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "family": "research-categories",
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "sdg",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "sdg",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "sdg",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/sdg.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": "/browse/categories/publication/sdg"
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "publication_type",
+        "label": "Publication Type",
+        "label_plural": "Publication Types",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "publication_type",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "publication_type",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "publication_type",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/publication_type.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "document_type",
+        "label": "Document Type",
+        "label_plural": "Document Types",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "document_type",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Exclude from search",
+                    "facet": "document_type",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/document_type.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": false,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "source_title",
+        "label": "Source Title",
+        "label_plural": "Source Titles",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "source_title",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "source_title",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "source_title",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/source_title.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "publisher",
+        "label": "Publisher",
+        "label_plural": "Publishers",
+        "is_literal": true,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "publisher",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "publisher",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "publisher",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/publisher.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "journal_list",
+        "label": "Journal List",
+        "label_plural": "Journal Lists",
+        "is_literal": true,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "journal_list",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "journal_list",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "journal_list",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/journal_list.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": false,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      },
+      {
+        "key": "open_access_status",
+        "label": "Open Access",
+        "label_plural": "Open Access",
+        "is_literal": false,
+        "values": null,
+        "disabled": false,
+        "completion": null,
+        "modal": {
+          "extended_filters": {
+            "title": "Add filters",
+            "items": []
+          },
+          "input_sublabel": null,
+          "context_menu": {
+            "facet": "open_access_status",
+            "title": "",
+            "groups": [
+              {
+                "id": "search",
+                "items": [
+                  {
+                    "label": "Add to search",
+                    "facet": "open_access_status",
+                    "id": "add-to-search",
+                    "tag": null,
+                    "navigation": null
+                  },
+                  {
+                    "label": "Exclude from search",
+                    "facet": "open_access_status",
+                    "id": "exclude-from-search",
+                    "tag": null,
+                    "navigation": null
+                  }
+                ],
+                "label": ""
+              }
+            ]
+          },
+          "navigation": {
+            "json": "/completion/extended/publication/open_access_status.json"
+          },
+          "max_selected": 100
+        },
+        "has_completion": true,
+        "navigation": {
+          "browse": null
+        },
+        "with_operation_and": true
+      }
+    ],
+    "limit": 10,
+    "navigation": {
+      "json": "/facets/publication/filters.json",
+      "filter_json": "/facets/publication/filters/paginated.json"
+    },
+    "filters_exclude": true,
+    "facet_filter_groups_enabled": true,
+    "families": [
+      {
+        "key": "research-org-location",
+        "label": "Location - Research Organization",
+        "visible": true
+      },
+      {
+        "key": "research-categories",
+        "label": "Research categories",
+        "visible": true
+      }
+    ],
+    "facet_filter_groups_meta": {}
+  },
+  "subsets": [],
+  "favorites": {
+    "favorites": null,
+    "hidden": true,
+    "enabled": false,
+    "show_tooltip": false,
+    "navigation": {
+      "browse": "/browse/favorites/publication",
+      "json": "/favorites/publication.json",
+      "create_json": "/favorites.json",
+      "alert_sources_json": "/alert/favorites/publication/sources.json"
+    }
+  },
+  "search_scope": {
+    "title": "Critical Technology Areas",
+    "items": [
+      {
+        "label": "Advanced Computing and Software",
+        "params": {
+          "and_subset_scope_dtic": [
+            "advanced_computing_software"
+          ]
+        },
+        "id": "advanced_computing_software",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Advanced Materials",
+        "params": {
+          "and_subset_scope_dtic": [
+            "advanced_materials"
+          ]
+        },
+        "id": "advanced_materials",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Biotechnology",
+        "params": {
+          "and_subset_scope_dtic": [
+            "biotechnology"
+          ]
+        },
+        "id": "biotechnology",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Directed Energy",
+        "params": {
+          "and_subset_scope_dtic": [
+            "directed_energy"
+          ]
+        },
+        "id": "directed_energy",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Future Generation Wireless Technology",
+        "params": {
+          "and_subset_scope_dtic": [
+            "future_generation_wireless_technology"
+          ]
+        },
+        "id": "future_generation_wireless_technology",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Human Machine Interfaces",
+        "params": {
+          "and_subset_scope_dtic": [
+            "human_machine_interfaces"
+          ]
+        },
+        "id": "human_machine_interfaces",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Hypersonics",
+        "params": {
+          "and_subset_scope_dtic": [
+            "hypersonics"
+          ]
+        },
+        "id": "hypersonics",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Integrated Network Systems of Systems",
+        "params": {
+          "and_subset_scope_dtic": [
+            "integrated_network_systems"
+          ]
+        },
+        "id": "integrated_network_systems",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Integrated Sensing and Cyber",
+        "params": {
+          "and_subset_scope_dtic": [
+            "integrated_sensing_cyber"
+          ]
+        },
+        "id": "integrated_sensing_cyber",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Microelectronics",
+        "params": {
+          "and_subset_scope_dtic": [
+            "microelectronics"
+          ]
+        },
+        "id": "microelectronics",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Quantum Sciences",
+        "params": {
+          "and_subset_scope_dtic": [
+            "quantum_sciences"
+          ]
+        },
+        "id": "quantum_sciences",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Renewable Energy Generation and Storage",
+        "params": {
+          "and_subset_scope_dtic": [
+            "renewable_energy_generation"
+          ]
+        },
+        "id": "renewable_energy_generation",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Space Technology",
+        "params": {
+          "and_subset_scope_dtic": [
+            "space_technology"
+          ]
+        },
+        "id": "space_technology",
+        "tag": null,
+        "navigation": null
+      },
+      {
+        "label": "Trusted AI and Autonomy",
+        "params": {
+          "and_subset_scope_dtic": [
+            "trusted_ai"
+          ]
+        },
+        "id": "trusted_ai",
+        "tag": null,
+        "navigation": null
+      }
+    ]
+  },
+  "search": {
+    "search_modes": [
+      {
+        "id": "content",
+        "label": "Documents",
+        "types": [
+          {
+            "type": "kws",
+            "limit": 22000,
+            "fields": {
+              "default": "full_search",
+              "items": [
+                {
+                  "id": "full_search",
+                  "label": "Full data",
+                  "tag_label": "Free text in full data"
+                },
+                {
+                  "id": "text_search",
+                  "label": "Title and abstract",
+                  "tag_label": "Free text in title and abstract"
+                },
+                {
+                  "id": "doi",
+                  "label": "DOI",
+                  "tag_label": "DOI"
+                }
+              ]
+            },
+            "placeholder": "e.g. Magnetoresistance AND alloys"
+          },
+          {
+            "type": "abs",
+            "limit": 22000,
+            "fields": null,
+            "placeholder": "Paste an abstract here to get similar documents"
+          }
+        ],
+        "default": "kws",
+        "navigation": {
+          "path": "/discover/publication"
+        }
+      }
+    ],
+    "query_builder": {
+      "limit": 22000,
+      "fields": {
+        "default": "full_search",
+        "items": [
+          {
+            "id": "full_search",
+            "label": "Full data",
+            "tag_label": "Free text in full data"
+          },
+          {
+            "id": "text_search",
+            "label": "Title and abstract",
+            "tag_label": "Free text in title and abstract"
+          }
+        ]
+      },
+      "auto_parentheses": true,
+      "advanced_search_fields": {
+        "publication_plus": {
+          "label": "DOD Publication",
+          "plural": "DOD Publications",
+          "alias": "publication",
+          "fields": [
+            {
+              "id": "abstract",
+              "label": "Abstract",
+              "description": "Search within the abstract or summary of a document.",
+              "type": "text"
+            },
+            {
+              "id": "acknowledgements",
+              "label": "Acknowledgements",
+              "description": "Search for keywords in acknowledgment and funding section of a document.",
+              "type": "text"
+            },
+            {
+              "id": "altmetric",
+              "label": "Altmetric Attention Score",
+              "description": "The Altmetric Attention Score is a weighted count of all of the online attention Altmetric have found for an individual research output. This includes mentions in public policy documents and references in Wikipedia, mainstream news, social networks, blogs and more.",
+              "type": "range"
+            },
+            {
+              "id": "conference_name",
+              "label": "Conference name",
+              "description": "Search by title of a conference, such as 'European Lung Cancer Congress'",
+              "type": "text"
+            },
+            {
+              "id": "doi",
+              "label": "DOI",
+              "description": "Digital Object Identifier (DOI) of a document. Content types: Publications and Datasets Availability: standard field set, i.e. available on all analytics-level instances",
+              "type": "text"
+            },
+            {
+              "id": "date_inserted",
+              "label": "Date - Inserted",
+              "description": "Date when the document was first inserted into Dimensions. Note: Documents commonly take at least a few days to be inserted after they have been created.",
+              "type": "date"
+            },
+            {
+              "id": "date",
+              "label": "Date - Publication",
+              "description": "The publication date of a document, e.g. 2018-01-01. To standardize these dates, any missing values are normalized to the first month of the year or the first day of the month. As a result, search results may include documents where the publication date is missing the day and/or month.",
+              "type": "date"
+            },
+            {
+              "id": "full_data_exact",
+              "label": "Exact search",
+              "description": "Search for keywords in the full text of a publication. This search index is not normalized / stemmed, i.e., it splits the text on white space only - all other characters and punctuation stay unchanged. This field can be useful when searching for exact terminology, such as gene names, chemical compounds etc.",
+              "type": "text"
+            },
+            {
+              "id": "fcr",
+              "label": "Field Citation Ratio (FCR)",
+              "description": "The Field Citation Ratio (FCR) indicates the relative citation performance of a publication when compared to similarly-aged articles in its subject area.",
+              "type": "range"
+            },
+            {
+              "id": "funder_id",
+              "label": "Funder ID",
+              "description": "GRID ID of the funding organization.",
+              "type": "text"
+            },
+            {
+              "id": "isbn",
+              "label": "ISBN",
+              "description": "International Standard Book Number (online and print).",
+              "type": "text"
+            },
+            {
+              "id": "issn",
+              "label": "ISSN",
+              "description": "International Standard Serial Number (online and print).",
+              "type": "text"
+            },
+            {
+              "id": "mesh_terms",
+              "label": "MeSH terms",
+              "description": "MeSH (Medical Subject Headings) is a controlled vocabulary thesaurus used in PubMed and ClinicalTrials.gov. Use the <a href=\"https://www.ncbi.nlm.nih.gov/mesh/\" target=\"_blank\">NCBI MeSH database</a> to find MeSH terms and learn more.",
+              "type": "text"
+            },
+            {
+              "id": "country_count",
+              "label": "Number of affiliation countries",
+              "description": "Count of identified affiliation countries in a publication.",
+              "type": "range"
+            },
+            {
+              "id": "org_count",
+              "label": "Number of affiliations",
+              "description": "Count of identified researcher affiliations in a publication.",
+              "type": "range"
+            },
+            {
+              "id": "authors_count",
+              "label": "Number of authors",
+              "description": "Count of authors, as they appear in the original document.",
+              "type": "range"
+            },
+            {
+              "id": "citations",
+              "label": "Number of citations",
+              "description": "Publication citations is the number of times that a publication has been cited by other publications in the database. Citing publications can be of any publication type, such as articles, chapters, preprints, or monographs.",
+              "type": "range"
+            },
+            {
+              "id": "orcid",
+              "label": "ORCID ID",
+              "description": "Search by an author's ORCID ID (such as \"0000-0002-9079-593X\").",
+              "type": "text"
+            },
+            {
+              "id": "rcr",
+              "label": "Relative Citation Ratio (RCR)",
+              "description": "The Relative Citation Ratio (RCR) indicates the relative citation performance of a publication when comparing its citation rate to that of other publications in its area of research.",
+              "type": "range"
+            },
+            {
+              "id": "org_id",
+              "label": "Research organization ID",
+              "description": "GRID ID of the organization. E.g., \u201cgrid.26999.3d\u201d.",
+              "type": "text"
+            },
+            {
+              "id": "org_names_raw",
+              "label": "Research organization name (raw)",
+              "description": "Search within the raw names of the involved research organizations. Note: Depending on the selected content type the organizations can have different roles: Publications (author affiliation), Grants (funded organization/investigator affiliations), Patents (current and original assignee), Clinical trials (sponsor and collaborating organization). Boolean nesting to process phrases or words in a specified order is not supported.",
+              "type": "text"
+            },
+            {
+              "id": "researcher_id",
+              "label": "Researcher ID",
+              "description": "Search by Dimensions researcher ID",
+              "type": "text"
+            },
+            {
+              "id": "researcher_name",
+              "label": "Researcher name",
+              "description": "Searches for names in the researcher(s) field within a record.",
+              "type": "text"
+            },
+            {
+              "id": "source_title",
+              "label": "Source title name",
+              "description": "Source title of a publication. Includes journals, preprint repositories, book series and conference proceedings.",
+              "type": "text"
+            },
+            {
+              "id": "title",
+              "label": "Title",
+              "description": "The title of a document.",
+              "type": "text"
+            }
+          ]
+        },
+        "project_plus": {
+          "label": "DOD Grant Award",
+          "plural": "DOD Grant Awards",
+          "alias": "grant",
+          "fields": [
+            {
+              "id": "abstract",
+              "label": "Abstract",
+              "description": "Search within the abstract or summary of a document.",
+              "type": "text"
+            },
+            {
+              "id": "activity_code",
+              "label": "Activity Code",
+              "description": "Search by the NIH Research Activity Code, e.g. R01",
+              "type": "text"
+            },
+            {
+              "id": "date_inserted",
+              "label": "Date - Inserted",
+              "description": "Date when the document was first inserted into Dimensions. Note: Documents commonly take at least a few days to be inserted after they have been created.",
+              "type": "date"
+            },
+            {
+              "id": "funder_id",
+              "label": "Funder ID",
+              "description": "GRID ID of the funding organization.",
+              "type": "text"
+            },
+            {
+              "id": "funding_usd",
+              "label": "Funding amount (USD)",
+              "description": "Description: Funding amount awarded in USD. Note: We obtain funding amounts in their original currencies and convert them based on the exchange rate at the time of the start date of the grant. In the case that a yearly distribution of the funding amount is provided (e.g. NIH projects), the funding amount is converted for each year's exchange rate.",
+              "type": "range"
+            },
+            {
+              "id": "program",
+              "label": "Funding program",
+              "description": "Funding program or scheme of a grant.",
+              "type": "text"
+            },
+            {
+              "id": "grant_number",
+              "label": "Grant number",
+              "description": "Search for the original project number of a grant.",
+              "type": "text"
+            },
+            {
+              "id": "org_id",
+              "label": "Research organization ID",
+              "description": "GRID ID of the organization. E.g., \u201cgrid.26999.3d\u201d.",
+              "type": "text"
+            },
+            {
+              "id": "org_names_raw",
+              "label": "Research organization name (raw)",
+              "description": "Search within the raw names of the involved research organizations. Note: Depending on the selected content type the organizations can have different roles: Publications (author affiliation), Grants (funded organization/investigator affiliations), Patents (current and original assignee), Clinical trials (sponsor and collaborating organization). Boolean nesting to process phrases or words in a specified order is not supported.",
+              "type": "text"
+            },
+            {
+              "id": "researcher_id",
+              "label": "Researcher ID",
+              "description": "Search by Dimensions researcher ID",
+              "type": "text"
+            },
+            {
+              "id": "researcher_name",
+              "label": "Researcher name",
+              "description": "Searches for names in the researcher(s) field within a record.",
+              "type": "text"
+            },
+            {
+              "id": "title",
+              "label": "Title",
+              "description": "The title of a document.",
+              "type": "text"
+            }
+          ]
+        },
+        "patent_plus": {
+          "label": "DOD Patent",
+          "plural": "DOD Patents",
+          "alias": "patent",
+          "fields": [
+            {
+              "id": "abstract",
+              "label": "Abstract",
+              "description": "Search within the abstract or summary of a document.",
+              "type": "text"
+            },
+            {
+              "id": "application_number",
+              "label": "Application number",
+              "description": "The application number is the number assigned to a patent application when it is filed.",
+              "type": "text"
+            },
+            {
+              "id": "cpc_group",
+              "label": "CPC group",
+              "description": "Search patents by CPC group name, e.g. H01L29",
+              "type": "text"
+            },
+            {
+              "id": "expiration_date",
+              "label": "Date - Expiration",
+              "description": "Expiration date is an estimate of when a patent is expected to expire. Note: The expiration date should not be considered authoritative or final. An attorney or the relevant patent office should be consulted for an authoritative expiration and status determination.",
+              "type": "date"
+            },
+            {
+              "id": "filing_date",
+              "label": "Date - Filing",
+              "description": "The filing date is the date when a patent application is first filed at a patent office.",
+              "type": "date"
+            },
+            {
+              "id": "granted_date",
+              "label": "Date - Granted",
+              "description": "Granted date is the date when the patent office issues a patent to the applicant.",
+              "type": "date"
+            },
+            {
+              "id": "date_inserted",
+              "label": "Date - Inserted",
+              "description": "Date when the document was first inserted into Dimensions. Note: Documents commonly take at least a few days to be inserted after they have been created.",
+              "type": "date"
+            },
+            {
+              "id": "priority_date",
+              "label": "Date - Priority",
+              "description": "The priority date describes the first date of filing of a patent application.",
+              "type": "date"
+            },
+            {
+              "id": "date",
+              "label": "Date - Publication",
+              "description": "The publication date of a document, e.g. 2018-01-01. To standardize these dates, any missing values are normalized to the first month of the year or the first day of the month. As a result, search results may include documents where the publication date is missing the day and/or month.",
+              "type": "date"
+            },
+            {
+              "id": "family_id",
+              "label": "Family ID",
+              "description": "Identifier of the simple patent family, as assigned by the EPO. Generally, simple families contain all records which share the same priority.",
+              "type": "text"
+            },
+            {
+              "id": "funder_id",
+              "label": "Funder ID",
+              "description": "GRID ID of the funding organization.",
+              "type": "text"
+            },
+            {
+              "id": "federal_support",
+              "label": "Government interest statement",
+              "description": "The government interest statement describes how an invention was funded by a federal research grant or procurement contract.",
+              "type": "text"
+            },
+            {
+              "id": "ipcr_group",
+              "label": "IPCR group",
+              "description": "Search patents by IPCR group name, e.g. H01L29",
+              "type": "text"
+            },
+            {
+              "id": "family_count",
+              "label": "Number of family members",
+              "description": "Number of documents within a simple patent family.",
+              "type": "range"
+            },
+            {
+              "id": "patent_number",
+              "label": "Patent number",
+              "description": "Search for publication number, application number, family id, priority id, orange book application number.",
+              "type": "text"
+            },
+            {
+              "id": "org_id",
+              "label": "Research organization ID",
+              "description": "GRID ID of the organization. E.g., \u201cgrid.26999.3d\u201d.",
+              "type": "text"
+            },
+            {
+              "id": "org_names_raw",
+              "label": "Research organization name (raw)",
+              "description": "Search within the raw names of the involved research organizations. Note: Depending on the selected content type the organizations can have different roles: Publications (author affiliation), Grants (funded organization/investigator affiliations), Patents (current and original assignee), Clinical trials (sponsor and collaborating organization). Boolean nesting to process phrases or words in a specified order is not supported.",
+              "type": "text"
+            },
+            {
+              "id": "researcher_id",
+              "label": "Researcher ID",
+              "description": "Search by Dimensions researcher ID",
+              "type": "text"
+            },
+            {
+              "id": "researcher_name",
+              "label": "Researcher name",
+              "description": "Searches for names in the researcher(s) field within a record.",
+              "type": "text"
+            },
+            {
+              "id": "title",
+              "label": "Title",
+              "description": "The title of a document.",
+              "type": "text"
+            },
+            {
+              "id": "title_abstract_claims",
+              "label": "Title, abstract, claims",
+              "description": "Search within title, abstract and claims fields of a patent record.",
+              "type": "text"
+            }
+          ]
+        },
+        "technical_report": {
+          "label": "DOD Technical Report",
+          "plural": "DOD Technical Reports",
+          "alias": "technical_report",
+          "fields": [
+            {
+              "id": "abstract",
+              "label": "Abstract",
+              "description": "Search within the abstract or summary of a document.",
+              "type": "text"
+            },
+            {
+              "id": "date_inserted",
+              "label": "Date - Inserted",
+              "description": "Date when the document was first inserted into Dimensions. Note: Documents commonly take at least a few days to be inserted after they have been created.",
+              "type": "date"
+            },
+            {
+              "id": "date",
+              "label": "Date - Publication",
+              "description": "The publication date of a document, e.g. 2018-01-01. To standardize these dates, any missing values are normalized to the first month of the year or the first day of the month. As a result, search results may include documents where the publication date is missing the day and/or month.",
+              "type": "date"
+            },
+            {
+              "id": "funder_id",
+              "label": "Funder ID",
+              "description": "GRID ID of the funding organization.",
+              "type": "text"
+            },
+            {
+              "id": "org_id",
+              "label": "Research organization ID",
+              "description": "GRID ID of the organization. E.g., \u201cgrid.26999.3d\u201d.",
+              "type": "text"
+            },
+            {
+              "id": "title",
+              "label": "Title",
+              "description": "The title of a document.",
+              "type": "text"
+            }
+          ]
+        },
+        "application": {
+          "label": "Presidential Budget Report",
+          "plural": "Presidential Budget Reports",
+          "alias": "application",
+          "fields": [
+            {
+              "id": "accession_number",
+              "label": "Accession number",
+              "description": "Search for the original accession number of a report.",
+              "type": "text"
+            },
+            {
+              "id": "funding_amount",
+              "label": "Budget Amount (USD)",
+              "description": "Budget amount awarded in USD.",
+              "type": "text"
+            },
+            {
+              "id": "date_inserted",
+              "label": "Date - Inserted",
+              "description": "Date when the document was first inserted into Dimensions. Note: Documents commonly take at least a few days to be inserted after they have been created.",
+              "type": "date"
+            },
+            {
+              "id": "description",
+              "label": "Description",
+              "description": "Search within the description or summary of a document.",
+              "type": "text"
+            },
+            {
+              "id": "researcher_id",
+              "label": "Researcher ID",
+              "description": "Search by Dimensions researcher ID",
+              "type": "text"
+            },
+            {
+              "id": "title",
+              "label": "Title",
+              "description": "The title of a document.",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "placeholder": "Enter a keyword",
+      "navigation": {
+        "calculate_json": "/concepts/publication/calculate.json",
+        "id_search_json": "/search/id_search/:search_id",
+        "id_search_create_json": "/search/id_search"
+      },
+      "id_search": {
+        "enabled": false,
+        "subset_key": "id_search",
+        "placeholder": "e.g. 10.1037/a0040251",
+        "info_text": "You can search for a maximum of 25,000 document IDs. Supported IDs are: DOI, ISBN, PubMed ID, arXiv ID, PMC ID and Dimensions publication ID. Please enter one document ID per line. The URL of an ID search is valid for one year.",
+        "limit": 25000
+      }
+    }
+  },
+  "save_menu": {
+    "title": "",
+    "items": [],
+    "show_tooltip": false,
+    "hidden": true
+  },
+  "sources": [
+    {
+      "key": "publication_plus",
+      "label": "DOD Publication",
+      "parent": null,
+      "plural": "DOD Publications",
+      "alias": "publication",
+      "navigation": {
+        "path": "/discover/publication",
+        "json": "/discover/publication/sources.json"
+      }
+    },
+    {
+      "key": "project_plus",
+      "label": "DOD Grant Award",
+      "parent": null,
+      "plural": "DOD Grant Awards",
+      "alias": "grant",
+      "navigation": {
+        "path": "/discover/grant",
+        "json": "/discover/grant/sources.json"
+      }
+    },
+    {
+      "key": "patent_plus",
+      "label": "DOD Patent",
+      "parent": null,
+      "plural": "DOD Patents",
+      "alias": "patent",
+      "navigation": {
+        "path": "/discover/patent",
+        "json": "/discover/patent/sources.json"
+      }
+    },
+    {
+      "key": "technical_report",
+      "label": "DOD Technical Report",
+      "parent": null,
+      "plural": "DOD Technical Reports",
+      "alias": "technical_report",
+      "navigation": {
+        "path": "/discover/technical_report",
+        "json": "/discover/technical_report/sources.json"
+      }
+    },
+    {
+      "key": "application",
+      "label": "Presidential Budget Report",
+      "parent": null,
+      "plural": "Presidential Budget Reports",
+      "alias": "application",
+      "navigation": {
+        "path": "/discover/application",
+        "json": "/discover/application/sources.json"
+      }
+    }
+  ],
+  "analytics": {
+    "navigation": {
+      "panels_json": "/analytics/publication/panels.json"
+    },
+    "sectionsBySource": {
+      "publication_plus": {
+        "system_category": [
+          "for-aggregated",
+          "for-barchart",
+          "for-timeline",
+          "for-heatmap",
+          "rcdc-aggregated",
+          "rcdc-barchart",
+          "rcdc-timeline",
+          "rcdc-heatmap",
+          "hrcs_hc-aggregated",
+          "hrcs_hc-barchart",
+          "hrcs_hc-timeline",
+          "hrcs_hc-heatmap",
+          "hrcs_rac-aggregated",
+          "hrcs_rac-barchart",
+          "hrcs_rac-timeline",
+          "hrcs_rac-heatmap",
+          "broad_research_areas-aggregated",
+          "broad_research_areas-barchart",
+          "broad_research_areas-timeline",
+          "broad_research_areas-heatmap",
+          "health_research_areas-aggregated",
+          "health_research_areas-barchart",
+          "health_research_areas-timeline",
+          "health_research_areas-heatmap",
+          "cancer_types-aggregated",
+          "cancer_types-barchart",
+          "cancer_types-timeline",
+          "cancer_types-heatmap",
+          "cso-aggregated",
+          "cso-barchart",
+          "cso-timeline",
+          "cso-heatmap",
+          "uoa-aggregated",
+          "uoa-barchart",
+          "uoa-timeline",
+          "uoa-heatmap",
+          "sdg-aggregated",
+          "sdg-barchart",
+          "sdg-timeline",
+          "sdg-heatmap"
+        ],
+        "overview": [
+          "overview-timeline"
+        ],
+        "open_access_status": [
+          "open_access_status-aggregated",
+          "open_access_status-timeline",
+          "open_access_status-heatmap"
+        ],
+        "author": [
+          "author-aggregated",
+          "author-timeline",
+          "author-heatmap",
+          "author-vosviewer"
+        ],
+        "source_title": [
+          "source_title-aggregated",
+          "source_title-timeline",
+          "source_title-heatmap"
+        ],
+        "publisher": [
+          "publisher-aggregated",
+          "publisher-timeline",
+          "publisher-heatmap"
+        ],
+        "funder": [
+          "funder-aggregated",
+          "funder-timeline",
+          "funder-heatmap"
+        ],
+        "organization": [
+          "organization-aggregated",
+          "organization-timeline",
+          "organization-heatmap"
+        ],
+        "place": [
+          "country-aggregated",
+          "country-geomap",
+          "country-timeline",
+          "country-heatmap",
+          "state-aggregated",
+          "state-geomap",
+          "state-timeline",
+          "state-heatmap",
+          "city-aggregated",
+          "city-geomap",
+          "city-timeline",
+          "city-heatmap"
+        ],
+        "compare": [
+          "compare-comparison-chart"
+        ]
+      },
+      "project_plus": {
+        "system_category": [
+          "for-aggregated",
+          "for-barchart",
+          "for-timeline",
+          "for-heatmap",
+          "rcdc-aggregated",
+          "rcdc-barchart",
+          "rcdc-timeline",
+          "rcdc-heatmap",
+          "hrcs_hc-aggregated",
+          "hrcs_hc-barchart",
+          "hrcs_hc-timeline",
+          "hrcs_hc-heatmap",
+          "hrcs_rac-aggregated",
+          "hrcs_rac-barchart",
+          "hrcs_rac-timeline",
+          "hrcs_rac-heatmap",
+          "broad_research_areas-aggregated",
+          "broad_research_areas-barchart",
+          "broad_research_areas-timeline",
+          "broad_research_areas-heatmap",
+          "health_research_areas-aggregated",
+          "health_research_areas-barchart",
+          "health_research_areas-timeline",
+          "health_research_areas-heatmap",
+          "cancer_types-aggregated",
+          "cancer_types-barchart",
+          "cancer_types-timeline",
+          "cancer_types-heatmap",
+          "cso-aggregated",
+          "cso-barchart",
+          "cso-timeline",
+          "cso-heatmap",
+          "uoa-aggregated",
+          "uoa-barchart",
+          "uoa-timeline",
+          "uoa-heatmap",
+          "sdg-aggregated",
+          "sdg-barchart",
+          "sdg-timeline",
+          "sdg-heatmap"
+        ],
+        "overview": [
+          "overview-timeline"
+        ],
+        "researcher": [
+          "researcher-aggregated",
+          "researcher-timeline",
+          "researcher-heatmap"
+        ],
+        "funder": [
+          "funder-aggregated",
+          "funder-timeline",
+          "funder-heatmap"
+        ],
+        "organization": [
+          "organization-aggregated",
+          "organization-timeline",
+          "organization-heatmap"
+        ],
+        "place": [
+          "country-aggregated",
+          "country-geomap",
+          "country-timeline",
+          "country-heatmap",
+          "state-aggregated",
+          "state-geomap",
+          "state-timeline",
+          "state-heatmap",
+          "city-aggregated",
+          "city-geomap",
+          "city-timeline",
+          "city-heatmap"
+        ],
+        "compare": [
+          "compare-comparison-chart"
+        ]
+      },
+      "patent_plus": {
+        "system_category": [
+          "for-aggregated",
+          "for-barchart",
+          "for-timeline",
+          "for-heatmap",
+          "rcdc-aggregated",
+          "rcdc-barchart",
+          "rcdc-timeline",
+          "rcdc-heatmap",
+          "hrcs_hc-aggregated",
+          "hrcs_hc-barchart",
+          "hrcs_hc-timeline",
+          "hrcs_hc-heatmap",
+          "hrcs_rac-aggregated",
+          "hrcs_rac-barchart",
+          "hrcs_rac-timeline",
+          "hrcs_rac-heatmap",
+          "broad_research_areas-aggregated",
+          "broad_research_areas-barchart",
+          "broad_research_areas-timeline",
+          "broad_research_areas-heatmap",
+          "health_research_areas-aggregated",
+          "health_research_areas-barchart",
+          "health_research_areas-timeline",
+          "health_research_areas-heatmap",
+          "cancer_types-aggregated",
+          "cancer_types-barchart",
+          "cancer_types-timeline",
+          "cancer_types-heatmap",
+          "cso-aggregated",
+          "cso-barchart",
+          "cso-timeline",
+          "cso-heatmap"
+        ],
+        "overview": [
+          "overview-timeline"
+        ],
+        "researcher": [
+          "researcher-aggregated",
+          "researcher-timeline",
+          "researcher-heatmap"
+        ],
+        "funder": [
+          "funder-aggregated",
+          "funder-timeline",
+          "funder-heatmap"
+        ],
+        "assignee": [
+          "assignee-aggregated",
+          "assignee-timeline",
+          "assignee-heatmap"
+        ],
+        "place": [
+          "country-aggregated",
+          "country-geomap",
+          "country-timeline",
+          "country-heatmap",
+          "state-aggregated",
+          "state-geomap",
+          "state-timeline",
+          "state-heatmap",
+          "city-aggregated",
+          "city-geomap",
+          "city-timeline",
+          "city-heatmap"
+        ],
+        "compare": [
+          "compare-comparison-chart"
+        ]
+      },
+      "technical_report": {
+        "system_category": [
+          "for-aggregated",
+          "for-barchart",
+          "for-timeline",
+          "for-heatmap",
+          "rcdc-aggregated",
+          "rcdc-barchart",
+          "rcdc-timeline",
+          "rcdc-heatmap",
+          "hrcs_hc-aggregated",
+          "hrcs_hc-barchart",
+          "hrcs_hc-timeline",
+          "hrcs_hc-heatmap",
+          "hrcs_rac-aggregated",
+          "hrcs_rac-barchart",
+          "hrcs_rac-timeline",
+          "hrcs_rac-heatmap",
+          "health_research_areas-aggregated",
+          "health_research_areas-barchart",
+          "health_research_areas-timeline",
+          "health_research_areas-heatmap",
+          "broad_research_areas-aggregated",
+          "broad_research_areas-barchart",
+          "broad_research_areas-timeline",
+          "broad_research_areas-heatmap",
+          "cancer_types-aggregated",
+          "cancer_types-barchart",
+          "cancer_types-timeline",
+          "cancer_types-heatmap",
+          "cso-aggregated",
+          "cso-barchart",
+          "cso-timeline",
+          "cso-heatmap",
+          "uoa-aggregated",
+          "uoa-barchart",
+          "uoa-timeline",
+          "uoa-heatmap",
+          "sdg-aggregated",
+          "sdg-barchart",
+          "sdg-timeline",
+          "sdg-heatmap"
+        ],
+        "overview": [
+          "overview-timeline"
+        ],
+        "publishing_org": [],
+        "researcher": [
+          "researcher-aggregated",
+          "researcher-timeline",
+          "researcher-heatmap"
+        ],
+        "funder": [
+          "funder-aggregated",
+          "funder-timeline",
+          "funder-heatmap"
+        ],
+        "organization": [
+          "organization-aggregated",
+          "organization-timeline",
+          "organization-heatmap"
+        ],
+        "place": [
+          "country-aggregated",
+          "country-geomap",
+          "country-timeline",
+          "country-heatmap",
+          "state-aggregated",
+          "state-geomap",
+          "state-timeline",
+          "state-heatmap",
+          "city-aggregated",
+          "city-geomap",
+          "city-timeline",
+          "city-heatmap"
+        ],
+        "compare": [
+          "compare-comparison-chart"
+        ]
+      },
+      "application": {
+        "overview": [
+          "overview-timeline"
+        ],
+        "funder": [
+          "funder-aggregated",
+          "funder-timeline",
+          "funder-heatmap"
+        ],
+        "organization": [],
+        "place": [
+          "country-aggregated",
+          "country-geomap",
+          "country-timeline",
+          "country-heatmap",
+          "state-aggregated",
+          "state-geomap",
+          "state-timeline",
+          "state-heatmap",
+          "city-aggregated",
+          "city-geomap",
+          "city-timeline",
+          "city-heatmap"
+        ]
+      }
+    },
+    "sections": [
+      {
+        "id": "system_category",
+        "label": "Research Categories",
+        "thumb": "system_category",
+        "entity": {
+          "key": "for",
+          "label": "Fields of Research (ANZSRC 2020)",
+          "parent": null,
+          "plural": "Fields of Research (ANZSRC 2020)",
+          "alias": "for"
+        },
+        "preview": true,
+        "items": [
+          {
+            "id": "system_category-for",
+            "label": "Fields of Research (ANZSRC 2020)",
+            "items": [
+              {
+                "id": "for-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Fields of Research (ANZSRC 2020) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/for/aggregated",
+                  "results_json": "/analytics/publication/for/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "for-barchart",
+                "label": "Bar chart",
+                "page_title": "Bar chart - Fields of Research (ANZSRC 2020) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "barchart",
+                "navigation": {
+                  "path": "/analytics/publication/for/barchart",
+                  "results_json": "/analytics/publication/for/barchart.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "for-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Fields of Research (ANZSRC 2020) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/for/timeline",
+                  "results_json": "/analytics/publication/for/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "for-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Fields of Research (ANZSRC 2020) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/for/heatmap",
+                  "results_json": "/analytics/publication/for/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "system_category-rcdc",
+            "label": "Research, Condition, and Disease Categorization",
+            "items": [
+              {
+                "id": "rcdc-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Research, Condition, and Disease Categorizations for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/rcdc/aggregated",
+                  "results_json": "/analytics/publication/rcdc/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "rcdc-barchart",
+                "label": "Bar chart",
+                "page_title": "Bar chart - Research, Condition, and Disease Categorizations for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "barchart",
+                "navigation": {
+                  "path": "/analytics/publication/rcdc/barchart",
+                  "results_json": "/analytics/publication/rcdc/barchart.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "rcdc-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Research, Condition, and Disease Categorizations for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/rcdc/timeline",
+                  "results_json": "/analytics/publication/rcdc/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "rcdc-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Research, Condition, and Disease Categorizations for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/rcdc/heatmap",
+                  "results_json": "/analytics/publication/rcdc/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "system_category-hrcs_hc",
+            "label": "Health Category (HRCS)",
+            "items": [
+              {
+                "id": "hrcs_hc-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Health Category (HRCS) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/hrcs_hc/aggregated",
+                  "results_json": "/analytics/publication/hrcs_hc/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "hrcs_hc-barchart",
+                "label": "Bar chart",
+                "page_title": "Bar chart - Health Category (HRCS) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "barchart",
+                "navigation": {
+                  "path": "/analytics/publication/hrcs_hc/barchart",
+                  "results_json": "/analytics/publication/hrcs_hc/barchart.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "hrcs_hc-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Health Category (HRCS) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/hrcs_hc/timeline",
+                  "results_json": "/analytics/publication/hrcs_hc/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "hrcs_hc-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Health Category (HRCS) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/hrcs_hc/heatmap",
+                  "results_json": "/analytics/publication/hrcs_hc/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "system_category-hrcs_rac",
+            "label": "Research Activity Codes (HRCS)",
+            "items": [
+              {
+                "id": "hrcs_rac-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Research Activity Codes (HRCS) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/hrcs_rac/aggregated",
+                  "results_json": "/analytics/publication/hrcs_rac/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "hrcs_rac-barchart",
+                "label": "Bar chart",
+                "page_title": "Bar chart - Research Activity Codes (HRCS) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "barchart",
+                "navigation": {
+                  "path": "/analytics/publication/hrcs_rac/barchart",
+                  "results_json": "/analytics/publication/hrcs_rac/barchart.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "hrcs_rac-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Research Activity Codes (HRCS) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/hrcs_rac/timeline",
+                  "results_json": "/analytics/publication/hrcs_rac/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "hrcs_rac-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Research Activity Codes (HRCS) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/hrcs_rac/heatmap",
+                  "results_json": "/analytics/publication/hrcs_rac/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "system_category-cancer_types",
+            "label": "Cancer Types",
+            "items": [
+              {
+                "id": "cancer_types-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Cancer Types for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/cancer_types/aggregated",
+                  "results_json": "/analytics/publication/cancer_types/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "cancer_types-barchart",
+                "label": "Bar chart",
+                "page_title": "Bar chart - Cancer Types for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "barchart",
+                "navigation": {
+                  "path": "/analytics/publication/cancer_types/barchart",
+                  "results_json": "/analytics/publication/cancer_types/barchart.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "cancer_types-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Cancer Types for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/cancer_types/timeline",
+                  "results_json": "/analytics/publication/cancer_types/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "cancer_types-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Cancer Types for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/cancer_types/heatmap",
+                  "results_json": "/analytics/publication/cancer_types/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "system_category-cso",
+            "label": "Common Scientific Outline (CSO)",
+            "items": [
+              {
+                "id": "cso-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Common Scientific Outline (CSO) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/cso/aggregated",
+                  "results_json": "/analytics/publication/cso/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "cso-barchart",
+                "label": "Bar chart",
+                "page_title": "Bar chart - Common Scientific Outline (CSO) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "barchart",
+                "navigation": {
+                  "path": "/analytics/publication/cso/barchart",
+                  "results_json": "/analytics/publication/cso/barchart.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "cso-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Common Scientific Outline (CSO) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/cso/timeline",
+                  "results_json": "/analytics/publication/cso/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "cso-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Common Scientific Outline (CSO) for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/cso/heatmap",
+                  "results_json": "/analytics/publication/cso/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "system_category-uoa",
+            "label": "Units of Assessment",
+            "items": [
+              {
+                "id": "uoa-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Research Categories for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/uoa/aggregated",
+                  "results_json": "/analytics/publication/uoa/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "uoa-barchart",
+                "label": "Bar chart",
+                "page_title": "Bar chart - Research Categories for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "barchart",
+                "navigation": {
+                  "path": "/analytics/publication/uoa/barchart",
+                  "results_json": "/analytics/publication/uoa/barchart.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "uoa-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Research Categories for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/uoa/timeline",
+                  "results_json": "/analytics/publication/uoa/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "uoa-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Research Categories for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/uoa/heatmap",
+                  "results_json": "/analytics/publication/uoa/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "system_category-sdg",
+            "label": "Sustainable Development Goals",
+            "items": [
+              {
+                "id": "sdg-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Sustainable Development Goals for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/sdg/aggregated",
+                  "results_json": "/analytics/publication/sdg/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "sdg-barchart",
+                "label": "Bar chart",
+                "page_title": "Bar chart - Sustainable Development Goals for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "barchart",
+                "navigation": {
+                  "path": "/analytics/publication/sdg/barchart",
+                  "results_json": "/analytics/publication/sdg/barchart.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "sdg-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Sustainable Development Goals for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/sdg/timeline",
+                  "results_json": "/analytics/publication/sdg/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "sdg-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Sustainable Development Goals for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/sdg/heatmap",
+                  "results_json": "/analytics/publication/sdg/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "overview",
+        "label": "Overview",
+        "thumb": "overview",
+        "entity": null,
+        "preview": true,
+        "items": [
+          {
+            "id": "overview-overview",
+            "label": "Overview",
+            "items": [
+              {
+                "id": "overview-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Overview for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/overview/timeline",
+                  "results_json": "/analytics/publication/overview/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "open_access_status",
+        "label": "Open Access",
+        "thumb": "open_access_status",
+        "entity": {
+          "key": "open_access_status",
+          "label": "Open Access",
+          "parent": null,
+          "plural": "Open Access",
+          "alias": "open_access_status"
+        },
+        "preview": true,
+        "items": [
+          {
+            "id": "open_access_status-open_access_status",
+            "label": "Open Access",
+            "items": [
+              {
+                "id": "open_access_status-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Open Access for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/open_access_status/aggregated",
+                  "results_json": "/analytics/publication/open_access_status/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "open_access_status-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Open Access for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/open_access_status/timeline",
+                  "results_json": "/analytics/publication/open_access_status/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "open_access_status-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Open Access for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/open_access_status/heatmap",
+                  "results_json": "/analytics/publication/open_access_status/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "author",
+        "label": "Researchers",
+        "thumb": "author",
+        "entity": {
+          "key": "author",
+          "label": "Researcher",
+          "parent": null,
+          "plural": "Researchers",
+          "alias": "author"
+        },
+        "preview": true,
+        "items": [
+          {
+            "id": "author-author",
+            "label": "Researcher",
+            "items": [
+              {
+                "id": "author-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Researchers for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/author/aggregated",
+                  "results_json": "/analytics/publication/author/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "author-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Researchers for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/author/timeline",
+                  "results_json": "/analytics/publication/author/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "author-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Researchers for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/author/heatmap",
+                  "results_json": "/analytics/publication/author/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "author-vosviewer",
+                "label": "Network",
+                "page_title": "Network - Researchers for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "vosviewer",
+                "navigation": {
+                  "path": "/analytics/publication/author/vosviewer",
+                  "results_json": "/analytics/publication/author/vosviewer.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "source_title",
+        "label": "Source Titles",
+        "thumb": "source_title",
+        "entity": {
+          "key": "source_title",
+          "label": "Source Title",
+          "parent": null,
+          "plural": "Source Titles",
+          "alias": "source_title"
+        },
+        "preview": true,
+        "items": [
+          {
+            "id": "source_title-source_title",
+            "label": "Source Title",
+            "items": [
+              {
+                "id": "source_title-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Source Titles for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/source_title/aggregated",
+                  "results_json": "/analytics/publication/source_title/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "source_title-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Source Titles for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/source_title/timeline",
+                  "results_json": "/analytics/publication/source_title/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "source_title-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Source Titles for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/source_title/heatmap",
+                  "results_json": "/analytics/publication/source_title/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "publisher",
+        "label": "Publishers",
+        "thumb": "publisher",
+        "entity": {
+          "key": "publisher",
+          "label": "Publisher",
+          "parent": null,
+          "plural": "Publishers",
+          "alias": "publisher"
+        },
+        "preview": true,
+        "items": [
+          {
+            "id": "publisher-publisher",
+            "label": "Publisher",
+            "items": [
+              {
+                "id": "publisher-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Publishers for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/publisher/aggregated",
+                  "results_json": "/analytics/publication/publisher/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "publisher-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Publishers for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/publisher/timeline",
+                  "results_json": "/analytics/publication/publisher/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "publisher-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Publishers for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/publisher/heatmap",
+                  "results_json": "/analytics/publication/publisher/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "funder",
+        "label": "Funders",
+        "thumb": "funder",
+        "entity": {
+          "key": "funder",
+          "label": "Funder",
+          "parent": null,
+          "plural": "Funders",
+          "alias": "funder"
+        },
+        "preview": true,
+        "items": [
+          {
+            "id": "funder-funder",
+            "label": "Funder",
+            "items": [
+              {
+                "id": "funder-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Funders for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/funder/aggregated",
+                  "results_json": "/analytics/publication/funder/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "funder-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Funders for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/funder/timeline",
+                  "results_json": "/analytics/publication/funder/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "funder-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Funders for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/funder/heatmap",
+                  "results_json": "/analytics/publication/funder/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "organization",
+        "label": "Research Organizations",
+        "thumb": "organization",
+        "entity": {
+          "key": "organization",
+          "label": "Research Organization",
+          "parent": null,
+          "plural": "Research Organizations",
+          "alias": "organization"
+        },
+        "preview": true,
+        "items": [
+          {
+            "id": "organization-organization",
+            "label": "Research Organization",
+            "items": [
+              {
+                "id": "organization-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Research Organizations for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/organization/aggregated",
+                  "results_json": "/analytics/publication/organization/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "organization-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Research Organizations for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/organization/timeline",
+                  "results_json": "/analytics/publication/organization/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "organization-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Research Organizations for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/organization/heatmap",
+                  "results_json": "/analytics/publication/organization/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "place",
+        "label": "Places",
+        "thumb": "place",
+        "entity": {
+          "key": "country",
+          "label": "Country/Territory",
+          "parent": null,
+          "plural": "Countries/Territories",
+          "alias": "country"
+        },
+        "preview": true,
+        "items": [
+          {
+            "id": "place-country",
+            "label": "Country/Territory",
+            "items": [
+              {
+                "id": "country-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Countries\\/Territories for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/country/aggregated",
+                  "results_json": "/analytics/publication/country/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "country-geomap",
+                "label": "Geomap",
+                "page_title": "Geomap - Countries\\/Territories for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "geomap",
+                "navigation": {
+                  "path": "/analytics/publication/country/geomap",
+                  "results_json": "/analytics/publication/country/geomap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "country-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Countries\\/Territories for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/country/timeline",
+                  "results_json": "/analytics/publication/country/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "country-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Countries\\/Territories for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/country/heatmap",
+                  "results_json": "/analytics/publication/country/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "place-state",
+            "label": "State/Region",
+            "items": [
+              {
+                "id": "state-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - States\\/Regions for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/state/aggregated",
+                  "results_json": "/analytics/publication/state/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "state-geomap",
+                "label": "Geomap",
+                "page_title": "Geomap - States\\/Regions for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "geomap",
+                "navigation": {
+                  "path": "/analytics/publication/state/geomap",
+                  "results_json": "/analytics/publication/state/geomap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "state-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - States\\/Regions for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/state/timeline",
+                  "results_json": "/analytics/publication/state/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "state-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - States\\/Regions for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/state/heatmap",
+                  "results_json": "/analytics/publication/state/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "place-city",
+            "label": "City",
+            "items": [
+              {
+                "id": "city-aggregated",
+                "label": "Aggregated",
+                "page_title": "Aggregated - Cities for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "aggregated",
+                "navigation": {
+                  "path": "/analytics/publication/city/aggregated",
+                  "results_json": "/analytics/publication/city/aggregated.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "city-geomap",
+                "label": "Geomap",
+                "page_title": "Geomap - Cities for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "geomap",
+                "navigation": {
+                  "path": "/analytics/publication/city/geomap",
+                  "results_json": "/analytics/publication/city/geomap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "city-timeline",
+                "label": "Timeline",
+                "page_title": "Timeline - Cities for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "timeline",
+                "navigation": {
+                  "path": "/analytics/publication/city/timeline",
+                  "results_json": "/analytics/publication/city/timeline.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              },
+              {
+                "id": "city-heatmap",
+                "label": "Heatmap",
+                "page_title": "Heatmap - Cities for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "heatmap",
+                "navigation": {
+                  "path": "/analytics/publication/city/heatmap",
+                  "results_json": "/analytics/publication/city/heatmap.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "compare",
+        "label": "Compare",
+        "thumb": "compare",
+        "entity": null,
+        "preview": false,
+        "items": [
+          {
+            "id": "compare-compare",
+            "label": "Compare",
+            "items": [
+              {
+                "id": "compare-comparison-chart",
+                "label": "Comparison chart",
+                "page_title": "Comparison chart - Compare for Researcher: Swapnil Sayan Saha in DOD Publications - Dimensions for DTIC",
+                "type": "comparison-chart",
+                "navigation": {
+                  "path": "/analytics/publication/compare/comparison-chart",
+                  "results_json": "/analytics/publication/compare/comparison-chart.json",
+                  "path_params": "/analytics/{source}/{section}/{subsection}",
+                  "url_defaults": {
+                    "subsection": null,
+                    "section": null,
+                    "source": null
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "discover": {
+    "irm": null,
+    "show_powered_by": false,
+    "facets_panel_promotion": null
+  },
+  "custom_footer": {
+    "content": "This site and its contents is part of Dimensions, a linked research knowledge system provided by Digital Science & Research Solutions Inc. For further information about Dimensions, go to <a href=\"https://dimensions.ai\" target=\"_blank\">https://dimensions.ai</a>",
+    "id": "custom_footer"
+  }
+}

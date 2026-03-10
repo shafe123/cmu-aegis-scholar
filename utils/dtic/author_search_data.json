@@ -1,0 +1,534 @@
+{
+  "search_modes": [
+    {
+      "id": "content",
+      "label": "Documents",
+      "types": [
+        {
+          "type": "kws",
+          "limit": 22000,
+          "fields": {
+            "default": "full_search",
+            "items": [
+              {
+                "id": "full_search",
+                "label": "Full data",
+                "tag_label": "Free text in full data"
+              },
+              {
+                "id": "text_search",
+                "label": "Title and abstract",
+                "tag_label": "Free text in title and abstract"
+              },
+              {
+                "id": "doi",
+                "label": "DOI",
+                "tag_label": "DOI"
+              }
+            ]
+          },
+          "placeholder": "e.g. Magnetoresistance AND alloys"
+        },
+        {
+          "type": "abs",
+          "limit": 22000,
+          "fields": null,
+          "placeholder": "Paste an abstract here to get similar documents"
+        }
+      ],
+      "default": "kws",
+      "navigation": {
+        "path": "/discover/publication"
+      }
+    }
+  ],
+  "query_builder": {
+    "limit": 22000,
+    "fields": {
+      "default": "full_search",
+      "items": [
+        {
+          "id": "full_search",
+          "label": "Full data",
+          "tag_label": "Free text in full data"
+        },
+        {
+          "id": "text_search",
+          "label": "Title and abstract",
+          "tag_label": "Free text in title and abstract"
+        }
+      ]
+    },
+    "auto_parentheses": true,
+    "advanced_search_fields": {
+      "publication_plus": {
+        "label": "DOD Publication",
+        "plural": "DOD Publications",
+        "alias": "publication",
+        "fields": [
+          {
+            "id": "abstract",
+            "label": "Abstract",
+            "description": "Search within the abstract or summary of a document.",
+            "type": "text"
+          },
+          {
+            "id": "acknowledgements",
+            "label": "Acknowledgements",
+            "description": "Search for keywords in acknowledgment and funding section of a document.",
+            "type": "text"
+          },
+          {
+            "id": "altmetric",
+            "label": "Altmetric Attention Score",
+            "description": "The Altmetric Attention Score is a weighted count of all of the online attention Altmetric have found for an individual research output. This includes mentions in public policy documents and references in Wikipedia, mainstream news, social networks, blogs and more.",
+            "type": "range"
+          },
+          {
+            "id": "conference_name",
+            "label": "Conference name",
+            "description": "Search by title of a conference, such as 'European Lung Cancer Congress'",
+            "type": "text"
+          },
+          {
+            "id": "doi",
+            "label": "DOI",
+            "description": "Digital Object Identifier (DOI) of a document. Content types: Publications and Datasets Availability: standard field set, i.e. available on all analytics-level instances",
+            "type": "text"
+          },
+          {
+            "id": "date_inserted",
+            "label": "Date - Inserted",
+            "description": "Date when the document was first inserted into Dimensions. Note: Documents commonly take at least a few days to be inserted after they have been created.",
+            "type": "date"
+          },
+          {
+            "id": "date",
+            "label": "Date - Publication",
+            "description": "The publication date of a document, e.g. 2018-01-01. To standardize these dates, any missing values are normalized to the first month of the year or the first day of the month. As a result, search results may include documents where the publication date is missing the day and/or month.",
+            "type": "date"
+          },
+          {
+            "id": "full_data_exact",
+            "label": "Exact search",
+            "description": "Search for keywords in the full text of a publication. This search index is not normalized / stemmed, i.e., it splits the text on white space only - all other characters and punctuation stay unchanged. This field can be useful when searching for exact terminology, such as gene names, chemical compounds etc.",
+            "type": "text"
+          },
+          {
+            "id": "fcr",
+            "label": "Field Citation Ratio (FCR)",
+            "description": "The Field Citation Ratio (FCR) indicates the relative citation performance of a publication when compared to similarly-aged articles in its subject area.",
+            "type": "range"
+          },
+          {
+            "id": "funder_id",
+            "label": "Funder ID",
+            "description": "GRID ID of the funding organization.",
+            "type": "text"
+          },
+          {
+            "id": "isbn",
+            "label": "ISBN",
+            "description": "International Standard Book Number (online and print).",
+            "type": "text"
+          },
+          {
+            "id": "issn",
+            "label": "ISSN",
+            "description": "International Standard Serial Number (online and print).",
+            "type": "text"
+          },
+          {
+            "id": "mesh_terms",
+            "label": "MeSH terms",
+            "description": "MeSH (Medical Subject Headings) is a controlled vocabulary thesaurus used in PubMed and ClinicalTrials.gov. Use the <a href=\"https://www.ncbi.nlm.nih.gov/mesh/\" target=\"_blank\">NCBI MeSH database</a> to find MeSH terms and learn more.",
+            "type": "text"
+          },
+          {
+            "id": "country_count",
+            "label": "Number of affiliation countries",
+            "description": "Count of identified affiliation countries in a publication.",
+            "type": "range"
+          },
+          {
+            "id": "org_count",
+            "label": "Number of affiliations",
+            "description": "Count of identified researcher affiliations in a publication.",
+            "type": "range"
+          },
+          {
+            "id": "authors_count",
+            "label": "Number of authors",
+            "description": "Count of authors, as they appear in the original document.",
+            "type": "range"
+          },
+          {
+            "id": "citations",
+            "label": "Number of citations",
+            "description": "Publication citations is the number of times that a publication has been cited by other publications in the database. Citing publications can be of any publication type, such as articles, chapters, preprints, or monographs.",
+            "type": "range"
+          },
+          {
+            "id": "orcid",
+            "label": "ORCID ID",
+            "description": "Search by an author's ORCID ID (such as \"0000-0002-9079-593X\").",
+            "type": "text"
+          },
+          {
+            "id": "rcr",
+            "label": "Relative Citation Ratio (RCR)",
+            "description": "The Relative Citation Ratio (RCR) indicates the relative citation performance of a publication when comparing its citation rate to that of other publications in its area of research.",
+            "type": "range"
+          },
+          {
+            "id": "org_id",
+            "label": "Research organization ID",
+            "description": "GRID ID of the organization. E.g., \u201cgrid.26999.3d\u201d.",
+            "type": "text"
+          },
+          {
+            "id": "org_names_raw",
+            "label": "Research organization name (raw)",
+            "description": "Search within the raw names of the involved research organizations. Note: Depending on the selected content type the organizations can have different roles: Publications (author affiliation), Grants (funded organization/investigator affiliations), Patents (current and original assignee), Clinical trials (sponsor and collaborating organization). Boolean nesting to process phrases or words in a specified order is not supported.",
+            "type": "text"
+          },
+          {
+            "id": "researcher_id",
+            "label": "Researcher ID",
+            "description": "Search by Dimensions researcher ID",
+            "type": "text"
+          },
+          {
+            "id": "researcher_name",
+            "label": "Researcher name",
+            "description": "Searches for names in the researcher(s) field within a record.",
+            "type": "text"
+          },
+          {
+            "id": "source_title",
+            "label": "Source title name",
+            "description": "Source title of a publication. Includes journals, preprint repositories, book series and conference proceedings.",
+            "type": "text"
+          },
+          {
+            "id": "title",
+            "label": "Title",
+            "description": "The title of a document.",
+            "type": "text"
+          }
+        ]
+      },
+      "project_plus": {
+        "label": "DOD Grant Award",
+        "plural": "DOD Grant Awards",
+        "alias": "grant",
+        "fields": [
+          {
+            "id": "abstract",
+            "label": "Abstract",
+            "description": "Search within the abstract or summary of a document.",
+            "type": "text"
+          },
+          {
+            "id": "activity_code",
+            "label": "Activity Code",
+            "description": "Search by the NIH Research Activity Code, e.g. R01",
+            "type": "text"
+          },
+          {
+            "id": "date_inserted",
+            "label": "Date - Inserted",
+            "description": "Date when the document was first inserted into Dimensions. Note: Documents commonly take at least a few days to be inserted after they have been created.",
+            "type": "date"
+          },
+          {
+            "id": "funder_id",
+            "label": "Funder ID",
+            "description": "GRID ID of the funding organization.",
+            "type": "text"
+          },
+          {
+            "id": "funding_usd",
+            "label": "Funding amount (USD)",
+            "description": "Description: Funding amount awarded in USD. Note: We obtain funding amounts in their original currencies and convert them based on the exchange rate at the time of the start date of the grant. In the case that a yearly distribution of the funding amount is provided (e.g. NIH projects), the funding amount is converted for each year's exchange rate.",
+            "type": "range"
+          },
+          {
+            "id": "program",
+            "label": "Funding program",
+            "description": "Funding program or scheme of a grant.",
+            "type": "text"
+          },
+          {
+            "id": "grant_number",
+            "label": "Grant number",
+            "description": "Search for the original project number of a grant.",
+            "type": "text"
+          },
+          {
+            "id": "org_id",
+            "label": "Research organization ID",
+            "description": "GRID ID of the organization. E.g., \u201cgrid.26999.3d\u201d.",
+            "type": "text"
+          },
+          {
+            "id": "org_names_raw",
+            "label": "Research organization name (raw)",
+            "description": "Search within the raw names of the involved research organizations. Note: Depending on the selected content type the organizations can have different roles: Publications (author affiliation), Grants (funded organization/investigator affiliations), Patents (current and original assignee), Clinical trials (sponsor and collaborating organization). Boolean nesting to process phrases or words in a specified order is not supported.",
+            "type": "text"
+          },
+          {
+            "id": "researcher_id",
+            "label": "Researcher ID",
+            "description": "Search by Dimensions researcher ID",
+            "type": "text"
+          },
+          {
+            "id": "researcher_name",
+            "label": "Researcher name",
+            "description": "Searches for names in the researcher(s) field within a record.",
+            "type": "text"
+          },
+          {
+            "id": "title",
+            "label": "Title",
+            "description": "The title of a document.",
+            "type": "text"
+          }
+        ]
+      },
+      "patent_plus": {
+        "label": "DOD Patent",
+        "plural": "DOD Patents",
+        "alias": "patent",
+        "fields": [
+          {
+            "id": "abstract",
+            "label": "Abstract",
+            "description": "Search within the abstract or summary of a document.",
+            "type": "text"
+          },
+          {
+            "id": "application_number",
+            "label": "Application number",
+            "description": "The application number is the number assigned to a patent application when it is filed.",
+            "type": "text"
+          },
+          {
+            "id": "cpc_group",
+            "label": "CPC group",
+            "description": "Search patents by CPC group name, e.g. H01L29",
+            "type": "text"
+          },
+          {
+            "id": "expiration_date",
+            "label": "Date - Expiration",
+            "description": "Expiration date is an estimate of when a patent is expected to expire. Note: The expiration date should not be considered authoritative or final. An attorney or the relevant patent office should be consulted for an authoritative expiration and status determination.",
+            "type": "date"
+          },
+          {
+            "id": "filing_date",
+            "label": "Date - Filing",
+            "description": "The filing date is the date when a patent application is first filed at a patent office.",
+            "type": "date"
+          },
+          {
+            "id": "granted_date",
+            "label": "Date - Granted",
+            "description": "Granted date is the date when the patent office issues a patent to the applicant.",
+            "type": "date"
+          },
+          {
+            "id": "date_inserted",
+            "label": "Date - Inserted",
+            "description": "Date when the document was first inserted into Dimensions. Note: Documents commonly take at least a few days to be inserted after they have been created.",
+            "type": "date"
+          },
+          {
+            "id": "priority_date",
+            "label": "Date - Priority",
+            "description": "The priority date describes the first date of filing of a patent application.",
+            "type": "date"
+          },
+          {
+            "id": "date",
+            "label": "Date - Publication",
+            "description": "The publication date of a document, e.g. 2018-01-01. To standardize these dates, any missing values are normalized to the first month of the year or the first day of the month. As a result, search results may include documents where the publication date is missing the day and/or month.",
+            "type": "date"
+          },
+          {
+            "id": "family_id",
+            "label": "Family ID",
+            "description": "Identifier of the simple patent family, as assigned by the EPO. Generally, simple families contain all records which share the same priority.",
+            "type": "text"
+          },
+          {
+            "id": "funder_id",
+            "label": "Funder ID",
+            "description": "GRID ID of the funding organization.",
+            "type": "text"
+          },
+          {
+            "id": "federal_support",
+            "label": "Government interest statement",
+            "description": "The government interest statement describes how an invention was funded by a federal research grant or procurement contract.",
+            "type": "text"
+          },
+          {
+            "id": "ipcr_group",
+            "label": "IPCR group",
+            "description": "Search patents by IPCR group name, e.g. H01L29",
+            "type": "text"
+          },
+          {
+            "id": "family_count",
+            "label": "Number of family members",
+            "description": "Number of documents within a simple patent family.",
+            "type": "range"
+          },
+          {
+            "id": "patent_number",
+            "label": "Patent number",
+            "description": "Search for publication number, application number, family id, priority id, orange book application number.",
+            "type": "text"
+          },
+          {
+            "id": "org_id",
+            "label": "Research organization ID",
+            "description": "GRID ID of the organization. E.g., \u201cgrid.26999.3d\u201d.",
+            "type": "text"
+          },
+          {
+            "id": "org_names_raw",
+            "label": "Research organization name (raw)",
+            "description": "Search within the raw names of the involved research organizations. Note: Depending on the selected content type the organizations can have different roles: Publications (author affiliation), Grants (funded organization/investigator affiliations), Patents (current and original assignee), Clinical trials (sponsor and collaborating organization). Boolean nesting to process phrases or words in a specified order is not supported.",
+            "type": "text"
+          },
+          {
+            "id": "researcher_id",
+            "label": "Researcher ID",
+            "description": "Search by Dimensions researcher ID",
+            "type": "text"
+          },
+          {
+            "id": "researcher_name",
+            "label": "Researcher name",
+            "description": "Searches for names in the researcher(s) field within a record.",
+            "type": "text"
+          },
+          {
+            "id": "title",
+            "label": "Title",
+            "description": "The title of a document.",
+            "type": "text"
+          },
+          {
+            "id": "title_abstract_claims",
+            "label": "Title, abstract, claims",
+            "description": "Search within title, abstract and claims fields of a patent record.",
+            "type": "text"
+          }
+        ]
+      },
+      "technical_report": {
+        "label": "DOD Technical Report",
+        "plural": "DOD Technical Reports",
+        "alias": "technical_report",
+        "fields": [
+          {
+            "id": "abstract",
+            "label": "Abstract",
+            "description": "Search within the abstract or summary of a document.",
+            "type": "text"
+          },
+          {
+            "id": "date_inserted",
+            "label": "Date - Inserted",
+            "description": "Date when the document was first inserted into Dimensions. Note: Documents commonly take at least a few days to be inserted after they have been created.",
+            "type": "date"
+          },
+          {
+            "id": "date",
+            "label": "Date - Publication",
+            "description": "The publication date of a document, e.g. 2018-01-01. To standardize these dates, any missing values are normalized to the first month of the year or the first day of the month. As a result, search results may include documents where the publication date is missing the day and/or month.",
+            "type": "date"
+          },
+          {
+            "id": "funder_id",
+            "label": "Funder ID",
+            "description": "GRID ID of the funding organization.",
+            "type": "text"
+          },
+          {
+            "id": "org_id",
+            "label": "Research organization ID",
+            "description": "GRID ID of the organization. E.g., \u201cgrid.26999.3d\u201d.",
+            "type": "text"
+          },
+          {
+            "id": "title",
+            "label": "Title",
+            "description": "The title of a document.",
+            "type": "text"
+          }
+        ]
+      },
+      "application": {
+        "label": "Presidential Budget Report",
+        "plural": "Presidential Budget Reports",
+        "alias": "application",
+        "fields": [
+          {
+            "id": "accession_number",
+            "label": "Accession number",
+            "description": "Search for the original accession number of a report.",
+            "type": "text"
+          },
+          {
+            "id": "funding_amount",
+            "label": "Budget Amount (USD)",
+            "description": "Budget amount awarded in USD.",
+            "type": "text"
+          },
+          {
+            "id": "date_inserted",
+            "label": "Date - Inserted",
+            "description": "Date when the document was first inserted into Dimensions. Note: Documents commonly take at least a few days to be inserted after they have been created.",
+            "type": "date"
+          },
+          {
+            "id": "description",
+            "label": "Description",
+            "description": "Search within the description or summary of a document.",
+            "type": "text"
+          },
+          {
+            "id": "researcher_id",
+            "label": "Researcher ID",
+            "description": "Search by Dimensions researcher ID",
+            "type": "text"
+          },
+          {
+            "id": "title",
+            "label": "Title",
+            "description": "The title of a document.",
+            "type": "text"
+          }
+        ]
+      }
+    },
+    "placeholder": "Enter a keyword",
+    "navigation": {
+      "calculate_json": "/concepts/publication/calculate.json",
+      "id_search_json": "/search/id_search/:search_id",
+      "id_search_create_json": "/search/id_search"
+    },
+    "id_search": {
+      "enabled": false,
+      "subset_key": "id_search",
+      "placeholder": "e.g. 10.1037/a0040251",
+      "info_text": "You can search for a maximum of 25,000 document IDs. Supported IDs are: DOI, ISBN, PubMed ID, arXiv ID, PMC ID and Dimensions publication ID. Please enter one document ID per line. The URL of an ID search is valid for one year.",
+      "limit": 25000
+    }
+  }
+}
