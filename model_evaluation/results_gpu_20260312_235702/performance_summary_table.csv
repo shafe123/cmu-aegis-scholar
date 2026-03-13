@@ -1,0 +1,31 @@
+Model,Category,MRR,NDCG,Queries,Avg Time (ms)
+all-MiniLM-L6-v2,Overall,0.6528,0.9142,12,10.04
+all-MiniLM-L6-v2,AI,0.7778,0.9006,3,-
+all-MiniLM-L6-v2,MilDec,0.8333,0.9643,3,-
+all-MiniLM-L6-v2,MilDec & AI,1.0000,0.9376,3,-
+all-MiniLM-L6-v2,Unrelated,0.0000,0.8542,3,-
+rubert-tiny2,Overall,0.3861,0.7704,12,5.93
+rubert-tiny2,AI,0.5833,0.7663,3,-
+rubert-tiny2,MilDec,0.7000,0.7970,3,-
+rubert-tiny2,MilDec & AI,0.2611,0.7131,3,-
+rubert-tiny2,Unrelated,0.0000,0.8051,3,-
+gte-base-en-v1.5,Overall,0.5676,0.7661,12,42.14
+gte-base-en-v1.5,AI,0.2704,0.6671,3,-
+gte-base-en-v1.5,MilDec,1.0000,0.8535,3,-
+gte-base-en-v1.5,MilDec & AI,1.0000,0.7985,3,-
+gte-base-en-v1.5,Unrelated,0.0000,0.7453,3,-
+USER-bge-m3,Overall,0.6667,0.9001,12,93.23
+USER-bge-m3,AI,1.0000,0.8686,3,-
+USER-bge-m3,MilDec,0.6667,0.9416,3,-
+USER-bge-m3,MilDec & AI,1.0000,0.9562,3,-
+USER-bge-m3,Unrelated,0.0000,0.8342,3,-
+Qwen3-Embedding-0.6B,Overall,0.6250,0.8839,12,186.22
+Qwen3-Embedding-0.6B,AI,1.0000,0.9285,3,-
+Qwen3-Embedding-0.6B,MilDec,0.8333,0.9232,3,-
+Qwen3-Embedding-0.6B,MilDec & AI,0.6667,0.8797,3,-
+Qwen3-Embedding-0.6B,Unrelated,0.0000,0.8043,3,-
+jina-code-embeddings-1.5b,Overall,0.6528,0.9129,12,476.03
+jina-code-embeddings-1.5b,AI,0.8333,0.9017,3,-
+jina-code-embeddings-1.5b,MilDec,0.7778,0.9271,3,-
+jina-code-embeddings-1.5b,MilDec & AI,1.0000,0.9565,3,-
+jina-code-embeddings-1.5b,Unrelated,0.0000,0.8662,3,-
