@@ -1,0 +1,634 @@
+{
+  "model": "deepvk/USER-bge-m3",
+  "embedding_dim": 1024,
+  "avg_mrr": 0.6666666666666666,
+  "avg_ndcg": 0.9001333882312627,
+  "avg_time_per_abstract_seconds": 0.3863960889720651,
+  "avg_time_per_abstract_ms": 386.3960889720651,
+  "total_abstracts_encoded": 718,
+  "total_encoding_time_seconds": 277.43239188194275,
+  "category_metrics": {
+    "AI": {
+      "avg_mrr": 1.0,
+      "avg_ndcg": 0.8685729669673697,
+      "queries_evaluated": 3
+    },
+    "MilDec": {
+      "avg_mrr": 0.6666666666666666,
+      "avg_ndcg": 0.9415935447297427,
+      "queries_evaluated": 3
+    },
+    "MilDec & AI": {
+      "avg_mrr": 1.0,
+      "avg_ndcg": 0.9562148070136433,
+      "queries_evaluated": 3
+    },
+    "Unrelated": {
+      "avg_mrr": 0.0,
+      "avg_ndcg": 0.834152234214295,
+      "queries_evaluated": 3
+    }
+  },
+  "queries": [
+    {
+      "query": "Multimodal latent perceptual loss for high-resolution image synthesis",
+      "mrr": 1.0,
+      "ndcg": 0.8565599960115793,
+      "relevant_authors": 5,
+      "total_authors": 32,
+      "category": "AI",
+      "top_results": [
+        [
+          "author_d2b7e0d3-e1ac-5980-9c91-c52acad8736e",
+          0.6941620111465454
+        ],
+        [
+          "author_a44bce31-6f08-5458-834b-91a40ac7bec4",
+          0.7046504020690918
+        ],
+        [
+          "author_6d18cf33-f99e-5435-82e4-684923ba8807",
+          0.7276087999343872
+        ],
+        [
+          "author_a5db27b5-1f1e-5378-90d1-a3af003ebbe0",
+          0.7353864908218384
+        ],
+        [
+          "author_05d4b046-8319-56cd-a216-425dff836a4f",
+          0.7383317947387695
+        ],
+        [
+          "author_a8611ce6-ce79-509d-835f-e334689408f7",
+          0.7418878078460693
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.743466854095459
+        ],
+        [
+          "author_068aadca-e864-5b99-bff5-029b99add255",
+          0.7438552379608154
+        ],
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.7465208172798157
+        ],
+        [
+          "author_c5869a2c-b8e4-5e86-8a82-2185a2a22039",
+          0.7565078735351562
+        ]
+      ]
+    },
+    {
+      "query": "Trade-off between representation diversity and realism in generative models",
+      "mrr": 1.0,
+      "ndcg": 0.8837422667087019,
+      "relevant_authors": 2,
+      "total_authors": 32,
+      "category": "AI",
+      "top_results": [
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.6915391087532043
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.704562783241272
+        ],
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.7095262408256531
+        ],
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.7391612529754639
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.7446243762969971
+        ],
+        [
+          "author_068aadca-e864-5b99-bff5-029b99add255",
+          0.748809814453125
+        ],
+        [
+          "author_85b96028-3031-5fe6-80e4-8a0542fa1709",
+          0.7496042251586914
+        ],
+        [
+          "author_a8611ce6-ce79-509d-835f-e334689408f7",
+          0.7905610799789429
+        ],
+        [
+          "author_77576e7e-bc43-59fa-9a08-8901bcf55992",
+          0.797181248664856
+        ],
+        [
+          "author_b69b75ea-077f-52ad-a080-16c019d5c267",
+          0.7986342906951904
+        ]
+      ]
+    },
+    {
+      "query": "How artificial intelligence creates original images from text descriptions",
+      "mrr": 1.0,
+      "ndcg": 0.8654166381818279,
+      "relevant_authors": 2,
+      "total_authors": 32,
+      "category": "AI",
+      "top_results": [
+        [
+          "author_a44bce31-6f08-5458-834b-91a40ac7bec4",
+          0.706802248954773
+        ],
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.7543516159057617
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.7749285697937012
+        ],
+        [
+          "author_d2b7e0d3-e1ac-5980-9c91-c52acad8736e",
+          0.7794428467750549
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.8039833307266235
+        ],
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.8131236433982849
+        ],
+        [
+          "author_a5db27b5-1f1e-5378-90d1-a3af003ebbe0",
+          0.8295623064041138
+        ],
+        [
+          "author_ceb13e8b-a851-5a29-9a76-b484a6b6b5c8",
+          0.8589965105056763
+        ],
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.8617761731147766
+        ],
+        [
+          "author_f71632e9-6bd8-5792-90b0-6d41a4961279",
+          0.8798365592956543
+        ]
+      ]
+    },
+    {
+      "query": "Military deception strategy",
+      "mrr": 1.0,
+      "ndcg": 0.9598297826947986,
+      "relevant_authors": 2,
+      "total_authors": 32,
+      "category": "MilDec",
+      "top_results": [
+        [
+          "author_a5285d4e-1482-508a-ad26-b3c72267b7ab",
+          0.7331827282905579
+        ],
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.7497535943984985
+        ],
+        [
+          "author_b69b75ea-077f-52ad-a080-16c019d5c267",
+          0.7689668536186218
+        ],
+        [
+          "author_00e4d0ff-ff9a-519c-88a9-2d307597e287",
+          0.7826762795448303
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.8328322172164917
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.88581383228302
+        ],
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.8940023183822632
+        ],
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.8999559879302979
+        ],
+        [
+          "author_85b96028-3031-5fe6-80e4-8a0542fa1709",
+          0.9392300844192505
+        ],
+        [
+          "author_a8611ce6-ce79-509d-835f-e334689408f7",
+          0.966099739074707
+        ]
+      ]
+    },
+    {
+      "query": "Military deception principles",
+      "mrr": 0.5,
+      "ndcg": 0.9157542355837918,
+      "relevant_authors": 2,
+      "total_authors": 32,
+      "category": "MilDec",
+      "top_results": [
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.7515337467193604
+        ],
+        [
+          "author_a5285d4e-1482-508a-ad26-b3c72267b7ab",
+          0.7647060751914978
+        ],
+        [
+          "author_00e4d0ff-ff9a-519c-88a9-2d307597e287",
+          0.7670814990997314
+        ],
+        [
+          "author_b69b75ea-077f-52ad-a080-16c019d5c267",
+          0.7680944204330444
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.8325676321983337
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.8791218996047974
+        ],
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.9080756902694702
+        ],
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.9093074798583984
+        ],
+        [
+          "author_85b96028-3031-5fe6-80e4-8a0542fa1709",
+          0.9281446933746338
+        ],
+        [
+          "author_a8611ce6-ce79-509d-835f-e334689408f7",
+          0.9525814056396484
+        ]
+      ]
+    },
+    {
+      "query": "Military deception techniques",
+      "mrr": 0.5,
+      "ndcg": 0.9491966159106376,
+      "relevant_authors": 2,
+      "total_authors": 32,
+      "category": "MilDec",
+      "top_results": [
+        [
+          "author_a5285d4e-1482-508a-ad26-b3c72267b7ab",
+          0.7554342746734619
+        ],
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.7787114381790161
+        ],
+        [
+          "author_b69b75ea-077f-52ad-a080-16c019d5c267",
+          0.7980422973632812
+        ],
+        [
+          "author_00e4d0ff-ff9a-519c-88a9-2d307597e287",
+          0.8150238990783691
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.8291407823562622
+        ],
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.8950757384300232
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.9065456986427307
+        ],
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.9184800386428833
+        ],
+        [
+          "author_85b96028-3031-5fe6-80e4-8a0542fa1709",
+          0.9616016149520874
+        ],
+        [
+          "author_a8611ce6-ce79-509d-835f-e334689408f7",
+          0.963590145111084
+        ]
+      ]
+    },
+    {
+      "query": "Deceptive autonomous agents",
+      "mrr": 1.0,
+      "ndcg": 0.950234761002825,
+      "relevant_authors": 6,
+      "total_authors": 32,
+      "category": "MilDec & AI",
+      "top_results": [
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.7476807832717896
+        ],
+        [
+          "author_b69b75ea-077f-52ad-a080-16c019d5c267",
+          0.7498209476470947
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.7599442601203918
+        ],
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.7930352687835693
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.8034119606018066
+        ],
+        [
+          "author_00e4d0ff-ff9a-519c-88a9-2d307597e287",
+          0.807417631149292
+        ],
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.8179136514663696
+        ],
+        [
+          "author_a5285d4e-1482-508a-ad26-b3c72267b7ab",
+          0.8180840015411377
+        ],
+        [
+          "author_a8611ce6-ce79-509d-835f-e334689408f7",
+          0.8342810869216919
+        ],
+        [
+          "author_85b96028-3031-5fe6-80e4-8a0542fa1709",
+          0.8412460684776306
+        ]
+      ]
+    },
+    {
+      "query": "Machine learning of deceptive strategies",
+      "mrr": 1.0,
+      "ndcg": 0.9342283114996106,
+      "relevant_authors": 6,
+      "total_authors": 32,
+      "category": "MilDec & AI",
+      "top_results": [
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.5404816269874573
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.5525062084197998
+        ],
+        [
+          "author_b69b75ea-077f-52ad-a080-16c019d5c267",
+          0.5747706890106201
+        ],
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.5967885255813599
+        ],
+        [
+          "author_00e4d0ff-ff9a-519c-88a9-2d307597e287",
+          0.6031898260116577
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.6058959364891052
+        ],
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.6612964868545532
+        ],
+        [
+          "author_85b96028-3031-5fe6-80e4-8a0542fa1709",
+          0.6827081441879272
+        ],
+        [
+          "author_c5869a2c-b8e4-5e86-8a82-2185a2a22039",
+          0.7100111842155457
+        ],
+        [
+          "author_77576e7e-bc43-59fa-9a08-8901bcf55992",
+          0.7245836853981018
+        ]
+      ]
+    },
+    {
+      "query": "Detecting deceptive machine behavior",
+      "mrr": 1.0,
+      "ndcg": 0.9841813485384944,
+      "relevant_authors": 5,
+      "total_authors": 32,
+      "category": "MilDec & AI",
+      "top_results": [
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.43905648589134216
+        ],
+        [
+          "author_f7b5127a-150d-5469-a028-a46bafcdba7a",
+          0.4590165615081787
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.4682213366031647
+        ],
+        [
+          "author_b69b75ea-077f-52ad-a080-16c019d5c267",
+          0.4957548975944519
+        ],
+        [
+          "author_00e4d0ff-ff9a-519c-88a9-2d307597e287",
+          0.5079548358917236
+        ],
+        [
+          "author_2774b6a5-1cd5-5c35-ba7b-d0f11d50f5ca",
+          0.5103563666343689
+        ],
+        [
+          "author_6039c433-2555-57cd-90c3-e6530a13265f",
+          0.5411986112594604
+        ],
+        [
+          "author_85b96028-3031-5fe6-80e4-8a0542fa1709",
+          0.5670459270477295
+        ],
+        [
+          "author_c5869a2c-b8e4-5e86-8a82-2185a2a22039",
+          0.5734413862228394
+        ],
+        [
+          "author_a5db27b5-1f1e-5378-90d1-a3af003ebbe0",
+          0.5774650573730469
+        ]
+      ]
+    },
+    {
+      "query": "Deep-sea bioluminescence and hydrothermal sensors",
+      "mrr": 0.0,
+      "ndcg": 0.8570382468260513,
+      "relevant_authors": 0,
+      "total_authors": 32,
+      "category": "Unrelated",
+      "top_results": [
+        [
+          "author_b09fadee-2a62-529f-9093-6f677f53d113",
+          0.7180306911468506
+        ],
+        [
+          "author_068aadca-e864-5b99-bff5-029b99add255",
+          0.7302349805831909
+        ],
+        [
+          "author_a8611ce6-ce79-509d-835f-e334689408f7",
+          0.7331028580665588
+        ],
+        [
+          "author_d2b7e0d3-e1ac-5980-9c91-c52acad8736e",
+          0.7629944086074829
+        ],
+        [
+          "author_6d18cf33-f99e-5435-82e4-684923ba8807",
+          0.7667149305343628
+        ],
+        [
+          "author_a5db27b5-1f1e-5378-90d1-a3af003ebbe0",
+          0.7792251110076904
+        ],
+        [
+          "author_05d4b046-8319-56cd-a216-425dff836a4f",
+          0.7856885194778442
+        ],
+        [
+          "author_c5869a2c-b8e4-5e86-8a82-2185a2a22039",
+          0.7960163354873657
+        ],
+        [
+          "author_a44bce31-6f08-5458-834b-91a40ac7bec4",
+          0.7967583537101746
+        ],
+        [
+          "author_a1917e79-7a66-5430-ab14-9f0c54c4794d",
+          0.8252545595169067
+        ]
+      ]
+    },
+    {
+      "query": "Structural integrity of high-tensile steel in bridges",
+      "mrr": 0.0,
+      "ndcg": 0.6901616179005698,
+      "relevant_authors": 0,
+      "total_authors": 32,
+      "category": "Unrelated",
+      "top_results": [
+        [
+          "author_a8611ce6-ce79-509d-835f-e334689408f7",
+          0.7403554916381836
+        ],
+        [
+          "author_bb367576-94d4-58fd-a9d8-ad093b204810",
+          0.7448803186416626
+        ],
+        [
+          "author_068aadca-e864-5b99-bff5-029b99add255",
+          0.7527928352355957
+        ],
+        [
+          "author_a1917e79-7a66-5430-ab14-9f0c54c4794d",
+          0.7600788474082947
+        ],
+        [
+          "author_05d4b046-8319-56cd-a216-425dff836a4f",
+          0.7633821368217468
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.7840123176574707
+        ],
+        [
+          "author_6d18cf33-f99e-5435-82e4-684923ba8807",
+          0.8002259731292725
+        ],
+        [
+          "author_85b96028-3031-5fe6-80e4-8a0542fa1709",
+          0.803330659866333
+        ],
+        [
+          "author_b09fadee-2a62-529f-9093-6f677f53d113",
+          0.8082708120346069
+        ],
+        [
+          "author_d338b836-41a0-54a4-a675-a5565f143403",
+          0.8192278146743774
+        ]
+      ]
+    },
+    {
+      "query": "Spectroscopic biosignatures in M-dwarf atmospheres",
+      "mrr": 0.0,
+      "ndcg": 0.9552568379162636,
+      "relevant_authors": 0,
+      "total_authors": 32,
+      "category": "Unrelated",
+      "top_results": [
+        [
+          "author_b09fadee-2a62-529f-9093-6f677f53d113",
+          0.6889297962188721
+        ],
+        [
+          "author_a8611ce6-ce79-509d-835f-e334689408f7",
+          0.7378149032592773
+        ],
+        [
+          "author_6d18cf33-f99e-5435-82e4-684923ba8807",
+          0.7663297653198242
+        ],
+        [
+          "author_068aadca-e864-5b99-bff5-029b99add255",
+          0.7766647338867188
+        ],
+        [
+          "author_05d4b046-8319-56cd-a216-425dff836a4f",
+          0.8211617469787598
+        ],
+        [
+          "author_d2b7e0d3-e1ac-5980-9c91-c52acad8736e",
+          0.8281381726264954
+        ],
+        [
+          "author_c5869a2c-b8e4-5e86-8a82-2185a2a22039",
+          0.834327220916748
+        ],
+        [
+          "author_bb367576-94d4-58fd-a9d8-ad093b204810",
+          0.8365240693092346
+        ],
+        [
+          "author_85b96028-3031-5fe6-80e4-8a0542fa1709",
+          0.8740506768226624
+        ],
+        [
+          "author_5c0ce0e8-dd3d-54e0-98c7-aab985f0ba84",
+          0.88274747133255
+        ]
+      ]
+    }
+  ]
+}

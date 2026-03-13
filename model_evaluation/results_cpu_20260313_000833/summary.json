@@ -1,0 +1,194 @@
+[
+  {
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "avg_mrr": 0.6527777777777778,
+    "avg_ndcg": 0.914179940412155,
+    "queries_evaluated": 12,
+    "avg_time_per_abstract_seconds": 0.024807028451669846,
+    "avg_time_per_abstract_ms": 24.807028451669847,
+    "total_abstracts_encoded": 718,
+    "total_encoding_time_seconds": 17.81144642829895,
+    "category_metrics": {
+      "AI": {
+        "avg_mrr": 0.7777777777777778,
+        "avg_ndcg": 0.9006012797207869,
+        "queries_evaluated": 3
+      },
+      "MilDec": {
+        "avg_mrr": 0.8333333333333334,
+        "avg_ndcg": 0.9643437465537344,
+        "queries_evaluated": 3
+      },
+      "MilDec & AI": {
+        "avg_mrr": 1.0,
+        "avg_ndcg": 0.937609404171332,
+        "queries_evaluated": 3
+      },
+      "Unrelated": {
+        "avg_mrr": 0.0,
+        "avg_ndcg": 0.8541653312027663,
+        "queries_evaluated": 3
+      }
+    }
+  },
+  {
+    "model": "cointegrated/rubert-tiny2",
+    "avg_mrr": 0.3861111111111111,
+    "avg_ndcg": 0.7703743786323337,
+    "queries_evaluated": 12,
+    "avg_time_per_abstract_seconds": 0.011561636473143,
+    "avg_time_per_abstract_ms": 11.561636473143,
+    "total_abstracts_encoded": 718,
+    "total_encoding_time_seconds": 8.301254987716675,
+    "category_metrics": {
+      "AI": {
+        "avg_mrr": 0.5833333333333334,
+        "avg_ndcg": 0.7662650064849759,
+        "queries_evaluated": 3
+      },
+      "MilDec": {
+        "avg_mrr": 0.7000000000000001,
+        "avg_ndcg": 0.797045214468492,
+        "queries_evaluated": 3
+      },
+      "MilDec & AI": {
+        "avg_mrr": 0.2611111111111111,
+        "avg_ndcg": 0.7131160915638359,
+        "queries_evaluated": 3
+      },
+      "Unrelated": {
+        "avg_mrr": 0.0,
+        "avg_ndcg": 0.805071202012031,
+        "queries_evaluated": 3
+      }
+    }
+  },
+  {
+    "model": "Alibaba-NLP/gte-base-en-v1.5",
+    "avg_mrr": 0.5675925925925925,
+    "avg_ndcg": 0.7660994312960425,
+    "queries_evaluated": 12,
+    "avg_time_per_abstract_seconds": 0.16357683172465035,
+    "avg_time_per_abstract_ms": 163.57683172465033,
+    "total_abstracts_encoded": 718,
+    "total_encoding_time_seconds": 117.44816517829895,
+    "category_metrics": {
+      "AI": {
+        "avg_mrr": 0.27037037037037037,
+        "avg_ndcg": 0.6671213542805533,
+        "queries_evaluated": 3
+      },
+      "MilDec": {
+        "avg_mrr": 1.0,
+        "avg_ndcg": 0.8534757787983914,
+        "queries_evaluated": 3
+      },
+      "MilDec & AI": {
+        "avg_mrr": 1.0,
+        "avg_ndcg": 0.7984692675020533,
+        "queries_evaluated": 3
+      },
+      "Unrelated": {
+        "avg_mrr": 0.0,
+        "avg_ndcg": 0.7453313246031718,
+        "queries_evaluated": 3
+      }
+    }
+  },
+  {
+    "model": "deepvk/USER-bge-m3",
+    "avg_mrr": 0.6666666666666666,
+    "avg_ndcg": 0.9001333882312624,
+    "queries_evaluated": 12,
+    "avg_time_per_abstract_seconds": 0.3863960889720651,
+    "avg_time_per_abstract_ms": 386.3960889720651,
+    "total_abstracts_encoded": 718,
+    "total_encoding_time_seconds": 277.43239188194275,
+    "category_metrics": {
+      "AI": {
+        "avg_mrr": 1.0,
+        "avg_ndcg": 0.8685729669673697,
+        "queries_evaluated": 3
+      },
+      "MilDec": {
+        "avg_mrr": 0.6666666666666666,
+        "avg_ndcg": 0.9415935447297427,
+        "queries_evaluated": 3
+      },
+      "MilDec & AI": {
+        "avg_mrr": 1.0,
+        "avg_ndcg": 0.9562148070136433,
+        "queries_evaluated": 3
+      },
+      "Unrelated": {
+        "avg_mrr": 0.0,
+        "avg_ndcg": 0.834152234214295,
+        "queries_evaluated": 3
+      }
+    }
+  },
+  {
+    "model": "Qwen/Qwen3-Embedding-0.6B",
+    "avg_mrr": 0.625,
+    "avg_ndcg": 0.8839314242915655,
+    "queries_evaluated": 12,
+    "avg_time_per_abstract_seconds": 2.8319547166399306,
+    "avg_time_per_abstract_ms": 2831.9547166399307,
+    "total_abstracts_encoded": 718,
+    "total_encoding_time_seconds": 2033.34348654747,
+    "category_metrics": {
+      "AI": {
+        "avg_mrr": 1.0,
+        "avg_ndcg": 0.9290405028159016,
+        "queries_evaluated": 3
+      },
+      "MilDec": {
+        "avg_mrr": 0.8333333333333334,
+        "avg_ndcg": 0.9231343036236422,
+        "queries_evaluated": 3
+      },
+      "MilDec & AI": {
+        "avg_mrr": 0.6666666666666666,
+        "avg_ndcg": 0.8796613905988728,
+        "queries_evaluated": 3
+      },
+      "Unrelated": {
+        "avg_mrr": 0.0,
+        "avg_ndcg": 0.8038895001278455,
+        "queries_evaluated": 3
+      }
+    }
+  },
+  {
+    "model": "jinaai/jina-code-embeddings-1.5b",
+    "avg_mrr": 0.6527777777777778,
+    "avg_ndcg": 0.9129911179223774,
+    "queries_evaluated": 12,
+    "avg_time_per_abstract_seconds": 6.880592309000765,
+    "avg_time_per_abstract_ms": 6880.5923090007645,
+    "total_abstracts_encoded": 718,
+    "total_encoding_time_seconds": 4940.265277862549,
+    "category_metrics": {
+      "AI": {
+        "avg_mrr": 0.8333333333333334,
+        "avg_ndcg": 0.9022103704631567,
+        "queries_evaluated": 3
+      },
+      "MilDec": {
+        "avg_mrr": 0.7777777777777778,
+        "avg_ndcg": 0.927062998412662,
+        "queries_evaluated": 3
+      },
+      "MilDec & AI": {
+        "avg_mrr": 1.0,
+        "avg_ndcg": 0.9565049845815509,
+        "queries_evaluated": 3
+      },
+      "Unrelated": {
+        "avg_mrr": 0.0,
+        "avg_ndcg": 0.8661861182321401,
+        "queries_evaluated": 3
+      }
+    }
+  }
+]
