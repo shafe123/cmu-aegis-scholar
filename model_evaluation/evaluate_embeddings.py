@@ -15,6 +15,7 @@ os.environ['TQDM_DISABLE'] = '1'
 import json
 import argparse
 import logging
+import time
 import uuid
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
@@ -54,6 +55,50 @@ def convert_researcher_id_to_author_guid(researcher_id: str) -> str:
     return f"author_{author_uuid}"
 
 
+def normalize_category(category: str) -> str:
+    """
+    Normalize category names, grouping all unrelated categories together.
+    
+    Args:
+        category: Original category name
+        
+    Returns:
+        Normalized category name
+    """
+    if pd.isna(category):
+        return "Unknown"
+    
+    category_lower = category.lower()
+    if 'unrelated' in category_lower or 'unrel' in category_lower:
+        return "Unrelated"
+    
+    return category.strip()
+
+
+def get_query_category(query_index: int) -> str:
+    """
+    Get the category for a query based on its index.
+    Queries 0-2: AI
+    Queries 3-5: MilDec
+    Queries 6-8: MilDec & AI
+    Queries 9-11: Unrelated
+    
+    Args:
+        query_index: 0-based index of the query
+        
+    Returns:
+        Category name
+    """
+    if query_index < 3:
+        return "AI"
+    elif query_index < 6:
+        return "MilDec"
+    elif query_index < 9:
+        return "MilDec & AI"
+    else:
+        return "Unrelated"
+
+
 class EmbeddingEvaluator:
     """
     Evaluates embedding models on author retrieval tasks.
@@ -64,7 +109,8 @@ class EmbeddingEvaluator:
         model_name: str,
         milvus_host: str = "localhost",
         milvus_port: int = 19530,
-        trust_remote_code: bool = False
+        trust_remote_code: bool = False,
+        force_cpu: bool = False
     ):
         """
         Initialize the evaluator.
@@ -74,6 +120,7 @@ class EmbeddingEvaluator:
             milvus_host: Milvus server host
             milvus_port: Milvus server port
             trust_remote_code: Whether to trust remote code when loading model
+            force_cpu: Force CPU usage even if GPU is available
         """
         self.model_name = model_name
         self.milvus_host = milvus_host
@@ -81,7 +128,10 @@ class EmbeddingEvaluator:
         self.trust_remote_code = trust_remote_code
         
         # Detect device
-        if torch.cuda.is_available():
+        if force_cpu:
+            self.device = 'cpu'
+            logger.info("Forced CPU mode")
+        elif torch.cuda.is_available():
             self.device = 'cuda'
             logger.info(f"GPU detected: {torch.cuda.get_device_name(0)}")
         else:
@@ -100,6 +150,11 @@ class EmbeddingEvaluator:
         logger.info("Connected to Milvus")
         
         self.collection = None
+        
+        # Timing metrics
+        self.total_encoding_time = 0.0
+        self.total_abstracts_encoded = 0
+        self.avg_time_per_abstract = 0.0
     
     def create_collection(self, collection_name: str, drop_existing: bool = True):
         """
@@ -197,14 +252,27 @@ class EmbeddingEvaluator:
             logger.info(f"  {author_id} ({author_names.get(author_id, 'Unknown')}): {len(abstracts)} papers")
             paper_embeddings = []
             for abstract_text in abstracts:
+                start_time = time.time()
                 embedding = self.model.encode(abstract_text, show_progress_bar=False)
+                encoding_time = time.time() - start_time
+                
                 paper_embeddings.append(embedding)
+                self.total_encoding_time += encoding_time
+                self.total_abstracts_encoded += 1
             
             # Average embeddings
             avg_embedding = np.mean(paper_embeddings, axis=0)
             author_embeddings[author_id] = avg_embedding
         
-        logger.info(f"Created embeddings for {len(author_embeddings)} authors")
+        # Calculate average time per abstract
+        if self.total_abstracts_encoded > 0:
+            self.avg_time_per_abstract = self.total_encoding_time / self.total_abstracts_encoded
+            logger.info(f"Created embeddings for {len(author_embeddings)} authors")
+            logger.info(f"Total encoding time: {self.total_encoding_time:.2f}s for {self.total_abstracts_encoded} abstracts")
+            logger.info(f"Average time per abstract: {self.avg_time_per_abstract:.4f}s ({self.avg_time_per_abstract*1000:.2f}ms)")
+        else:
+            logger.info(f"Created embeddings for {len(author_embeddings)} authors")
+        
         return author_embeddings
     
     def upload_to_milvus(
@@ -305,55 +373,91 @@ class EmbeddingEvaluator:
         
         logger.info(f"Found {len(query_cols)} query columns")
         
+        # Define query categories
+        query_categories = ["AI", "MilDec", "MilDec & AI", "Unrelated"]
+        
         # Results storage
         results = {}
         detailed_results = []
+        category_results = {cat: [] for cat in query_categories}
         
         # Evaluate each query
-        for query_col in query_cols:
+        for query_idx, query_col in enumerate(query_cols):
             logger.info(f"\nEvaluating query: {query_col}")
             
-            # Get ground truth rankings (lower is better, NaN means not relevant)
+            # Get query category
+            query_category = get_query_category(query_idx)
+            
+            # Get ground truth ratings for ALL authors (rating scale 1-5)
             # Convert researcher IDs to author GUIDs to match Milvus storage
             ground_truth = {}
             for _, row in df.iterrows():
                 researcher_id = row['author_id']
                 author_guid = convert_researcher_id_to_author_guid(researcher_id)
-                rank = row[query_col]
-                if pd.notna(rank) and rank >= 3:  # Relevant (rating >= 3 on 1-5 scale)
-                    ground_truth[author_guid] = float(rank)
+                rating = row[query_col]
+                if pd.notna(rating):
+                    ground_truth[author_guid] = float(rating)
             
-            if not ground_truth:
-                logger.warning(f"  No ground truth data for query: {query_col}")
-                continue
+            num_relevant = sum(1 for rating in ground_truth.values() if rating >= 3)
+            logger.info(f"  Ground truth: {len(ground_truth)} authors rated, {num_relevant} relevant (rating >= 3)")
             
-            # Perform search
-            search_results = self.search(query_col, top_k=len(ground_truth))
+            # Perform search across all authors to properly evaluate ranking
+            # The model should rank relevant authors higher than irrelevant ones
+            search_results = self.search(query_col, top_k=100)
             
             # Calculate metrics
             mrr = self._calculate_mrr(search_results, ground_truth)
             ndcg = self._calculate_ndcg(search_results, ground_truth)
             
-            logger.info(f"  MRR: {mrr:.4f}, NDCG: {ndcg:.4f}")
+            logger.info(f"  MRR: {mrr:.4f}, NDCG: {ndcg:.4f} [Category: {query_category}]")
             
+            num_relevant = sum(1 for rating in ground_truth.values() if rating >= 3)
             results[query_col] = {
                 "mrr": mrr,
                 "ndcg": ndcg,
-                "relevant_authors": len(ground_truth)
+                "relevant_authors": num_relevant,
+                "total_authors": len(ground_truth),
+                "category": query_category
             }
             
+            # Track results by query category
+            category_results[query_category].append({
+                "mrr": mrr,
+                "ndcg": ndcg
+            })
+            
             # Store detailed results
+            num_relevant = sum(1 for rating in ground_truth.values() if rating >= 3)
             detailed_results.append({
                 "query": query_col,
                 "mrr": mrr,
                 "ndcg": ndcg,
-                "relevant_authors": len(ground_truth),
+                "relevant_authors": num_relevant,
+                "total_authors": len(ground_truth),
+                "category": query_category,
                 "top_results": search_results[:10]
             })
         
         # Calculate average metrics
         avg_mrr = np.mean([r["mrr"] for r in results.values()])
         avg_ndcg = np.mean([r["ndcg"] for r in results.values()])
+        
+        # Calculate category-level metrics (query categories)
+        category_metrics = {}
+        for category, cat_results in category_results.items():
+            if cat_results:
+                category_metrics[category] = {
+                    "avg_mrr": np.mean([r["mrr"] for r in cat_results]),
+                    "avg_ndcg": np.mean([r["ndcg"] for r in cat_results]),
+                    "queries_evaluated": len(cat_results)
+                }
+            else:
+                # Include categories with no evaluated queries
+                category_metrics[category] = {
+                    "avg_mrr": 0.0,
+                    "avg_ndcg": 0.0,
+                    "queries_evaluated": 0
+                }
         
         logger.info("\n" + "="*70)
         logger.info("EVALUATION SUMMARY")
@@ -362,6 +466,14 @@ class EmbeddingEvaluator:
         logger.info(f"Queries evaluated: {len(results)}")
         logger.info(f"Average MRR: {avg_mrr:.4f}")
         logger.info(f"Average NDCG: {avg_ndcg:.4f}")
+        if self.total_abstracts_encoded > 0:
+            logger.info(f"Avg embedding time: {self.avg_time_per_abstract:.4f}s/abstract ({self.avg_time_per_abstract*1000:.2f}ms)")
+        
+        logger.info("\nResults by Query Category:")
+        for category in sorted(category_metrics.keys()):
+            metrics = category_metrics[category]
+            logger.info(f"  {category}: MRR={metrics['avg_mrr']:.4f}, NDCG={metrics['avg_ndcg']:.4f}, n={metrics['queries_evaluated']}")
+        
         logger.info("="*70)
         
         # Save detailed results if requested
@@ -375,6 +487,11 @@ class EmbeddingEvaluator:
                     "embedding_dim": self.embedding_dim,
                     "avg_mrr": avg_mrr,
                     "avg_ndcg": avg_ndcg,
+                    "avg_time_per_abstract_seconds": self.avg_time_per_abstract,
+                    "avg_time_per_abstract_ms": self.avg_time_per_abstract * 1000,
+                    "total_abstracts_encoded": self.total_abstracts_encoded,
+                    "total_encoding_time_seconds": self.total_encoding_time,
+                    "category_metrics": category_metrics,
                     "queries": detailed_results
                 }, f, indent=2)
             
@@ -389,16 +506,17 @@ class EmbeddingEvaluator:
     ) -> float:
         """
         Calculate Mean Reciprocal Rank.
+        Only considers authors with rating >= 3 as "relevant".
         
         Args:
             search_results: List of (author_id, distance) tuples
-            ground_truth: Dictionary mapping author_id to ground truth rank
+            ground_truth: Dictionary mapping author_id to rating (1-5 scale)
             
         Returns:
             MRR score
         """
         for rank, (author_id, _) in enumerate(search_results, 1):
-            if author_id in ground_truth:
+            if author_id in ground_truth and ground_truth[author_id] >= 3:
                 return 1.0 / rank
         return 0.0
     
@@ -410,10 +528,11 @@ class EmbeddingEvaluator:
     ) -> float:
         """
         Calculate Normalized Discounted Cumulative Gain.
+        Uses actual rating values as relevance scores (higher rating = more relevant).
         
         Args:
             search_results: List of (author_id, distance) tuples
-            ground_truth: Dictionary mapping author_id to ground truth rank
+            ground_truth: Dictionary mapping author_id to rating (1-5 scale)
             k: Cutoff for NDCG@k (None for all results)
             
         Returns:
@@ -426,15 +545,16 @@ class EmbeddingEvaluator:
         dcg = 0.0
         for rank, (author_id, _) in enumerate(search_results, 1):
             if author_id in ground_truth:
-                # Relevance is inverse of ground truth rank (lower rank = higher relevance)
-                relevance = 1.0 / ground_truth[author_id]
+                # Relevance is the rating itself (higher rating = higher relevance)
+                relevance = (ground_truth[author_id] - 1) / 4.0
                 dcg += relevance / np.log2(rank + 1)
         
         # Calculate IDCG (ideal DCG with perfect ranking)
-        ideal_ranks = sorted(ground_truth.values())
+        # Sort ratings in descending order (best ratings first)
+        ideal_ratings = sorted(ground_truth.values(), reverse=True)
         idcg = 0.0
-        for rank, gt_rank in enumerate(ideal_ranks, 1):
-            relevance = 1.0 / gt_rank
+        for rank, rating in enumerate(ideal_ratings, 1):
+            relevance = (rating - 1) / 4.0
             idcg += relevance / np.log2(rank + 1)
         
         # Return NDCG

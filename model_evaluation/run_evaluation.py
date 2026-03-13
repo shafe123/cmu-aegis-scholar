@@ -21,6 +21,7 @@ import argparse
 import logging
 import json
 import uuid
+from datetime import datetime
 from pathlib import Path
 import pandas as pd
 
@@ -57,10 +58,10 @@ AVAILABLE_MODELS = {
         "trust_remote_code": False,
         "description": "Tiny Russian BERT model for multilingual support"
     },
-    # "OrcaDB/gte-base-en-v1.5": {
-    #     "trust_remote_code": True,
-    #     "description": "General Text Embeddings base model v1.5"
-    # },
+    "Alibaba-NLP/gte-base-en-v1.5": {
+        "trust_remote_code": True,
+        "description": "General Text Embeddings base model v1.5 (8192 context, 768 dimensions)"
+    },
     "deepvk/USER-bge-m3": {
         "trust_remote_code": False,
         "description": "Multilingual BGE-M3 model from DeepVK"
@@ -151,7 +152,8 @@ def evaluate_model(
     milvus_host,
     milvus_port,
     output_file,
-    skip_upload=False
+    skip_upload=False,
+    force_cpu=False
 ):
     """Evaluate a single model."""
     logger.info("="*70)
@@ -163,7 +165,8 @@ def evaluate_model(
         model_name=model_name,
         milvus_host=milvus_host,
         milvus_port=milvus_port,
-        trust_remote_code=trust_remote_code
+        trust_remote_code=trust_remote_code,
+        force_cpu=force_cpu
     )
     
     if not skip_upload:
@@ -196,10 +199,18 @@ def evaluate_model(
     # Evaluate
     results = evaluator.evaluate_queries(ground_truth_csv, output_file)
     
+    # Extract timing metrics
+    timing_metrics = {
+        "avg_time_per_abstract_seconds": evaluator.avg_time_per_abstract,
+        "avg_time_per_abstract_ms": evaluator.avg_time_per_abstract * 1000,
+        "total_abstracts_encoded": evaluator.total_abstracts_encoded,
+        "total_encoding_time_seconds": evaluator.total_encoding_time
+    }
+    
     # Cleanup
     evaluator.cleanup()
     
-    return results
+    return results, timing_metrics
 
 
 def main():
@@ -288,6 +299,11 @@ Examples:
         help="Skip uploading embeddings to Milvus (use existing collection)"
     )
     parser.add_argument(
+        "--force-cpu",
+        action="store_true",
+        help="Force CPU usage even if GPU is available"
+    )
+    parser.add_argument(
         "--no-cache",
         action="store_true",
         help="Don't use cached blob data"
@@ -305,16 +321,13 @@ Examples:
                 "or set AZURE_STORAGE_CONNECTION_STRING environment variable."
             )
         
-        # Create output directory
-        output_dir = Path(args.output_dir)
-        output_dir.mkdir(exist_ok=True)
-        
         # Load ground truth
         df = load_ground_truth(args.ground_truth)
         researcher_ids = df['author_id'].tolist()
         
         # Step 1: Fetch author papers (if not skipped)
-        author_papers_file = output_dir / "author_papers.json"
+        # Store author_papers.json in root directory (shared across runs)
+        author_papers_file = Path("author_papers.json")
         
         if not args.skip_fetch:
             author_papers = fetch_author_papers(
@@ -328,6 +341,12 @@ Examples:
             logger.info("Skipping data fetch (using existing author_papers.json)")
             if not author_papers_file.exists():
                 raise FileNotFoundError(f"No existing author papers file found at {author_papers_file}")
+        
+        # Create timestamped output directory for evaluation results
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_dir = Path(f"{args.output_dir}_{timestamp}")
+        output_dir.mkdir(exist_ok=True)
+        logger.info(f"Results will be saved to: {output_dir}")
         
         # Step 2: Evaluate model(s)
         models_to_evaluate = []
@@ -352,7 +371,7 @@ Examples:
             collection_name = f"eval_{model_safe_name}"
             
             # Evaluate
-            results = evaluate_model(
+            results, timing_metrics = evaluate_model(
                 model_name=model_name,
                 trust_remote_code=AVAILABLE_MODELS[model_name]["trust_remote_code"],
                 ground_truth_csv=args.ground_truth,
@@ -361,10 +380,11 @@ Examples:
                 milvus_host=args.milvus_host,
                 milvus_port=args.milvus_port,
                 output_file=str(output_file),
-                skip_upload=args.skip_upload
+                skip_upload=args.skip_upload,
+                force_cpu=args.force_cpu
             )
             
-            all_results[model_name] = results
+            all_results[model_name] = (results, timing_metrics)
         
         # Generate summary report
         logger.info("\n" + "="*70)
@@ -372,21 +392,43 @@ Examples:
         logger.info("="*70)
         
         summary_data = []
-        for model_name, results in all_results.items():
+        for model_name, (results, timing_metrics) in all_results.items():
             avg_mrr = sum(r["mrr"] for r in results.values()) / len(results)
             avg_ndcg = sum(r["ndcg"] for r in results.values()) / len(results)
+            
+            # Load category metrics from the result file
+            model_safe_name = model_name.replace("/", "_").replace(":", "_").replace("-", "_").replace(".", "_")
+            result_file = output_dir / f"{model_safe_name}_results.json"
+            category_metrics = {}
+            if result_file.exists():
+                with open(result_file, 'r', encoding='utf-8') as f:
+                    result_data = json.load(f)
+                    category_metrics = result_data.get('category_metrics', {})
             
             summary_data.append({
                 "model": model_name,
                 "avg_mrr": avg_mrr,
                 "avg_ndcg": avg_ndcg,
-                "queries_evaluated": len(results)
+                "queries_evaluated": len(results),
+                "avg_time_per_abstract_seconds": timing_metrics["avg_time_per_abstract_seconds"],
+                "avg_time_per_abstract_ms": timing_metrics["avg_time_per_abstract_ms"],
+                "total_abstracts_encoded": timing_metrics["total_abstracts_encoded"],
+                "total_encoding_time_seconds": timing_metrics["total_encoding_time_seconds"],
+                "category_metrics": category_metrics
             })
             
             logger.info(f"\n{model_name}:")
             logger.info(f"  Average MRR:  {avg_mrr:.4f}")
             logger.info(f"  Average NDCG: {avg_ndcg:.4f}")
             logger.info(f"  Queries:      {len(results)}")
+            if timing_metrics["total_abstracts_encoded"] > 0:
+                logger.info(f"  Avg time/abstract: {timing_metrics['avg_time_per_abstract_ms']:.2f}ms")
+            
+            if category_metrics:
+                logger.info(f"  By Query Category:")
+                for category in sorted(category_metrics.keys()):
+                    metrics = category_metrics[category]
+                    logger.info(f"    {category}: MRR={metrics['avg_mrr']:.4f}, NDCG={metrics['avg_ndcg']:.4f}, n={metrics['queries_evaluated']}")
         
         # Save summary
         summary_file = output_dir / "summary.json"

@@ -27,6 +27,9 @@
 .PARAMETER SkipUpload
     Skip uploading embeddings to Milvus (use existing collection).
 
+.PARAMETER ForceCPU
+    Force CPU usage even if GPU is available.
+
 .PARAMETER MaxBlobs
     Maximum number of blob files to process (for testing).
 
@@ -38,6 +41,9 @@
 
 .EXAMPLE
     .\quick_start.ps1 -Model "sentence-transformers/all-MiniLM-L6-v2" -SkipFetch -SkipUpload
+
+.EXAMPLE
+    .\quick_start.ps1 -AllModels -ForceCPU
 #>
 
 [CmdletBinding()]
@@ -59,6 +65,9 @@ param(
     
     [Parameter(Mandatory = $false)]
     [switch]$SkipUpload,
+    
+    [Parameter(Mandatory = $false)]
+    [switch]$ForceCPU,
     
     [Parameter(Mandatory = $false)]
     [int]$MaxBlobs = 0
@@ -244,6 +253,11 @@ if ($SkipFetch) {
 if ($SkipUpload) {
     $cmd += " --skip-upload"
     Write-Info "Skipping embedding upload (using existing Milvus collection)"
+}
+
+if ($ForceCPU) {
+    $cmd += " --force-cpu"
+    Write-Info "Forcing CPU usage (GPU disabled)"
 }
 
 Write-Host ""
