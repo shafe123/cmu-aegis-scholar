@@ -1,0 +1,103 @@
+model,metric_level,mrr,ndcg
+Alibaba-NLP/gte-base-en-v1.5,Overall,0.5675925925925925,0.7660994312960424
+Alibaba-NLP/gte-base-en-v1.5,Category: AI,0.27037037037037037,0.6671213542805533
+Alibaba-NLP/gte-base-en-v1.5,Category: MilDec,1.0,0.8534757787983914
+Alibaba-NLP/gte-base-en-v1.5,Category: MilDec & AI,1.0,0.7984692675020533
+Alibaba-NLP/gte-base-en-v1.5,Category: Unrelated,0.0,0.7453313246031718
+Alibaba-NLP/gte-base-en-v1.5,Query 1 (AI),0.2,0.5948426544213921
+Alibaba-NLP/gte-base-en-v1.5,Query 2 (AI),0.1111111111111111,0.6477526941024071
+Alibaba-NLP/gte-base-en-v1.5,Query 3 (AI),0.5,0.7587687143178607
+Alibaba-NLP/gte-base-en-v1.5,Query 4 (MilDec),1.0,0.8104647242793868
+Alibaba-NLP/gte-base-en-v1.5,Query 5 (MilDec),1.0,0.859909089123822
+Alibaba-NLP/gte-base-en-v1.5,Query 6 (MilDec),1.0,0.8900535229919653
+Alibaba-NLP/gte-base-en-v1.5,Query 7 (MilDec & AI),1.0,0.7905649120548925
+Alibaba-NLP/gte-base-en-v1.5,Query 8 (MilDec & AI),1.0,0.7661670314302973
+Alibaba-NLP/gte-base-en-v1.5,Query 9 (MilDec & AI),1.0,0.8386758590209699
+Alibaba-NLP/gte-base-en-v1.5,Query 10 (Unrelated),0.0,0.8263583731199395
+Alibaba-NLP/gte-base-en-v1.5,Query 11 (Unrelated),0.0,0.5963862261308401
+Alibaba-NLP/gte-base-en-v1.5,Query 12 (Unrelated),0.0,0.8132493745587357
+cointegrated/rubert-tiny2,Overall,0.38611111111111107,0.7703743786323337
+cointegrated/rubert-tiny2,Category: AI,0.5833333333333334,0.7662650064849759
+cointegrated/rubert-tiny2,Category: MilDec,0.7000000000000001,0.797045214468492
+cointegrated/rubert-tiny2,Category: MilDec & AI,0.2611111111111111,0.7131160915638359
+cointegrated/rubert-tiny2,Category: Unrelated,0.0,0.805071202012031
+cointegrated/rubert-tiny2,Query 1 (AI),0.25,0.6238288624290886
+cointegrated/rubert-tiny2,Query 2 (AI),0.5,0.8171364631618385
+cointegrated/rubert-tiny2,Query 3 (AI),1.0,0.8578296938640004
+cointegrated/rubert-tiny2,Query 4 (MilDec),1.0,0.8260323658983624
+cointegrated/rubert-tiny2,Query 5 (MilDec),1.0,0.8389694612858147
+cointegrated/rubert-tiny2,Query 6 (MilDec),0.1,0.7261338162212988
+cointegrated/rubert-tiny2,Query 7 (MilDec & AI),0.2,0.6456591547945066
+cointegrated/rubert-tiny2,Query 8 (MilDec & AI),0.25,0.720525939886579
+cointegrated/rubert-tiny2,Query 9 (MilDec & AI),0.3333333333333333,0.7731631800104223
+cointegrated/rubert-tiny2,Query 10 (Unrelated),0.0,0.9286201793333394
+cointegrated/rubert-tiny2,Query 11 (Unrelated),0.0,0.6067087412901109
+cointegrated/rubert-tiny2,Query 12 (Unrelated),0.0,0.8798846854126428
+deepvk/USER-bge-m3,Overall,0.6666666666666666,0.9001333882312627
+deepvk/USER-bge-m3,Category: AI,1.0,0.8685729669673697
+deepvk/USER-bge-m3,Category: MilDec,0.6666666666666666,0.9415935447297427
+deepvk/USER-bge-m3,Category: MilDec & AI,1.0,0.9562148070136433
+deepvk/USER-bge-m3,Category: Unrelated,0.0,0.834152234214295
+deepvk/USER-bge-m3,Query 1 (AI),1.0,0.8565599960115793
+deepvk/USER-bge-m3,Query 2 (AI),1.0,0.8837422667087019
+deepvk/USER-bge-m3,Query 3 (AI),1.0,0.8654166381818279
+deepvk/USER-bge-m3,Query 4 (MilDec),1.0,0.9598297826947986
+deepvk/USER-bge-m3,Query 5 (MilDec),0.5,0.9157542355837918
+deepvk/USER-bge-m3,Query 6 (MilDec),0.5,0.9491966159106376
+deepvk/USER-bge-m3,Query 7 (MilDec & AI),1.0,0.950234761002825
+deepvk/USER-bge-m3,Query 8 (MilDec & AI),1.0,0.9342283114996106
+deepvk/USER-bge-m3,Query 9 (MilDec & AI),1.0,0.9841813485384944
+deepvk/USER-bge-m3,Query 10 (Unrelated),0.0,0.8570382468260513
+deepvk/USER-bge-m3,Query 11 (Unrelated),0.0,0.6901616179005698
+deepvk/USER-bge-m3,Query 12 (Unrelated),0.0,0.9552568379162636
+jinaai/jina-code-embeddings-1.5b,Overall,0.6527777777777778,0.9129911179223774
+jinaai/jina-code-embeddings-1.5b,Category: AI,0.8333333333333334,0.9022103704631567
+jinaai/jina-code-embeddings-1.5b,Category: MilDec,0.7777777777777778,0.927062998412662
+jinaai/jina-code-embeddings-1.5b,Category: MilDec & AI,1.0,0.9565049845815509
+jinaai/jina-code-embeddings-1.5b,Category: Unrelated,0.0,0.8661861182321401
+jinaai/jina-code-embeddings-1.5b,Query 1 (AI),1.0,0.8978133520500001
+jinaai/jina-code-embeddings-1.5b,Query 2 (AI),1.0,0.9224938474950284
+jinaai/jina-code-embeddings-1.5b,Query 3 (AI),0.5,0.886323911844441
+jinaai/jina-code-embeddings-1.5b,Query 4 (MilDec),1.0,0.9341808986804132
+jinaai/jina-code-embeddings-1.5b,Query 5 (MilDec),1.0,0.9411349774664732
+jinaai/jina-code-embeddings-1.5b,Query 6 (MilDec),0.3333333333333333,0.9058731190910997
+jinaai/jina-code-embeddings-1.5b,Query 7 (MilDec & AI),1.0,0.9641671231947229
+jinaai/jina-code-embeddings-1.5b,Query 8 (MilDec & AI),1.0,0.9312278176970795
+jinaai/jina-code-embeddings-1.5b,Query 9 (MilDec & AI),1.0,0.9741200128528505
+jinaai/jina-code-embeddings-1.5b,Query 10 (Unrelated),0.0,0.857395739660772
+jinaai/jina-code-embeddings-1.5b,Query 11 (Unrelated),0.0,0.7918542119715132
+jinaai/jina-code-embeddings-1.5b,Query 12 (Unrelated),0.0,0.949308403064135
+Qwen/Qwen3-Embedding-0.6B,Overall,0.625,0.8839314242915655
+Qwen/Qwen3-Embedding-0.6B,Category: AI,1.0,0.9290405028159016
+Qwen/Qwen3-Embedding-0.6B,Category: MilDec,0.8333333333333334,0.9231343036236422
+Qwen/Qwen3-Embedding-0.6B,Category: MilDec & AI,0.6666666666666666,0.8796613905988728
+Qwen/Qwen3-Embedding-0.6B,Category: Unrelated,0.0,0.8038895001278455
+Qwen/Qwen3-Embedding-0.6B,Query 1 (AI),1.0,0.916880119240502
+Qwen/Qwen3-Embedding-0.6B,Query 2 (AI),1.0,0.9242569743054687
+Qwen/Qwen3-Embedding-0.6B,Query 3 (AI),1.0,0.9459844149017339
+Qwen/Qwen3-Embedding-0.6B,Query 4 (MilDec),1.0,0.9284380256324943
+Qwen/Qwen3-Embedding-0.6B,Query 5 (MilDec),1.0,0.918850580641879
+Qwen/Qwen3-Embedding-0.6B,Query 6 (MilDec),0.5,0.9221143045965534
+Qwen/Qwen3-Embedding-0.6B,Query 7 (MilDec & AI),0.5,0.8555573868150217
+Qwen/Qwen3-Embedding-0.6B,Query 8 (MilDec & AI),0.5,0.8542088501707572
+Qwen/Qwen3-Embedding-0.6B,Query 9 (MilDec & AI),1.0,0.9292179348108394
+Qwen/Qwen3-Embedding-0.6B,Query 10 (Unrelated),0.0,0.7719679849352787
+Qwen/Qwen3-Embedding-0.6B,Query 11 (Unrelated),0.0,0.8137440675618637
+Qwen/Qwen3-Embedding-0.6B,Query 12 (Unrelated),0.0,0.8259564478863941
+sentence-transformers/all-MiniLM-L6-v2,Overall,0.6527777777777778,0.9141799404121548
+sentence-transformers/all-MiniLM-L6-v2,Category: AI,0.7777777777777778,0.9006012797207869
+sentence-transformers/all-MiniLM-L6-v2,Category: MilDec,0.8333333333333334,0.9643437465537344
+sentence-transformers/all-MiniLM-L6-v2,Category: MilDec & AI,1.0,0.937609404171332
+sentence-transformers/all-MiniLM-L6-v2,Category: Unrelated,0.0,0.8541653312027663
+sentence-transformers/all-MiniLM-L6-v2,Query 1 (AI),1.0,0.9133248359873907
+sentence-transformers/all-MiniLM-L6-v2,Query 2 (AI),1.0,0.9337363531296998
+sentence-transformers/all-MiniLM-L6-v2,Query 3 (AI),0.3333333333333333,0.8547426500452701
+sentence-transformers/all-MiniLM-L6-v2,Query 4 (MilDec),1.0,0.9705930282580874
+sentence-transformers/all-MiniLM-L6-v2,Query 5 (MilDec),1.0,0.971256931935565
+sentence-transformers/all-MiniLM-L6-v2,Query 6 (MilDec),0.5,0.9511812794675513
+sentence-transformers/all-MiniLM-L6-v2,Query 7 (MilDec & AI),1.0,0.9584113095147848
+sentence-transformers/all-MiniLM-L6-v2,Query 8 (MilDec & AI),1.0,0.9015038301532657
+sentence-transformers/all-MiniLM-L6-v2,Query 9 (MilDec & AI),1.0,0.9529130728459454
+sentence-transformers/all-MiniLM-L6-v2,Query 10 (Unrelated),0.0,0.8562968642110399
+sentence-transformers/all-MiniLM-L6-v2,Query 11 (Unrelated),0.0,0.7700129605384558
+sentence-transformers/all-MiniLM-L6-v2,Query 12 (Unrelated),0.0,0.9361861688588032
