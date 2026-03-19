@@ -18,17 +18,7 @@ RUN python -c "from sentence_transformers import SentenceTransformer; \
     print('Downloading models...'); \
     print('  - sentence-transformers/all-MiniLM-L6-v2'); \
     SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); \
-    print('  - cointegrated/rubert-tiny2'); \
-    SentenceTransformer('cointegrated/rubert-tiny2'); \
-    print('  - OrcaDB/gte-base-en-v1.5'); \
-    SentenceTransformer('OrcaDB/gte-base-en-v1.5', trust_remote_code=True); \
-    print('  - deepvk/USER-bge-m3'); \
-    SentenceTransformer('deepvk/USER-bge-m3'); \
-    print('  - Qwen/Qwen3-Embedding-0.6B'); \
-    SentenceTransformer('Qwen/Qwen3-Embedding-0.6B', trust_remote_code=True); \
-    print('  - jinaai/jina-code-embeddings-1.5b'); \
-    SentenceTransformer('jinaai/jina-code-embeddings-1.5b'); \
-    print('All models downloaded successfully')"
+    "
 
 COPY . .
 

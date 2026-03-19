@@ -95,6 +95,28 @@ services:
     networks:
       - aegisnet
 
+  vector-loader:
+    build: ../jobs/vector-loader
+    environment:
+      - PYTHONUNBUFFERED=1
+      - VECTOR_DB_URL=http://vector-db:8002
+      - VECTOR_DB_TIMEOUT=300
+      - DATA_DIR=/data/dtic_compressed
+      - COLLECTION_NAME=aegis_vectors
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      - BATCH_SIZE=100
+      - SKIP_IF_LOADED=true
+      - MIN_ENTITIES_THRESHOLD=100
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../data:/data
+    depends_on:
+      vector-db:
+        condition: service_healthy
+    restart: "no" # Only run once
+    networks:
+      - aegisnet
+
   aegis-scholar-api:
     build: ../services/aegis-scholar-api
     ports:

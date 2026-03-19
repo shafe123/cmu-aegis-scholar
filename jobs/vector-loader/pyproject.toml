@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "vector-loader"
+version = "0.1.0"
+description = "One-time vector loader for importing DTIC data into vector database"
+authors = ["you <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+orjson = "^3.9"
+httpx = "^0.24"
+pydantic = "^2.0"
+pydantic-settings = "^2.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"
+
+[[tool.poetry.packages]]
+include = "app"
+from = "."
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
