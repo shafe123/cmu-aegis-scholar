@@ -257,3 +257,6 @@ terraform.rc
 # planout
 
 *_cache.json
+
+data/dtic/
+data/dtic/*
