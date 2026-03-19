@@ -7,7 +7,7 @@ authors = ["you <you@example.com>"]
 [tool.poetry.dependencies]
 python = "^3.12"
 fastapi = "^0.110"
-uvicorn = {extras = ["standard"], version = "^0.22"}
+uvicorn = "^0.22"  # Removed [standard] extras for smaller image
 pymilvus = "^2.3"
 pydantic = "^2.0"
 pydantic-settings = "^2.0"

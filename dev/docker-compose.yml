@@ -75,6 +75,8 @@ services:
       - MILVUS_HOST=milvus-standalone
       - MILVUS_PORT=19530
       - DEFAULT_COLLECTION=aegis_vectors
+    volumes:
+      - model-cache:/app/.cache
     depends_on:
       - milvus-standalone
     healthcheck:
@@ -101,6 +103,7 @@ services:
       - LOG_LEVEL=INFO
     volumes:
       - ../data:/data
+      - model-cache:/app/.cache
     depends_on:
       vector-db:
         condition: service_healthy
@@ -133,3 +136,4 @@ volumes:
   milvus-etcd:
   milvus-minio:
   milvus-standalone:
+  model-cache:

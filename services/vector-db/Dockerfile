@@ -1,26 +1,54 @@
-FROM python:3.13-slim
+# syntax=docker/dockerfile:1
+# Multi-stage build to reduce final image size
+# Stage 1: Builder
+FROM python:3.12-slim AS builder
+
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl build-essential \
-  && rm -rf /var/lib/apt/lists/*
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - && ln -s /etc/poetry/bin/poetry /usr/local/bin/poetry
-ENV PATH="/root/.local/bin:/usr/local/bin:$PATH"
+# Install Poetry and export plugin
+RUN curl -sSL https://install.python-poetry.org | python3 - 
+ENV PATH="/root/.local/bin:$PATH"
+RUN poetry self add poetry-plugin-export
 
+# Copy dependency files
 COPY pyproject.toml poetry.lock* ./
-RUN poetry config virtualenvs.create false \
-  && poetry install --only main --no-interaction --no-ansi --no-root
 
-# Pre-download embedding models (done here to leverage Docker layer caching)
-# Models won't need to be re-downloaded unless dependencies change
-RUN python -c "from sentence_transformers import SentenceTransformer; \
-    print('Downloading models...'); \
-    print('  - sentence-transformers/all-MiniLM-L6-v2'); \
-    SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); \
-    "
+# Export dependencies to requirements.txt (no Poetry needed in final image)
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --only main
 
-COPY . .
+# Stage 2: Runtime
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install curl for healthchecks
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements from builder
+COPY --from=builder /app/requirements.txt .
+
+# Install PyTorch CPU-only first (much smaller than default with CUDA)
+# Use BuildKit cache mount to cache pip downloads
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
+# Install remaining runtime dependencies
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY app/ ./app/
+
+# Set cache directories for models (will be persisted via volume mount)
+ENV TRANSFORMERS_CACHE=/app/.cache/transformers
+ENV SENTENCE_TRANSFORMERS_HOME=/app/.cache/sentence-transformers
 
 EXPOSE 8002
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002"]
