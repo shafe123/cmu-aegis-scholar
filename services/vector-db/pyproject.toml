@@ -5,13 +5,13 @@ description = "FastAPI microservice for Milvus vector search operations"
 authors = ["you <you@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.12,<3.13"  # FastEmbed requires <3.13
 fastapi = "^0.110"
 uvicorn = "^0.22"  # Removed [standard] extras for smaller image
 pymilvus = "^2.3"
 pydantic = "^2.0"
 pydantic-settings = "^2.0"
-sentence-transformers = "^3.0"
+fastembed = "^0.3"  # ONNX-based embeddings (much smaller than PyTorch)
 numpy = "^2.0"
 
 [tool.poetry.group.dev.dependencies]

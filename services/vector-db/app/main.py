@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, status
 from typing import List, Dict, Any
 from pymilvus import connections, Collection, utility, DataType, FieldSchema, CollectionSchema
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 from contextlib import asynccontextmanager
 import numpy as np
 import logging
@@ -28,7 +28,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Global variables (initialized on startup)
-embedding_models: Dict[str, SentenceTransformer] = {}  # Cache of loaded models
+embedding_models: Dict[str, TextEmbedding] = {}  # Cache of loaded models
 model_dimensions: Dict[str, int] = {}  # Cache of model dimensions
 
 # Cache for loaded collections and their schema info
@@ -37,7 +37,7 @@ _collection_schema_cache: Dict[str, Dict[str, Any]] = {}
 
 
 # Model management functions
-def get_or_load_model(model_name: str) -> SentenceTransformer:
+def get_or_load_model(model_name: str) -> TextEmbedding:
     """
     Get a model from cache or load it if not already loaded.
     
@@ -45,7 +45,7 @@ def get_or_load_model(model_name: str) -> SentenceTransformer:
         model_name: Name of the model to load
         
     Returns:
-        SentenceTransformer: The loaded model
+        TextEmbedding: The loaded model
         
     Raises:
         ValueError: If model_name is not in AVAILABLE_MODELS
@@ -63,19 +63,15 @@ def get_or_load_model(model_name: str) -> SentenceTransformer:
     try:
         logger.info(f"Loading model: {model_name}")
         
-        # Check if model requires trust_remote_code
-        trust_remote_code = AVAILABLE_MODELS[model_name].get("trust_remote_code", False)
-        model = SentenceTransformer(model_name, trust_remote_code=trust_remote_code)
+        # FastEmbed model name mapping
+        fastembed_model = AVAILABLE_MODELS[model_name].get("fastembed_name", model_name)
+        model = TextEmbedding(model_name=fastembed_model)
         
         embedding_models[model_name] = model
         
         # Cache the dimension
-        dim = model.get_sentence_embedding_dimension()
+        dim = AVAILABLE_MODELS[model_name]["dimension"]
         model_dimensions[model_name] = dim
-        
-        # Update AVAILABLE_MODELS with actual dimension if it was None
-        if AVAILABLE_MODELS[model_name]["dimension"] is None:
-            AVAILABLE_MODELS[model_name]["dimension"] = dim
         
         logger.info(f"Model '{model_name}' loaded successfully (dimension: {dim})")
         return model
@@ -609,11 +605,9 @@ async def text_search(request: TextSearchRequest):
         
         # Convert text query to embedding
         logger.info(f"Converting query text to embedding using model '{model_name}': '{request.query_text[:50]}...'")
-        query_embedding = model.encode(
-            [request.query_text],
-            show_progress_bar=False,
-            convert_to_numpy=True
-        )[0]  # Get first (and only) embedding
+        # FastEmbed returns a generator, convert to list and get first embedding
+        embeddings_gen = model.embed([request.query_text])
+        query_embedding = np.array(next(iter(embeddings_gen)))
         
         # Prepare search parameters
         search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
@@ -725,11 +719,9 @@ async def create_author_embedding(request: CreateAuthorEmbeddingRequest):
         logger.info(f"Processing {len(valid_abstracts)} abstracts for author {request.author_id} using model '{model_name}'")
         
         # Generate embeddings for all abstracts
-        abstract_embeddings = model.encode(
-            valid_abstracts,
-            show_progress_bar=False,
-            convert_to_numpy=True
-        )
+        # FastEmbed returns a generator, convert to numpy array
+        embeddings_gen = model.embed(valid_abstracts)
+        abstract_embeddings = np.array(list(embeddings_gen))
         
         # Average the embeddings
         averaged_embedding = np.mean(abstract_embeddings, axis=0)

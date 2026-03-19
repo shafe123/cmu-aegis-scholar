@@ -4,12 +4,12 @@ from typing import Dict
 
 
 # Available embedding models and their configurations
-# Currently restricted to all-MiniLM-L6-v2 only
+# Using FastEmbed (ONNX-based) for smaller image size
 AVAILABLE_MODELS: Dict[str, Dict[str, any]] = {
     "sentence-transformers/all-MiniLM-L6-v2": {
         "dimension": 384,
         "description": "Fast and efficient sentence embeddings (384 dimensions)",
-        "trust_remote_code": False
+        "fastembed_name": "sentence-transformers/all-MiniLM-L6-v2"
     }
 }
 

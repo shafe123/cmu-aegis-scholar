@@ -19,7 +19,8 @@ RUN poetry self add poetry-plugin-export
 # Copy dependency files
 COPY pyproject.toml poetry.lock* ./
 
-# Export dependencies to requirements.txt (no Poetry needed in final image)
+# Update lock file with Python 3.12, then export
+RUN poetry lock
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --only main
 
 # Stage 2: Runtime
@@ -34,12 +35,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
 # Copy requirements from builder
 COPY --from=builder /app/requirements.txt .
 
-# Install PyTorch CPU-only first (much smaller than default with CUDA)
-# Use BuildKit cache mount to cache pip downloads
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-
-# Install remaining runtime dependencies
+# Install all dependencies with cache mount
+# FastEmbed uses ONNX Runtime (much smaller than PyTorch)
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir -r requirements.txt
 
