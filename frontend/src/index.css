@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-aegis-dark: #1e2227;
+  --color-aegis-navy: #0f172a;
+  --color-aegis-cyan: #22d3ee;
+  --color-aegis-edge: #334155;
+  
+  --shadow-cyan-glow: 0 0 15px rgba(34, 211, 238, 0.3);
+}
+
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 500ms;
+}
