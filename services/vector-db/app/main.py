@@ -138,12 +138,14 @@ def initialize_default_collection():
         if not utility.has_collection(collection_name):
             logger.info(f"Collection '{collection_name}' does not exist. Creating it...")
             
-            # Get or load the default embedding model to determine dimension
+            # Get the embedding dimension from config/cache
             try:
-                default_model = get_or_load_model(settings.default_embedding_model)
-                embedding_dim = default_model.get_sentence_embedding_dimension()
+                # Load model to ensure it's cached (side effect)
+                get_or_load_model(settings.default_embedding_model)
+                # Get dimension from model_dimensions cache (populated during load)
+                embedding_dim = model_dimensions[settings.default_embedding_model]
             except Exception as e:
-                logger.warning(f"Could not load default model for collection initialization: {e}")
+                logger.warning(f"Could not determine embedding dimension for collection initialization: {e}")
                 logger.warning("Skipping collection initialization.")
                 return
             
@@ -154,6 +156,7 @@ def initialize_default_collection():
                 FieldSchema(name="author_name", dtype=DataType.VARCHAR, max_length=500),
                 FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=embedding_dim),
                 FieldSchema(name="num_abstracts", dtype=DataType.INT64),
+                FieldSchema(name="citation_count", dtype=DataType.INT64, default_value=0),
             ]
             
             schema = CollectionSchema(
@@ -239,7 +242,8 @@ def _upsert_author_embedding(
     author_id: str,
     author_name: str,
     embedding: list,
-    num_abstracts: int
+    num_abstracts: int,
+    citation_count: int = 0
 ) -> tuple[bool, str]:
     """
     Shared helper function to upsert author embedding into collection.
@@ -250,6 +254,7 @@ def _upsert_author_embedding(
         author_name: Author's display name
         embedding: Embedding vector as a list
         num_abstracts: Number of abstracts used to create the embedding
+        citation_count: Author's citation count (defaults to 0 if not provided)
         
     Returns:
         Tuple of (is_update, action_description)
@@ -334,6 +339,7 @@ def _upsert_author_embedding(
         [author_name],                        # author_name
         [embedding],                          # embedding
         [num_abstracts],                      # num_abstracts
+        [citation_count],                     # citation_count
     ]
     
     # Upsert the data (insert if new, update if exists)
@@ -733,7 +739,8 @@ async def create_author_embedding(request: CreateAuthorEmbeddingRequest):
             author_id=request.author_id,
             author_name=request.author_name,
             embedding=averaged_embedding.tolist(),
-            num_abstracts=len(valid_abstracts)
+            num_abstracts=len(valid_abstracts),
+            citation_count=request.citation_count or 0
         )
         
         logger.info(f"Successfully {action} embedding for author {request.author_id} in collection '{collection_name}'")
@@ -810,7 +817,8 @@ async def create_author_vector(request: CreateAuthorVectorRequest):
             author_id=request.author_id,
             author_name=request.author_name,
             embedding=request.embedding,
-            num_abstracts=request.num_abstracts or 0
+            num_abstracts=request.num_abstracts or 0,
+            citation_count=request.citation_count or 0
         )
         
         logger.info(f"Successfully {action} vector for author {request.author_id} in collection '{collection_name}'")

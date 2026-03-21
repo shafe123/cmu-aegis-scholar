@@ -116,10 +116,15 @@ class CreateAuthorEmbeddingRequest(BaseModel):
         description="Collection to store the embedding in",
         json_schema_extra={"example": "aegis_vectors"}
     )
+    citation_count: Optional[int] = Field(
+        None,
+        description="Author's citation count",
+        json_schema_extra={"example": 8924}
+    )
     metadata: Optional[Dict[str, Any]] = Field(
         default_factory=dict, 
         description="Additional metadata for the author",
-        json_schema_extra={"example": {"h_index": 42, "citation_count": 8924, "works_count": 156}}
+        json_schema_extra={"example": {"h_index": 42, "works_count": 156}}
     )
 
 
@@ -155,10 +160,15 @@ class CreateAuthorVectorRequest(BaseModel):
         description="Collection to store the embedding in",
         json_schema_extra={"example": "aegis_vectors"}
     )
+    citation_count: Optional[int] = Field(
+        None,
+        description="Author's citation count",
+        json_schema_extra={"example": 7234}
+    )
     metadata: Optional[Dict[str, Any]] = Field(
         default_factory=dict, 
         description="Additional metadata for the author",
-        json_schema_extra={"example": {"h_index": 38, "citation_count": 7234, "works_count": 132}}
+        json_schema_extra={"example": {"h_index": 38, "works_count": 132}}
     )
 
 

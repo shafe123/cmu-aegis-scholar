@@ -1,0 +1,47 @@
+{
+    "id": "work_8aa955a1-dd8f-5978-b048-ba47f8b10616",
+    "title": "Singularities of the Laplacian at corners and edges of three‐dimensional domains and their treatment with finite element methods",
+    "sources": [
+        {
+            "source": "dtic",
+            "id": "pub.1000004508"
+        }
+    ],
+    "last_updated": "2026-02-26T16:56:50.404676",
+    "abstract": "Abstract Three‐dimensional Poisson problems containing boundary singularities are treated. The forms of the solutions for certain problems of this type are derived, where the domains of the problems can be represented in terms either of spherical‐ or of cylindrical‐polar co‐ordinates. These singular forms are used to augment the basis of a standard piecewise polynomial Galerkin space, thus producing an augmented Galerkin technique which is suited to the context of a problem involving a singularity. Error estimates are derived.",
+    "publication_date": "1988-07-01",
+    "doi": "10.1002/mma.1670100309",
+    "url": "https://dtic.dimensions.ai/details/publication/pub.1000004508?or_facet_year=1988",
+    "citation_count": 0,
+    "authors": [
+        {
+            "author_id": "author_1fcd8d31-5d05-51f6-9438-0127a738da6f",
+            "org_id": "org_2bbcd91e-a312-5712-8f37-49be0776a188"
+        },
+        {
+            "author_id": "author_e0122a57-ab33-54ab-a276-cfdfafffa769",
+            "org_id": "org_fb0b9f71-c950-5ca0-a4ee-934bc1a8dfd2"
+        }
+    ],
+    "orgs": [
+        {
+            "org_id": "org_2bbcd91e-a312-5712-8f37-49be0776a188",
+            "role": "affiliation"
+        },
+        {
+            "org_id": "org_fb0b9f71-c950-5ca0-a4ee-934bc1a8dfd2",
+            "role": "affiliation"
+        }
+    ],
+    "topics": [
+        {
+            "topic_id": "topic_91d85617-76db-57f2-bbb5-4aed08071f9b",
+            "score": 1.0
+        },
+        {
+            "topic_id": "topic_f0d3ecb9-57b4-5d4e-a985-e69fbc86686e",
+            "score": 1.0
+        }
+    ],
+    "created_at": "2026-02-26T16:56:50.404676"
+}

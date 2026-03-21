@@ -69,7 +69,8 @@ class VectorDBClient:
         author_name: str,
         abstracts: list[str],
         collection_name: str,
-        model_name: str
+        model_name: str,
+        citation_count: int = None
     ) -> bool:
         """Create an author embedding from abstracts."""
         try:
@@ -80,6 +81,8 @@ class VectorDBClient:
                 "collection_name": collection_name,
                 "model_name": model_name
             }
+            if citation_count is not None:
+                payload["citation_count"] = citation_count
             
             response = self.client.post(
                 f"{self.base_url}/authors/embeddings",
@@ -146,9 +149,59 @@ class VectorLoader:
         logger.info(f"Found {len(files)} compressed files for {entity_type}")
         return files
     
-    def process_works_file(self, file_path: Path) -> int:
+    def build_author_lookup(self) -> dict[str, dict]:
+        """
+        Build a lookup table of author_id -> {name, citation_count} by scanning author files.
+        This is done once at startup to avoid repeated file scanning.
+        
+        Returns:
+            Dictionary mapping author_id to author metadata
+        """
+        logger.info("Building author lookup table from author files...")
+        lookup = {}
+        
+        author_files = self.get_compressed_files("authors")
+        if not author_files:
+            logger.warning("No author files found - author names will default to IDs")
+            return lookup
+        
+        total_authors = 0
+        for file_path in author_files:
+            try:
+                with gzip.open(file_path, 'rb') as f:
+                    for line in f:
+                        if not line.strip():
+                            continue
+                        
+                        try:
+                            author = self._parse_json(line)
+                            author_id = author.get("id")
+                            author_name = author.get("name")
+                            citation_count = author.get("citation_count", 0)
+                            
+                            if author_id:
+                                lookup[author_id] = {
+                                    "name": author_name or author_id,
+                                    "citation_count": citation_count
+                                }
+                                total_authors += 1
+                        except Exception as e:
+                            logger.debug(f"Error parsing author record: {e}")
+                            continue
+            except Exception as e:
+                logger.error(f"Error reading author file {file_path}: {e}")
+                continue
+        
+        logger.info(f"Built lookup table with {total_authors} authors ({len(lookup)} unique)")
+        return lookup
+    
+    def process_works_file(self, file_path: Path, author_lookup: dict[str, dict]) -> int:
         """
         Process a works file and extract author abstracts.
+        
+        Args:
+            file_path: Path to the works file
+            author_lookup: Pre-built lookup table of author_id -> {name, citation_count}
         
         Returns:
             Number of records processed
@@ -156,7 +209,7 @@ class VectorLoader:
         logger.info(f"Processing works file: {file_path.name}")
         
         # Accumulate abstracts per author
-        author_data = defaultdict(lambda: {"name": None, "abstracts": []})
+        author_data = defaultdict(lambda: {"name": None, "citation_count": 0, "abstracts": []})
         records_read = 0
         
         try:
@@ -181,10 +234,11 @@ class VectorLoader:
                             if not author_id:
                                 continue
                             
-                            # Store author name if we don't have it yet
+                            # Get author metadata from lookup table (if available)
                             if author_data[author_id]["name"] is None:
-                                # Try to get name from author object or use ID
-                                author_data[author_id]["name"] = author.get("name", author_id)
+                                author_info = author_lookup.get(author_id, {})
+                                author_data[author_id]["name"] = author_info.get("name", author_id)
+                                author_data[author_id]["citation_count"] = author_info.get("citation_count", 0)
                             
                             # Add abstract to this author's collection
                             author_data[author_id]["abstracts"].append(abstract)
@@ -214,7 +268,8 @@ class VectorLoader:
                         author_name=data["name"] or author_id,
                         abstracts=data["abstracts"],
                         collection_name=settings.collection_name,
-                        model_name=settings.embedding_model
+                        model_name=settings.embedding_model,
+                        citation_count=data.get("citation_count")
                     )
                     
                     if success:
@@ -243,7 +298,7 @@ class VectorLoader:
             logger.error(f"Error processing file {file_path}: {e}")
             return 0
     
-    def process_entity_type(self, entity_type: str):
+    def process_entity_type(self, entity_type: str, author_lookup: dict[str, dict]):
         """Process all files for a specific entity type."""
         logger.info(f"Processing entity type: {entity_type}")
         
@@ -255,7 +310,7 @@ class VectorLoader:
         for file_path in files:
             # Process based on entity type
             if entity_type == "works":
-                self.process_works_file(file_path)
+                self.process_works_file(file_path, author_lookup)
             else:
                 logger.warning(f"Entity type '{entity_type}' not yet supported for loading")
                 continue
@@ -289,13 +344,16 @@ class VectorLoader:
                 logger.info("Skipping data load (data already present)")
                 return
             
+            # Build author lookup table first (for author names and metadata)
+            author_lookup = self.build_author_lookup()
+            
             # Process entity types (currently only works are supported)
             # Note: We only process works files because they contain the abstracts
             # needed to generate author embeddings
             entity_types_to_process = ["works"]
             
             for entity_type in entity_types_to_process:
-                self.process_entity_type(entity_type)
+                self.process_entity_type(entity_type, author_lookup)
             
             # Print summary
             logger.info("=" * 70)
