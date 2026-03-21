@@ -78,7 +78,28 @@ class Work(BaseModel):
     last_updated: Optional[datetime] = None
 
 
+# ---------------------------------------------------------------------------
+# Search-result wrappers
+# ---------------------------------------------------------------------------
+# These extend the base entity models with a relevance_score so that search
+# results carry ranking information without altering the core data models.
+
+class AuthorSearchResult(Author):
+    """An Author result enriched with a search relevance score."""
+    relevance_score: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        description=(
+            "Semantic similarity score derived from vector distance. "
+            "Higher is more relevant. Range 0-1."
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Response models for search endpoints
+# ---------------------------------------------------------------------------
+
 class SearchResponse(BaseModel):
     """Generic search response with results and metadata."""
     query: str
@@ -90,7 +111,7 @@ class SearchResponse(BaseModel):
 
 class AuthorSearchResponse(SearchResponse):
     """Search response for authors."""
-    results: List[Author]
+    results: List[AuthorSearchResult]
 
 
 class OrgSearchResponse(SearchResponse):
