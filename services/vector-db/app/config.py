@@ -39,9 +39,9 @@ class Settings(BaseSettings):
     default_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     
     # API Configuration
-    api_title: str = "AEGIS Scholar Vector DB Service"
+    api_title: str = "Aegis Scholar Vector DB API"
     api_version: str = "0.1.0"
-    api_description: str = "FastAPI service for Milvus vector search operations"
+    api_description: str = "FastAPI service for vector search operations"
 
 
 settings = Settings()

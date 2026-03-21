@@ -1,8 +1,12 @@
 from fastapi import FastAPI, HTTPException, status
+from fastapi.staticfiles import StaticFiles
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.responses import FileResponse
 from typing import List, Dict, Any
 from pymilvus import connections, Collection, utility, DataType, FieldSchema, CollectionSchema
 from fastembed import TextEmbedding
 from contextlib import asynccontextmanager
+from pathlib import Path
 import numpy as np
 import logging
 
@@ -233,7 +237,13 @@ app = FastAPI(
     version=settings.api_version,
     description=settings.api_description,
     lifespan=lifespan,
+    docs_url=None,  # Disable default docs
+    redoc_url=None,  # Disable default redoc
 )
+
+# Mount static files for favicon
+static_path = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 
 
 # Helper Functions
@@ -357,7 +367,7 @@ async def root():
     """Root endpoint."""
     return {
         "service": "vector-db",
-        "message": "AEGIS Scholar Vector DB Service",
+        "message": "Aegis Scholar Vector DB API",
         "version": settings.api_version
     }
 
@@ -385,6 +395,33 @@ async def health_check():
             milvus_connected=False,
             collections=[]
         )
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Serve custom favicon."""
+    favicon_path = Path(__file__).parent / "static" / "favicon.svg"
+    return FileResponse(favicon_path, media_type="image/svg+xml")
+
+
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    """Custom Swagger UI with custom favicon."""
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} - Swagger UI",
+        swagger_favicon_url="/favicon.ico"
+    )
+
+
+@app.get("/redoc", include_in_schema=False)
+async def custom_redoc_html():
+    """Custom ReDoc with custom favicon."""
+    return get_redoc_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} - ReDoc",
+        redoc_favicon_url="/favicon.ico"
+    )
 
 
 @app.get("/collections", response_model=List[CollectionInfo], tags=["Collections"])

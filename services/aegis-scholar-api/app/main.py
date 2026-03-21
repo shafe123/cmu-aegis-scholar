@@ -6,8 +6,12 @@ The system is designed to be read-only for users.
 """
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.responses import FileResponse
 from typing import Optional
 import logging
+from pathlib import Path
 
 from app.config import settings
 from app.schemas import (
@@ -30,7 +34,13 @@ app = FastAPI(
     title=settings.api_title,
     description=settings.api_description,
     version=settings.api_version,
+    docs_url=None,  # Disable default docs
+    redoc_url=None,  # Disable default redoc
 )
+
+# Mount static files for favicon
+static_path = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 
 # Add CORS middleware
 app.add_middleware(
@@ -63,6 +73,33 @@ async def root():
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "service": "aegis-scholar-api"}
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Serve custom favicon."""
+    favicon_path = Path(__file__).parent / "static" / "favicon.svg"
+    return FileResponse(favicon_path, media_type="image/svg+xml")
+
+
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    """Custom Swagger UI with custom favicon."""
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} - Swagger UI",
+        swagger_favicon_url="/favicon.ico"
+    )
+
+
+@app.get("/redoc", include_in_schema=False)
+async def custom_redoc_html():
+    """Custom ReDoc with custom favicon."""
+    return get_redoc_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} - ReDoc",
+        redoc_favicon_url="/favicon.ico"
+    )
 
 
 @app.get("/search/authors", response_model=AuthorSearchResponse)
