@@ -523,23 +523,20 @@ async def vector_search(request: VectorSearchRequest):
         )
         search_time = (time.time() - start_time) * 1000  # Convert to milliseconds
         
-        # Format all results
+        # Format all results - flatten entity fields
         all_results = []
         for hits in results:
             for hit in hits:
-                # Build entity dict from individual fields to avoid double-nesting
-                entity_dict = {}
+                # Extract fields directly from entity to create flattened result
+                result_data = {"distance": hit.distance}
+                
                 if hasattr(hit, 'entity'):
                     for field_name in hit.entity.fields:
-                        entity_dict[field_name] = hit.entity.get(field_name)
+                        # Skip 'id' and 'embedding' fields to avoid duplication
+                        if field_name not in ['id', 'embedding']:
+                            result_data[field_name] = hit.entity.get(field_name)
                 
-                all_results.append(
-                    VectorSearchResult(
-                        id=str(hit.id),
-                        distance=hit.distance,
-                        entity=entity_dict
-                    )
-                )
+                all_results.append(VectorSearchResult(**result_data))
         
         # Apply pagination
         paginated_results = all_results[request.offset:request.offset + request.limit]
@@ -633,23 +630,20 @@ async def text_search(request: TextSearchRequest):
         )
         search_time = (time.time() - start_time) * 1000  # Convert to milliseconds
         
-        # Format all results
+        # Format all results - flatten entity fields
         all_results = []
         for hits in results:
             for hit in hits:
-                # Build entity dict from individual fields to avoid double-nesting
-                entity_dict = {}
+                # Extract fields directly from entity to create flattened result
+                result_data = {"distance": hit.distance}
+                
                 if hasattr(hit, 'entity'):
                     for field_name in hit.entity.fields:
-                        entity_dict[field_name] = hit.entity.get(field_name)
+                        # Skip 'id' and 'embedding' fields to avoid duplication
+                        if field_name not in ['id', 'embedding']:
+                            result_data[field_name] = hit.entity.get(field_name)
                 
-                all_results.append(
-                    VectorSearchResult(
-                        id=str(hit.id),
-                        distance=hit.distance,
-                        entity=entity_dict
-                    )
-                )
+                all_results.append(VectorSearchResult(**result_data))
         
         # Apply pagination
         paginated_results = all_results[request.offset:request.offset + request.limit]

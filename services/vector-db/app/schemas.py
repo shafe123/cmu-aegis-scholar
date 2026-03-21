@@ -175,23 +175,35 @@ class CreateAuthorVectorRequest(BaseModel):
 # Response Models
 
 class VectorSearchResult(BaseModel):
-    """Single search result."""
-    id: str = Field(
-        ...,
-        json_schema_extra={"example": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"}
-    )
+    """Single search result with flattened entity fields."""
     distance: float = Field(
         ...,
+        description="Distance/similarity score from query",
         json_schema_extra={"example": 0.4523}
     )
-    entity: Dict[str, Any] = Field(
+    author_id: str = Field(
         ...,
-        json_schema_extra={"example": {
-            "author_id": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
-            "author_name": "Dr. Sarah Chen",
-            "num_abstracts": 124
-        }}
+        description="Unique identifier for the author",
+        json_schema_extra={"example": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"}
     )
+    author_name: str = Field(
+        ...,
+        description="Name of the author",
+        json_schema_extra={"example": "Dr. Sarah Chen"}
+    )
+    num_abstracts: int = Field(
+        ...,
+        description="Number of abstracts used for this embedding",
+        json_schema_extra={"example": 124}
+    )
+    citation_count: Optional[int] = Field(
+        None,
+        description="Author's citation count",
+        json_schema_extra={"example": 8924}
+    )
+    
+    class Config:
+        extra = "allow"  # Allow additional fields from output_fields
 
 
 class PaginationMetadata(BaseModel):
@@ -220,22 +232,18 @@ class VectorSearchResponse(BaseModel):
         ...,
         json_schema_extra={"example": [
             {
-                "id": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
                 "distance": 0.4523,
-                "entity": {
-                    "author_id": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
-                    "author_name": "Dr. Sarah Chen",
-                    "num_abstracts": 124
-                }
+                "author_id": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+                "author_name": "Dr. Sarah Chen",
+                "num_abstracts": 124,
+                "citation_count": 8924
             },
             {
-                "id": "author_e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
                 "distance": 0.5891,
-                "entity": {
-                    "author_id": "author_e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
-                    "author_name": "Dr. Michael Rodriguez",
-                    "num_abstracts": 98
-                }
+                "author_id": "author_e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+                "author_name": "Dr. Michael Rodriguez",
+                "num_abstracts": 98,
+                "citation_count": 6543
             }
         ]}
     )
