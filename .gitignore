@@ -260,3 +260,8 @@ terraform.rc
 
 data/dtic/
 data/dtic/*
+
+# Aegis Scholar Data
+data/
+*.gz
+*.jsonl

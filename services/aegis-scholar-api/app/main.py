@@ -43,6 +43,7 @@ from app.schemas import (
     Work,
 )
 from app.services import vector_db
+from app.services.graph_db import graph_client
 
 # Configure logging
 logging.basicConfig(level=settings.log_level)
