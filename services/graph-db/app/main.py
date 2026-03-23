@@ -11,6 +11,16 @@ driver = GraphDatabase.driver(settings.neo4j_uri, auth=(settings.neo4j_user, set
 def close_driver():
     driver.close()
 
+@app.get("/health", tags=["System"])
+async def health_check():
+    try:
+        # Check if we can talk to Neo4j
+        with driver.session() as session:
+            session.run("RETURN 1")
+        return {"status": "healthy", "neo4j": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
+
 # --- UPSERT ENDPOINTS ---
 
 @app.post("/authors", tags=["Ingestion"])
