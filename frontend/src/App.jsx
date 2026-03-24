@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { Search, Users, FileText, Globe, Calendar, Settings, Loader2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Users, FileText, Globe, Calendar, Settings, Loader2, X } from 'lucide-react';
 import { searchAuthors } from './services/api';
+import NetworkGraph from './components/NetworkGraph';
 
-// Sub-component for the Individual Researcher Rows
-const ResearcherRow = ({ author }) => {
-  // Mapping dept codes to the specific wireframe colors
+const ResearcherRow = ({ author, onSelect }) => {
   const deptStyles = {
     USA: 'bg-black text-yellow-500 border-yellow-500/50',
     USN: 'bg-[#003147] text-white border-cyan-500/30',
@@ -19,19 +18,22 @@ const ResearcherRow = ({ author }) => {
       </div>
 
       <div className="flex-1">
-        <h3 className="text-aegis-cyan font-bold text-lg group-hover:underline cursor-pointer">
-          {author.name || "Unknown Researcher"}
+        <h3 
+          className="text-aegis-cyan font-bold text-lg group-hover:underline cursor-pointer"
+          onClick={() => onSelect(author)}
+        >
+          {author.name} {/* This will now correctly show "Peter D. Killworth" */}
         </h3>
         <p className="text-slate-400 text-sm truncate max-w-md">
-          {author.specialty || "Specialization and expertise summary goes here..."}
+          {author.specialization} {/* Match the key in api.js */}
         </p>
       </div>
 
       <div className="text-slate-400 text-sm w-32 text-center font-mono">
-        {author.last_published || '2024-03-12'}
+        {author.date} {/* Match the key in api.js */}
       </div>
 
-      {/* Mini Bar Chart Placeholder from Wireframe */}
+      {/* ... Rest of your component (Bar chart and H-Index) remains the same ... */}
       <div className="w-24 flex items-end gap-1 h-8 px-2">
         <div className="bg-slate-600 w-2 h-3 rounded-t-sm group-hover:bg-green-400 transition-colors"></div>
         <div className="bg-slate-600 w-2 h-6 rounded-t-sm group-hover:bg-aegis-cyan transition-colors"></div>
@@ -40,7 +42,7 @@ const ResearcherRow = ({ author }) => {
       </div>
 
       <div className="w-20 text-right font-mono text-xl text-slate-200 pr-4">
-        {author.score || author.h_index || '0.0'}
+        {author.h_index}
       </div>
     </div>
   );
@@ -51,6 +53,8 @@ export default function App() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('Authors');
+  
+  const [selectedAuthor, setSelectedAuthor] = useState(null);
 
   const onSearch = async (e) => {
     e.preventDefault();
@@ -58,9 +62,7 @@ export default function App() {
     setLoading(true);
     try {
       const data = await searchAuthors(query);
-      // Backend mapping safety net
-      const finalResults = data.results || data.authors || (Array.isArray(data) ? data : []);
-      setResults(finalResults);
+      setResults(data);
     } catch (err) {
       console.error("Search failed:", err);
     } finally {
@@ -91,7 +93,6 @@ export default function App() {
             </div>
           )}
           
-          {/* Search Box */}
           <form onSubmit={onSearch} className="relative max-w-3xl mx-auto group">
             <input 
               type="text" 
@@ -109,7 +110,6 @@ export default function App() {
             </button>
           </form>
 
-          {/* Wireframe Toggles */}
           <div className="flex justify-center gap-2 mt-8">
             {['Authors', 'Works', 'Orgs', 'Year'].map((tab) => (
               <button
@@ -139,7 +139,11 @@ export default function App() {
             </div>
             
             {results.map((author, idx) => (
-              <ResearcherRow key={author.id || idx} author={author} />
+              <ResearcherRow 
+                key={author.id || idx} 
+                author={author} 
+                onSelect={(a) => setSelectedAuthor(a)}
+              />
             ))}
           </div>
         )}
@@ -147,10 +151,48 @@ export default function App() {
         {results.length > 0 && (
           <div className="mt-4 flex justify-between items-center text-[10px] font-mono text-slate-600 uppercase tracking-widest px-2">
             <div>Vector DB: Milvus 2.3</div>
-            <div>Showing {results.length} of 240.2M Records</div>
+            <div>Showing {results.length} results</div>
           </div>
         )}
       </main>
+
+      {/* GRAPH VISUALIZATION MODAL */}
+      {selectedAuthor && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4 md:p-10">
+          <div className="bg-[#0f1115] border border-slate-700 w-full max-w-6xl h-full max-h-[90vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-aegis-cyan/10 rounded-lg">
+                  <Users className="text-aegis-cyan" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">{selectedAuthor.name}</h2>
+                  <p className="text-xs text-slate-500 font-mono tracking-tighter uppercase">ID: {selectedAuthor.id}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedAuthor(null)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white"
+              >
+                <X size={28} />
+              </button>
+            </div>
+            
+            {/* Graph Content Area */}
+            <div className="flex-1 relative bg-black/40">
+               <NetworkGraph authorId={selectedAuthor.id} />
+               
+               {/* Legend Overlay */}
+               <div className="absolute bottom-6 left-6 bg-slate-900/80 p-3 rounded-lg border border-slate-700 text-[10px] font-mono space-y-2 pointer-events-none">
+                 <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-blue-500"></span> Primary Author</div>
+                 <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-slate-400"></span> Co-Authors / Topics</div>
+                 <div className="text-slate-500 italic mt-2">Drag to explore connections</div>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
