@@ -38,7 +38,7 @@ COPY --from=builder /app/requirements.txt .
 # Install all dependencies with cache mount
 # FastEmbed uses ONNX Runtime (much smaller than PyTorch)
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir -r requirements.txt
+    pip install -r requirements.txt
 
 # Copy application code
 COPY app/ ./app/
