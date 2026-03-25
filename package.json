@@ -1,0 +1,23 @@
+{
+    "name": "cmu-aegis-scholar",
+    "version": "1.0.0",
+    "description": "CMU Aegis Scholar - Research paper search and analysis platform",
+    "private": true,
+    "scripts": {
+        "setup": "py -3.12 scripts/setup.py",
+        "test:all": "py -3.12 scripts/test_runner.py all",
+        "test:frontend": "py -3.12 scripts/test_runner.py frontend",
+        "test:services": "py -3.12 scripts/test_runner.py services",
+        "test:jobs": "py -3.12 scripts/test_runner.py jobs",
+        "test:libs": "py -3.12 scripts/test_runner.py libs",
+        "test:integration": "py -3.12 scripts/test_runner.py integration",
+        "test:python": "py -3.12 scripts/test_runner.py python",
+        "test:coverage": "py -3.12 scripts/test_runner.py all"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/shafe123/cmu-aegis-scholar.git"
+    },
+    "author": "CMU Aegis Scholar Team",
+    "license": "MIT"
+}

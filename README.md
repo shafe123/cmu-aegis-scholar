@@ -53,6 +53,60 @@ pip install -e .
 - `infra/` - Infrastructure and deployment configurations (Terraform)
 - `k8s/` - Kubernetes manifests
 - `dev/` - Development utilities and Docker Compose configuration
+- `tests/` - Integration tests (cross-component)
+- `frontend/` - React frontend application
+- `jobs/` - One-time and scheduled data processing jobs
+
+## Testing
+
+This project has comprehensive unit and integration testing with an **80% coverage target**.
+
+### Quick Start
+
+**First-time setup:**
+```bash
+npm run setup
+```
+
+**Run all tests:**
+```bash
+npm run test:all
+```
+
+**Run specific components:**
+```bash
+npm run test:frontend      # Frontend tests
+npm run test:services      # All service tests
+npm run test:jobs          # All job tests
+npm run test:integration   # Integration tests
+```
+
+### Test Organization
+
+- **Unit Tests**: Located in `tests/` folder within each component
+- **Integration Tests**: Located in root `/tests` folder
+- **Coverage Target**: 80% across all components
+
+### Documentation
+
+- **[tests/README.md](tests/README.md)** - Testing guide and commands
+- **[scripts/README.md](scripts/README.md)** - Test runner documentation
+
+### Running Component Tests
+
+**Frontend:**
+```bash
+cd frontend
+npm test
+```
+
+**Python Services:**
+```bash
+cd services/aegis-scholar-api
+poetry run pytest --cov=app
+```
+
+See [tests/README.md](tests/README.md) for complete details.
 
 ## Running the Example Service with Docker Compose
 
