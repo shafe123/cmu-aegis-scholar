@@ -105,10 +105,10 @@ class VectorDBClient:
 class VectorLoader:
     """Loads DTIC data into the vector database."""
     
-    def __init__(self):
+    def __init__(self, client: 'VectorDBClient' = None, data_dir: Path = None):
         """Initialize the data loader."""
-        self.data_dir = Path(settings.data_dir)
-        self.client = VectorDBClient(settings.vector_db_url, settings.vector_db_timeout)
+        self.data_dir = data_dir if data_dir is not None else Path(settings.data_dir)
+        self.client = client if client is not None else VectorDBClient(settings.vector_db_url, settings.vector_db_timeout)
         self.stats = defaultdict(int)
     
     def _parse_json(self, line: bytes) -> dict:
