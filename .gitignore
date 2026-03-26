@@ -265,3 +265,9 @@ data/dtic/*
 data/
 *.gz
 *.jsonl
+
+# Secrets and Env
+*.txt
+*.env
+.env.*
+secrets/
