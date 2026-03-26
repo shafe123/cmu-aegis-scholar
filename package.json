@@ -19,5 +19,8 @@
         "url": "https://github.com/shafe123/cmu-aegis-scholar.git"
     },
     "author": "CMU Aegis Scholar Team",
-    "license": "MIT"
+    "license": "MIT",
+    "dependencies": {
+        "vis-network": "^10.0.2"
+    }
 }
