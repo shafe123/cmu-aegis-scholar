@@ -1,0 +1,78 @@
+
+It can be extremely interactive. vis-network was designed specifically for this purpose. You can move from a "static picture" to a discovery tool where the graph acts as the navigation for your whole website.
+Here is how you can implement a "Click for More Info" feature using your current setup.
+1. Update the API to send "hidden" Metadata
+First, ensure your graph-db API includes the extra info (like abstracts, years, or h-index) in the JSON it sends to the frontend. vis-network allows you to store custom properties inside each node object that aren't displayed as labels but are accessible when clicked.
+2. The JavaScript "Select" Event
+You can tell the network object to listen for a selectNode event. When a user clicks, you grab that node's data and display it in a sidebar or a modal.
+Updated JavaScript:
+code
+JavaScript
+async function loadGraph(authorId) {
+    const response = await fetch(`http://localhost:8000/viz/author-network/${authorId}`);
+    const graphData = await response.json();
+
+    const container = document.getElementById('mynetwork');
+    
+    // We use DataSets so we can update them dynamically
+    const nodes = new vis.DataSet(graphData.nodes);
+    const edges = new vis.DataSet(graphData.edges);
+
+    const options = {
+        nodes: { shape: 'dot', size: 16, font: { size: 12, face: 'Tahoma' } },
+        interaction: { hover: true, navigationButtons: true }, // Enables zoom/pan buttons
+        physics: { enabled: true, stabilization: { iterations: 200 } }
+    };
+
+    const network = new vis.Network(container, { nodes, edges }, options);
+
+    // --- INTERACTIVITY SECTION ---
+
+    network.on("selectNode", function (params) {
+        const nodeId = params.nodes[0];
+        const clickedNode = nodes.get(nodeId);
+
+        // Logic: What to do when a node is clicked?
+        console.log("Clicked on:", clickedNode.label);
+        
+        // Example: Update a 'Info Sidebar' on your page
+        const sidebar = document.getElementById('info-sidebar');
+        sidebar.innerHTML = `
+            <h3>${clickedNode.group === 'author' ? 'Author Details' : 'Research Work'}</h3>
+            <p><strong>Name/Title:</strong> ${clickedNode.label}</p>
+            <p><strong>ID:</strong> ${clickedNode.id}</p>
+            <hr>
+            <p>Here you could fetch and show the abstract or h-index from the node data!</p>
+            <button onclick="expandNode('${clickedNode.id}')">Explore this node</button>
+        `;
+    });
+}
+3. Take it further: "Infinite Exploration"
+The coolest feature you can add to a scholarly graph is Dynamic Expansion.
+Instead of reloading the whole page, when a user clicks a node, you fetch that node's neighbors and add them to the existing graph. This lets the user "walk" through the research network.
+The "Expand" Function:
+code
+JavaScript
+async function expandNode(newId) {
+    // 1. Fetch the network for the NEW node the user just clicked
+    const response = await fetch(`http://localhost:8000/viz/author-network/${newId}`);
+    const newData = await response.json();
+
+    // 2. Simply 'add' the new nodes and edges. 
+    // vis-network automatically ignores duplicates by ID.
+    nodes.add(newData.nodes);
+    edges.add(newData.edges);
+    
+    // The graph will physically bounce and grow to show the new connections!
+}
+4. Added Polish for your CMU Project
+To make it look professional:
+Color Coding: Use different colors for Authors (e.g., Blue) and Works (e.g., Orange).
+Scaling: Make the "Work" nodes bigger if they have a higher citation_count.
+Tooltips: Add a title property to the node (e.g., nodes.append({"id": 1, "label": " paper", "title": "Full Abstract appears on hover..."})). vis-network shows this automatically on hover.
+Summary: What is possible?
+Click to show metadata (Abstracts, years, metrics) in a sidebar.
+Click to Expand (Grow the graph dynamically).
+Double-click to navigate (Go to a dedicated profile page for that author).
+Right-click to filter (Hide all nodes except for a specific topic).
+Since your backend is already returning the correct ID prefixes (author_... and work_...), your frontend JavaScript can easily decide which icon or color to show based on the ID string!
