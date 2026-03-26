@@ -11,107 +11,65 @@ driver = GraphDatabase.driver(settings.neo4j_uri, auth=(settings.neo4j_user, set
 def close_driver():
     driver.close()
 
-@app.get("/health", tags=["System"])
-async def health_check():
-    try:
-        # Check if we can talk to Neo4j
-        with driver.session() as session:
-            session.run("RETURN 1")
-        return {"status": "healthy", "neo4j": "connected"}
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
+# ... (Health and Ingestion endpoints remain the same) ...
 
-# --- UPSERT ENDPOINTS ---
-
-@app.post("/authors", tags=["Ingestion"])
-async def upsert_author(author: AuthorNode):
+@app.get("/viz/author-network/{node_id}", tags=["Visualization"])
+async def get_author_network(node_id: str):
+    """
+    Fetches the local network for any node (Author or Work).
+    Returns nodes with a 'details' object for the Frontend Inspector.
+    """
+    # This query finds the node, its immediate neighbors (m), 
+    # and the neighbors of those neighbors (co)
     query = """
-    MERGE (a:Author {id: $id})
-    SET a.name = $name, a.h_index = $h_index, a.works_count = $works_count
-    RETURN a.id
-    """
-    with driver.session() as session:
-        session.run(query, **author.dict())
-    return {"status": "success", "id": author.id}
-
-@app.post("/works", tags=["Ingestion"])
-async def upsert_work(work: WorkNode):
-    query = """
-    MERGE (w:Work {id: $id})
-    SET w.title = $title, w.year = $year, w.citation_count = $citation_count
-    RETURN w.id
-    """
-    with driver.session() as session:
-        session.run(query, **work.dict())
-    return {"status": "success", "id": work.id}
-
-# --- RELATIONSHIP ENDPOINTS ---
-
-@app.post("/relationships/authored", tags=["Relationships"])
-async def link_author_work(rel: AuthorWorkRel):
-    query = """
-    MATCH (a:Author {id: $author_id})
-    MATCH (w:Work {id: $work_id})
-    MERGE (a)-[:AUTHORED]->(w)
-    """
-    with driver.session() as session:
-        session.run(query, author_id=rel.author_id, work_id=rel.work_id)
-    return {"status": "linked"}
-
-# --- SEARCH ENDPOINTS (For aegis-scholar-api) ---
-
-@app.get("/authors/{author_id}/collaborators")
-async def get_collaborators(author_id: str):
-    """The 'Collaborators of my Collaborators' query from your document."""
-    query = """
-    MATCH (a:Author {id: $author_id})-[:AUTHORED]->(w:Work)<-[:AUTHORED]-(collab:Author)
-    WHERE a <> collab
-    RETURN DISTINCT collab.name as name, collab.id as id
-    """
-    with driver.session() as session:
-        result = session.run(query, author_id=author_id)
-        return [dict(record) for record in result]
-
-@app.get("/viz/author-network/{author_id}", tags=["Visualization"])
-async def get_author_network(author_id: str):
-    """
-    Returns a JSON structure specifically for frontend graph libraries.
-    Matches: (Author)-[:AUTHORED]->(Work)<-[:AUTHORED]-(CoAuthor)
-    """
-    query = """
-    MATCH (a:Author {id: $author_id})-[:AUTHORED]->(w:Work)
-    OPTIONAL MATCH (w)<-[:AUTHORED]-(co:Author)
-    WHERE co.id <> $author_id
-    RETURN a, w, co
+    MATCH (n {id: $node_id})
+    OPTIONAL MATCH (n)-[r:AUTHORED]-(m)
+    OPTIONAL MATCH (m)-[r2:AUTHORED]-(co)
+    RETURN n, r, m, co
     LIMIT 50
     """
+    
     with driver.session() as session:
-        result = session.run(query, author_id=author_id)
+        result = session.run(query, node_id=node_id)
         nodes = []
         edges = []
         node_ids = set()
+        edge_keys = set()
 
         for record in result:
-            author = record["a"]
-            work = record["w"]
-            co_author = record["co"]
+            # Process every node returned in the path (n, m, and co)
+            for key in ["n", "m", "co"]:
+                node = record[key]
+                if node and node["id"] not in node_ids:
+                    # Check labels to determine if it's an Author or Work
+                    is_author = "Author" in node.labels
+                    
+                    nodes.append({
+                        "id": node["id"],
+                        "label": node.get("name") if is_author else (node.get("title", "Untitled")[:30] + "..."),
+                        "full_title": node.get("title") if not is_author else None,
+                        "group": "author" if is_author else "work",
+                        "details": {
+                            # Standardized keys used by the Frontend
+                            "h_index": node.get("h_index", 0) if is_author else None,
+                            "works": node.get("works_count", 0) if is_author else None,
+                            "year": node.get("year", "N/A") if not is_author else None,
+                            "citations": node.get("citation_count", 0) if not is_author else None,
+                        }
+                    })
+                    node_ids.add(node["id"])
 
-            # Add Main Author
-            if author["id"] not in node_ids:
-                nodes.append({"id": author["id"], "label": author["name"], "group": "author", "color": "#ff6b6b"})
-                node_ids.add(author["id"])
-
-            # Add Work Node and Edge
-            if work["id"] not in node_ids:
-                nodes.append({"id": work["id"], "label": work["title"][:30] + "...", "group": "work", "color": "#4ecdc4"})
-                node_ids.add(work["id"])
-            edges.append({"from": author["id"], "to": work["id"], "label": "AUTHORED"})
-
-            # Add Co-Author Node and Edge
-            if co_author and co_author["id"] not in node_ids:
-                nodes.append({"id": co_author["id"], "label": co_author["name"], "group": "author", "color": "#ffadad"})
-                node_ids.add(co_author["id"])
-            if co_author:
-                edges.append({"from": co_author["id"], "to": work["id"], "label": "AUTHORED"})
+            # Add edges between n->m and m->co for the graph lines
+            n_ptr, m_ptr, co_ptr = record["n"], record["m"], record["co"]
+            if n_ptr and m_ptr:
+                ekey = tuple(sorted([n_ptr["id"], m_ptr["id"]]))
+                if ekey not in edge_keys:
+                    edges.append({"from": n_ptr["id"], "to": m_ptr["id"], "label": "AUTHORED"})
+                    edge_keys.add(ekey)
+            if m_ptr and co_ptr:
+                ekey2 = tuple(sorted([m_ptr["id"], co_ptr["id"]]))
+                if ekey2 not in edge_keys:
+                    edges.append({"from": m_ptr["id"], "to": co_ptr["id"], "label": "AUTHORED"})
+                    edge_keys.add(ekey2)
 
         return {"nodes": nodes, "edges": edges}
