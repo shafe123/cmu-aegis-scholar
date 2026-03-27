@@ -1,63 +1,51 @@
-"""Tests for graph-loader job."""
 import pytest
-# from app.loader import GraphLoader  # Uncomment when loader implementation exists
+from unittest.mock import MagicMock, patch
+from app.loader import GraphLoader, GraphDBClient
 
+class TestGraphLoader:
+    def test_should_skip_loading_true(self, tmp_data_dir):
+        # We mock the API client so get_stats returns a real dict
+        mock_api = MagicMock()
+        mock_api.get_stats.return_value = {"author_count": 500}
+        
+        # Inject the mock client into the loader
+        loader = GraphLoader(client=mock_api, data_dir=tmp_data_dir)
+        
+        # Patch settings to enable skipping
+        with patch("app.loader.settings") as s:
+            s.skip_if_loaded = True
+            s.min_entities_threshold = 100
+            
+            # This should now return True because 500 >= 100
+            assert loader.should_skip_loading() is True
+            mock_api.get_stats.assert_called_once()
 
-def test_placeholder():
-    """Placeholder test - replace with actual tests."""
-    assert True
+    def test_should_skip_loading_false(self, tmp_data_dir):
+        mock_api = MagicMock()
+        mock_api.get_stats.return_value = {"author_count": 10} # Below 100
+        
+        loader = GraphLoader(client=mock_api, data_dir=tmp_data_dir)
+        
+        with patch("app.loader.settings") as s:
+            s.skip_if_loaded = True
+            s.min_entities_threshold = 100
+            assert loader.should_skip_loading() is False
 
-
-# Example test structure:
-# @pytest.mark.asyncio
-# async def test_load_authors(mock_neo4j_client, sample_dtic_author):
-#     """Test loading authors into Neo4j."""
-#     loader = GraphLoader(mock_neo4j_client)
-#     
-#     result = await loader.load_author(sample_dtic_author)
-#     
-#     assert result is not None
-#     assert mock_neo4j_client.execute_query.called
-#
-#
-# @pytest.mark.asyncio
-# async def test_create_relationships(mock_neo4j_client, sample_dtic_work):
-#     """Test creating author-work relationships."""
-#     loader = GraphLoader(mock_neo4j_client)
-#     
-#     result = await loader.create_authorship_relationships(sample_dtic_work)
-#     
-#     assert result is not None
-#     # Verify relationship was created for each author
-#     assert mock_neo4j_client.execute_query.call_count == len(sample_dtic_work["authors"])
-#
-#
-# @pytest.mark.asyncio
-# async def test_batch_processing(mock_neo4j_client, sample_batch_data):
-#     """Test batch processing of records."""
-#     loader = GraphLoader(mock_neo4j_client)
-#     
-#     results = await loader.process_batch(sample_batch_data)
-#     
-#     assert len(results) == len(sample_batch_data)
-#     assert all(r.get("success") for r in results)
-#
-#
-# def test_data_transformation(sample_dtic_author):
-#     """Test transformation of DTIC data to graph format."""
-#     transformed = transform_author_to_graph(sample_dtic_author)
-#     
-#     assert "label" in transformed
-#     assert transformed["label"] == "Author"
-#     assert "properties" in transformed
-#     assert transformed["properties"]["name"] == sample_dtic_author["display_name"]
-#
-#
-# @pytest.mark.asyncio
-# async def test_error_handling(mock_neo4j_client):
-#     """Test error handling in loader."""
-#     mock_neo4j_client.execute_query.side_effect = Exception("Database error")
-#     loader = GraphLoader(mock_neo4j_client)
-#     
-#     with pytest.raises(Exception):
-#         await loader.load_author({"invalid": "data"})
+class TestGraphDBClient:
+    def test_get_stats_success(self):
+        # Test the internal HTTP handling of the client
+        with patch("httpx.Client") as mock_http_cls:
+            mock_http = MagicMock()
+            mock_http_cls.return_value = mock_http
+            
+            # Setup the mock response
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.json.return_value = {"author_count": 123}
+            mock_http.get.return_value = mock_resp
+            
+            client = GraphDBClient()
+            stats = client.get_stats()
+            
+            assert stats["author_count"] == 123
+            assert mock_http.get.called
