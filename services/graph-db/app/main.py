@@ -129,17 +129,19 @@ async def get_collaborators(author_id: str):
 async def get_author_network(author_id: str):
     """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
     query = """
-    MATCH (a:Author {id: $author_id})-[:AUTHORED]->(w:Work)
-    OPTIONAL MATCH (w)<-[:AUTHORED]-(co:Author)
-    WHERE co.id <> $author_id
-    RETURN a, w, co
+    MATCH (n {id: $node_id})
+    OPTIONAL MATCH (n)-[r:AUTHORED]-(m)
+    OPTIONAL MATCH (m)-[r2:AUTHORED]-(co)
+    RETURN n, r, m, co
     LIMIT 50
     """
+    
     with driver.session() as session:
-        result = session.run(query, author_id=author_id)
+        result = session.run(query, node_id=node_id)
         nodes = []
         edges = []
         node_ids = set()
+        edge_keys = set()
 
         for record in result:
             author = record["a"]
