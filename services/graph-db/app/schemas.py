@@ -1,50 +1,64 @@
+
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+
 
 class Source(BaseModel):
+    """Metadata source information."""
     source: str
     id: str
 
-# Node Schemas
+
 class AuthorNode(BaseModel):
+    """Graph node representing a researcher."""
     id: str = Field(..., description="author_...")
     name: str
-    h_index: Optional[int] = 0
-    works_count: Optional[int] = 0
-    sources: Optional[List[Source]] = []
+    h_index: int | None = 0
+    works_count: int | None = 0
+    sources: list[Source] | None = []
+
 
 class WorkNode(BaseModel):
+    """Graph node representing a research publication."""
     id: str = Field(..., description="work_...")
     title: str
-    year: Optional[int] = None
-    citation_count: Optional[int] = 0
-    sources: Optional[List[Source]] = []
+    year: int | None = None
+    citation_count: int | None = 0
+    sources: list[Source] | None = []
+
 
 class OrgNode(BaseModel):
+    """Graph node representing an institution."""
     id: str = Field(..., description="org_...")
     name: str
     type: str  # institution, funder, publisher
-    country: Optional[str] = None
-    sources: Optional[List[Source]] = []
+    country: str | None = None
+    sources: list[Source] | None = []
+
 
 class TopicNode(BaseModel):
+    """Graph node representing a research topic."""
     id: str = Field(..., description="topic_...")
     name: str
-    field: Optional[str] = None
-    subfield: Optional[str] = None
-    domain: Optional[str] = None
+    field: str | None = None
+    subfield: str | None = None
+    domain: str | None = None
 
-# Relationship Schemas (For Bulk Loading)
+
 class AuthorWorkRel(BaseModel):
+    """Relationship model for authoring a work."""
     author_id: str
     work_id: str
 
+
 class AuthorOrgRel(BaseModel):
+    """Relationship model for institutional affiliation."""
     author_id: str
     org_id: str
     role: str = "Researcher"
 
+
 class WorkTopicRel(BaseModel):
+    """Relationship model for topic coverage."""
     work_id: str
     topic_id: str
     score: float = 1.0

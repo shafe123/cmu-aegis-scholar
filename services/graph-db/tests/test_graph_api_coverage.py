@@ -1,11 +1,13 @@
-import pytest
 import os
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.config import Settings
 from app.schemas import AuthorNode
 
 # ---------------------------------------------------------------------------
-# 1. Testing Config & Secrets (Using Real Temp Files for Pathlib compatibility)
+# 1. Testing Config & Secrets
 # ---------------------------------------------------------------------------
 
 def test_settings_reads_from_secret_file(tmp_path):
@@ -45,11 +47,14 @@ def test_viz_logic_handling_of_solo_authors():
     for record in [mock_record]:
         author, work, co_author = record["a"], record["w"], record["co"]
         if author["id"] not in node_ids:
-            nodes.append(author); node_ids.add(author["id"])
+            nodes.append(author)
+            node_ids.add(author["id"])
         if work["id"] not in node_ids:
-            nodes.append(work); node_ids.add(work["id"])
+            nodes.append(work)
+            node_ids.add(work["id"])
         if co_author and co_author["id"] not in node_ids:
-            nodes.append(co_author); node_ids.add(co_author["id"])
+            nodes.append(co_author)
+            node_ids.add(co_author["id"])
 
     assert len(nodes) == 2 # Only Author and Work, no Co-Author node
 
@@ -77,7 +82,6 @@ async def test_lifespan_shutdown_closes_driver():
     # We patch the global driver in the main module
     with patch("app.main.driver") as mock_driver:
         # lifespan is an async generator, so we use 'async with'
-        # Since this test is logic-only, we just enter and exit the context
         async with lifespan(mock_app):
             pass 
         

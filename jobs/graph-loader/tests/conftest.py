@@ -1,7 +1,7 @@
 """Test configuration and shared fixtures for graph-loader."""
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch
-from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # 1. Configuration Fixtures

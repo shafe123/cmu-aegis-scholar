@@ -1,25 +1,25 @@
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException
 from neo4j import GraphDatabase
 
 from app.config import settings
-from app.schemas import AuthorNode, WorkNode, AuthorWorkRel
+from app.schemas import AuthorNode, AuthorWorkRel, WorkNode
 
 # --- 1. Setup Logging ---
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- 2. Database Driver Initialization ---
-# The driver is initialized globally but closed cleanly in lifespan
 driver = GraphDatabase.driver(
-    settings.neo4j_uri, 
+    settings.neo4j_uri,
     auth=(settings.neo4j_user, settings.neo4j_password)
 )
 
-# --- 3. Application Lifespan (Startup/Shutdown) ---
+# --- 3. Application Lifespan ---
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
     """Handles clean startup and shutdown of resources."""
     logger.info("Graph API starting up...")
     yield
@@ -53,7 +53,7 @@ async def health_check():
         with driver.session() as session:
             session.run("RETURN 1")
         return {"status": "healthy", "neo4j": "connected"}
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         return {"status": "unhealthy", "error": str(e)}
 
 @app.get("/stats", tags=["System"])
@@ -66,11 +66,11 @@ async def get_stats():
             count = record["count"] if record else 0
             return {"author_count": count}
     except Exception as e:
-        logger.error(f"Database error in /stats: {e}")
+        logger.error("Database error in /stats: %s", e)
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"Graph database connection error: {str(e)}"
-        )
+        ) from e
 
 # --- 6. Ingestion Endpoints ---
 
@@ -83,7 +83,6 @@ async def upsert_author(author: AuthorNode):
     RETURN a.id
     """
     with driver.session() as session:
-        # model_dump() replaces the deprecated dict() method
         session.run(query, **author.model_dump())
     return {"status": "success", "id": author.id}
 
@@ -137,29 +136,25 @@ async def get_author_network(author_id: str):
     """
     with driver.session() as session:
         result = session.run(query, author_id=author_id)
-        nodes = []
-        edges = []
-        node_ids = set()
+        nodes, edges, node_ids = [], [], set()
 
         for record in result:
-            author = record["a"]
-            work = record["w"]
-            co_author = record["co"]
+            author, work, co_author = record["a"], record["w"], record["co"]
 
-            # Add Main Author
             if author["id"] not in node_ids:
-                nodes.append({"id": author["id"], "label": author["name"], "group": "author", "color": "#ff6b6b"})
+                nodes.append({"id": author["id"], "label": author["name"],
+                              "group": "author", "color": "#ff6b6b"})
                 node_ids.add(author["id"])
 
-            # Add Work Node and Edge
             if work["id"] not in node_ids:
-                nodes.append({"id": work["id"], "label": work["title"][:30] + "...", "group": "work", "color": "#4ecdc4"})
+                nodes.append({"id": work["id"], "label": work["title"][:30] + "...",
+                              "group": "work", "color": "#4ecdc4"})
                 node_ids.add(work["id"])
             edges.append({"from": author["id"], "to": work["id"], "label": "AUTHORED"})
 
-            # Add Co-Author Node and Edge (if exists)
             if co_author and co_author["id"] not in node_ids:
-                nodes.append({"id": co_author["id"], "label": co_author["name"], "group": "author", "color": "#ffadad"})
+                nodes.append({"id": co_author["id"], "label": co_author["name"],
+                              "group": "author", "color": "#ffadad"})
                 node_ids.add(co_author["id"])
             if co_author:
                 edges.append({"from": co_author["id"], "to": work["id"], "label": "AUTHORED"})

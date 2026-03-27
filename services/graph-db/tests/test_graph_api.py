@@ -1,5 +1,5 @@
-import pytest
 from unittest.mock import MagicMock
+
 
 def test_root_endpoint(client):
     """Test the base health/info endpoint."""

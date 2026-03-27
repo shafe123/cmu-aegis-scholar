@@ -19,6 +19,9 @@ pytest-asyncio = "^0.21"
 pytest-cov = "^4.1"
 pytest-mock = "^3.12"
 httpx = "^0.24"
+ruff = "^0.3.0"
+pylint = "^3.0.0"
+pylint-pydantic = "^0.3.0"
 
 [[tool.poetry.packages]]
 include = "app"
@@ -34,3 +37,27 @@ python_functions = ["test_*"]
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# E: pycodestyle, F: Pyflakes, B: flake8-bugbear, I: isort, UP: pyupgrade
+select = ["E", "F", "B", "I", "UP"]
+ignore = ["E501"] # Ignore line-length errors (formatter will handle it)
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pylint."MESSAGES CONTROL"]
+max-line-length = 100
+disable = [
+    "C0114", # Missing module docstring
+    "C0115", # Missing class docstring
+    "C0116", # Missing function docstring
+    "R0903", # Too few public methods (common in Pydantic models)
+]
+
+[tool.pylint.MASTER]
+load-plugins = "pylint_pydantic" # Helps Pylint understand Pydantic v2 fields
