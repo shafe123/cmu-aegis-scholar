@@ -34,6 +34,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+addopts = ["--import-mode=importlib"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
