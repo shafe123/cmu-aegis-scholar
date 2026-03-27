@@ -75,8 +75,8 @@ def test_viz_network_logic(client, mock_neo4j_session):
     """Test the logic for flattening graph nodes and edges for frontend JS."""
     # Mock complex Neo4j response structure
     mock_record = {
-        "a": {"id": "auth_1", "name": "Primary Author"},
-        "w": {"id": "work_1", "title": "Great Research Paper"},
+        "n": {"id": "auth_1", "name": "Primary Author"},
+        "m": {"id": "work_1", "title": "Great Research Paper"},
         "co": {"id": "auth_2", "name": "Co-Author"}
     }
     mock_neo4j_session.run.return_value = [mock_record]
