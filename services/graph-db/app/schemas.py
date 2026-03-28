@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, List, Optional
+from pydantic import BaseModel, Field
 
 
 class Source(BaseModel):
@@ -23,11 +23,11 @@ class WorkNode(BaseModel):
 
     id: str = Field(..., description="work_...")
     title: str
-    year: Optional[int] = None
-    citation_count: Optional[int] = 0
-    sources: Optional[List[Source]] = []
-    abstract: Optional[str] = None
-    publication_date: Optional[str] = None
+    year: int | None = None
+    citation_count: int | None = 0
+    sources: list[Source] | None = []
+    abstract: str | None = None
+    publication_date: str | None = None
 
 
 class OrgNode(BaseModel):
