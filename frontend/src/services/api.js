@@ -25,17 +25,19 @@ export const searchAuthors = async (query, activeTab = 'Authors') => {
     // If data.results doesn't exist, return empty array safely
     const rawResults = data.results || [];
 
-    return rawResults.map(item => {
-      // THE FIX: If Milvus wrapped it in 'entity', use that. Otherwise, use the item itself.
-      const e = item.entity ? item.entity : item;
-      
-      return {
+    const formattedResults = rawResults.map(e => ({
         id: e.author_id || "unknown_id",
         name: e.author_name || "Unknown Author",
-        specialization: `Expertise Discovery | ${e.num_abstracts || 0} Abstracts • ${e.citation_count || 0} Citations`,
-        h_index: "N/A" 
-      };
-    });
+        specialization: `Expertise Discovery | Works: ${e.num_abstracts || 0} • Citations: ${e.citation_count || 0}`,
+        works_count: e.num_abstracts || 0,
+        citation_count: e.citation_count || 0
+      }));
+
+      return formattedResults.sort((a, b) => {
+        const impactA = a.works_count > 0 ? a.citation_count / a.works_count : 0;
+        const impactB = b.works_count > 0 ? b.citation_count / b.works_count : 0;
+        return impactB - impactA; // Sorts descending
+      });
     
   } catch (err) {
     console.error("❌ Vector Search Error:", err);

@@ -19,6 +19,8 @@ class WorkNode(BaseModel):
     year: Optional[int] = None
     citation_count: Optional[int] = 0
     sources: Optional[List[Source]] = []
+    abstract: Optional[str] = None
+    publication_date: Optional[str] = None
 
 class OrgNode(BaseModel):
     id: str = Field(..., description="org_...")

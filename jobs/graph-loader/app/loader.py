@@ -42,7 +42,9 @@ class GraphDBClient:
             r.raise_for_status()
             return True
         except Exception as e:
-            logger.debug(f"Rel error {rel_type}: {e}")
+
+            # CHANGED FROM DEBUG TO ERROR: Now it will tell us why relationships are failing!
+            logger.error(f"Rel error {rel_type}: {e}") 
             return False
 
 class GraphLoader:
@@ -89,6 +91,12 @@ class GraphLoader:
                     if not line.strip(): continue
                     work = json.loads(line)
                     work_id = work.get("id")
+
+                    # Temporary debug line in loader.py
+                    if work.get("abstract"):
+                        print(f"DEBUG: Sending abstract for {work.get('id')[:10]}...")
+
+                    # 1. Upsert the Work node itself
                     self.api.upsert_node("works", work)
                     for auth in work.get("authors", []):
                         self.api.create_relationship("authored", {"author_id": auth["author_id"], "work_id": work_id})

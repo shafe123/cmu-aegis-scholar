@@ -1,6 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Body, HTTPException
 from neo4j import GraphDatabase
 
 from app.config import settings
@@ -26,6 +26,85 @@ async def lifespan(app: FastAPI):
     logger.info("Graph API shutting down: Closing Neo4j Driver...")
     if driver:
         driver.close()
+
+@app.get("/health", tags=["System"])
+async def health_check():
+    """Health check endpoint for Docker."""
+    return {"status": "healthy"}
+
+@app.post("/works", tags=["Ingestion"])
+async def create_work(work: WorkNode):
+    """Upserts a Work node into Neo4j with abstract and publication date."""
+    query = """
+    MERGE (w:Work {id: $id})
+    SET w.title = $title, 
+        w.citation_count = $citation_count,
+        w.abstract = $abstract,
+        w.publication_date = $publication_date
+    """
+    with driver.session() as session:
+        session.run(query, 
+                    id=work.id, 
+                    title=work.title, 
+                    citation_count=work.citation_count,
+                    abstract=work.abstract,
+                    publication_date=work.publication_date)
+    return {"status": "success", "id": work.id}
+
+@app.post("/authors", tags=["Ingestion"])
+async def create_author(payload: dict = Body(...)):
+    """Upserts an Author node into Neo4j."""
+    query = "MERGE (a:Author {id: $id}) SET a.name = $name"
+    with driver.session() as session:
+        session.run(query, id=payload["id"], name=payload.get("name", "Unknown Author"))
+    return {"status": "success"}
+
+@app.post("/orgs", tags=["Ingestion"])
+async def create_org(payload: dict = Body(...)):
+    """Upserts an Organization node into Neo4j."""
+    query = "MERGE (o:Org {id: $id}) SET o.name = $name"
+    with driver.session() as session:
+        session.run(query, id=payload["id"], name=payload.get("name", "Unknown Org"))
+    return {"status": "success"}
+
+@app.post("/topics", tags=["Ingestion"])
+async def create_topic(payload: dict = Body(...)):
+    """Upserts a Topic node into Neo4j."""
+    query = "MERGE (t:Topic {id: $id}) SET t.name = $name"
+    with driver.session() as session:
+        session.run(query, id=payload["id"], name=payload.get("name", "Unknown Topic"))
+    return {"status": "success"}
+
+@app.post("/relationships/{rel_type}", tags=["Ingestion"])
+async def create_relationship(rel_type: str, payload: dict = Body(...)):
+    """Creates edges (lines) between nodes in Neo4j, guaranteeing they exist first."""
+    with driver.session() as session:
+        if rel_type == "authored":
+            # Using MERGE instead of MATCH prevents silent failures!
+            query = """
+            MERGE (a:Author {id: $author_id})
+            MERGE (w:Work {id: $work_id})
+            MERGE (a)-[:AUTHORED]->(w)
+            """
+            session.run(query, author_id=payload["author_id"], work_id=payload["work_id"])
+            
+        elif rel_type == "affiliated":
+            query = """
+            MERGE (a:Author {id: $author_id})
+            MERGE (o:Org {id: $org_id})
+            MERGE (a)-[:AFFILIATED_WITH]->(o)
+            """
+            session.run(query, author_id=payload["author_id"], org_id=payload["org_id"])
+            
+        elif rel_type == "covers":
+            query = """
+            MERGE (w:Work {id: $work_id})
+            MERGE (t:Topic {id: $topic_id})
+            MERGE (w)-[:COVERS]->(t)
+            """
+            session.run(query, work_id=payload["work_id"], topic_id=payload["topic_id"])
+            
+    return {"status": "success"}
 
 # --- 4. Initialize FastAPI ---
 app = FastAPI(
@@ -143,9 +222,27 @@ async def get_author_network(author_id: str):
         node_ids = set()
 
         for record in result:
-            author = record["n"]
-            work = record["m"]
-            co_author = record["co"]
+            # Process every node returned in the path (n, m, and co)
+            for key in ["n", "m", "co"]:
+                node = record[key]
+                if node and node["id"] not in node_ids:
+                    # Check labels to determine if it's an Author or Work
+                    is_author = "Author" in node.labels
+                    
+                    nodes.append({
+                        "id": node["id"],
+                        # FIX: Stop truncating the title here! Send the whole thing.
+                        "label": node.get("name") if is_author else node.get("title", "Untitled"),
+                        "full_title": node.get("title") if not is_author else None,
+                        "group": "author" if is_author else "work",
+                        "details": {
+                            "email": f"{node.get('name', '').split(' ')[0].lower()}.{node.get('name', '').split(' ')[-1].lower()}@university.edu" if is_author else None,
+                            "works": node.get("works_count", 0) if is_author else None,
+                            "year": str(node.get("publication_date") or "N/A")[:4] if not is_author else None,
+                            "abstract": node.get("abstract", "No abstract available for this work.") if not is_author else None,
+                        }
+                    })
+                    node_ids.add(node["id"])
 
             # Add Main Author
             if author and author["id"] not in node_ids:
