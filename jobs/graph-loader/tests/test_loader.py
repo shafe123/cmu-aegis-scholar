@@ -1,6 +1,7 @@
-import pytest
 from unittest.mock import MagicMock, patch
-from app.loader import GraphLoader, GraphDBClient
+
+from app.loader import GraphDBClient, GraphLoader
+
 
 class TestGraphLoader:
     def test_should_skip_loading_true(self, tmp_data_dir):
