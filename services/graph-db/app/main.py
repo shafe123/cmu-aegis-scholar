@@ -1,7 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Body, HTTPException
 from neo4j import GraphDatabase
 
 
@@ -14,11 +13,11 @@ logger = logging.getLogger(__name__)
 
 # --- 2. Database Driver Initialization ---
 driver = GraphDatabase.driver(
-    settings.neo4j_uri,
-    auth=(settings.neo4j_user, settings.neo4j_password)
+    settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password)
 )
 
-# --- 3. Application Lifespan ---
+
+# --- 3. Application Lifespan (Startup/Shutdown) ---
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Handles clean startup and shutdown of resources."""
@@ -28,54 +27,93 @@ async def lifespan(_: FastAPI):
     if driver:
         driver.close()
 
-# --- 4. Initialize FastAPI ---
-app = FastAPI(
-    title=settings.api_title,
-    version=settings.api_version,
-    description=settings.api_description,
-    lifespan=lifespan
-)
-
-# --- 5. System & Health Endpoints ---
-
-@app.get("/", tags=["System"])
-async def root():
-    """Root endpoint providing service information."""
-    return {
-        "title": settings.api_title,
-        "version": settings.api_version,
-        "status": "online"
-    }
 
 # --- 4. Initialize FastAPI ---
 app = FastAPI(
     title=settings.api_title,
     version=settings.api_version,
     description=settings.api_description,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # --- 5. System & Health Endpoints ---
 
-@app.get("/", tags=["System"])
-async def root():
-    """Root endpoint providing service information."""
-    return {
-        "title": settings.api_title,
-        "version": settings.api_version,
-        "status": "online"
-    }
 
 @app.get("/health", tags=["System"])
 async def health_check():
-    """Verifies connectivity to Neo4j."""
-    """Verifies connectivity to Neo4j."""
+    """Health check endpoint that verifies Neo4j connectivity."""
     try:
         with driver.session() as session:
             session.run("RETURN 1")
         return {"status": "healthy", "neo4j": "connected"}
-    except Exception as e:  # pylint: disable=broad-exception-caught
+    except Exception as e:
         return {"status": "unhealthy", "error": str(e)}
+
+
+@app.post("/orgs", tags=["Ingestion"])
+async def create_org(payload: dict = Body(...)):
+    """Upserts an Organization node into Neo4j."""
+    query = "MERGE (o:Org {id: $id}) SET o.name = $name"
+    with driver.session() as session:
+        session.run(query, id=payload["id"], name=payload.get("name", "Unknown Org"))
+    return {"status": "success"}
+
+
+@app.post("/topics", tags=["Ingestion"])
+async def create_topic(payload: dict = Body(...)):
+    """Upserts a Topic node into Neo4j."""
+    query = "MERGE (t:Topic {id: $id}) SET t.name = $name"
+    with driver.session() as session:
+        session.run(query, id=payload["id"], name=payload.get("name", "Unknown Topic"))
+    return {"status": "success"}
+
+
+@app.post("/relationships/{rel_type}", tags=["Ingestion"])
+async def create_relationship(rel_type: str, payload: dict = Body(...)):
+    """Creates edges (lines) between nodes in Neo4j, guaranteeing they exist first."""
+    with driver.session() as session:
+        if rel_type == "authored":
+            # Using MERGE instead of MATCH prevents silent failures!
+            query = """
+            MERGE (a:Author {id: $author_id})
+            MERGE (w:Work {id: $work_id})
+            MERGE (a)-[:AUTHORED]->(w)
+            """
+            session.run(
+                query, author_id=payload["author_id"], work_id=payload["work_id"]
+            )
+
+        elif rel_type == "affiliated":
+            query = """
+            MERGE (a:Author {id: $author_id})
+            MERGE (o:Org {id: $org_id})
+            MERGE (a)-[:AFFILIATED_WITH]->(o)
+            """
+            session.run(query, author_id=payload["author_id"], org_id=payload["org_id"])
+
+        elif rel_type == "covers":
+            query = """
+            MERGE (w:Work {id: $work_id})
+            MERGE (t:Topic {id: $topic_id})
+            MERGE (w)-[:COVERS]->(t)
+            """
+            session.run(query, work_id=payload["work_id"], topic_id=payload["topic_id"])
+
+    return {"status": "success"}
+
+
+# --- 6. Root Endpoint ---
+
+
+@app.get("/", tags=["System"])
+async def root():
+    """Root endpoint providing service information."""
+    return {
+        "title": settings.api_title,
+        "version": settings.api_version,
+        "status": "online",
+    }
+
 
 @app.get("/stats", tags=["System"])
 async def get_stats():
@@ -89,11 +127,12 @@ async def get_stats():
     except Exception as e:
         logger.error("Database error in /stats: %s", e)
         raise HTTPException(
-            status_code=500,
-            detail=f"Graph database connection error: {str(e)}"
-        ) from e
+            status_code=500, detail=f"Graph database connection error: {str(e)}"
+        )
 
-# --- 6. Ingestion Endpoints ---
+
+# --- 7. Ingestion Endpoints ---
+
 
 @app.post("/authors", tags=["Ingestion"])
 async def upsert_author(author: AuthorNode):
@@ -107,6 +146,7 @@ async def upsert_author(author: AuthorNode):
     with driver.session() as session:
         session.run(query, **author.model_dump())
     return {"status": "success", "id": author.id}
+
 
 @app.post("/works", tags=["Ingestion"])
 async def upsert_work(work: WorkNode):
@@ -122,6 +162,7 @@ async def upsert_work(work: WorkNode):
         session.run(query, **work.model_dump())
     return {"status": "success", "id": work.id}
 
+
 @app.post("/relationships/authored", tags=["Relationships"])
 async def link_author_work(rel: AuthorWorkRel):
     """Creates an AUTHORED relationship between an Author and a Work."""
@@ -136,8 +177,9 @@ async def link_author_work(rel: AuthorWorkRel):
         session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
-# --- 7. Search & Analysis Endpoints ---
-# --- 7. Search & Analysis Endpoints ---
+
+# --- 8. Search & Analysis Endpoints ---
+
 
 @app.get("/authors/{author_id}/collaborators", tags=["Analysis"])
 @app.get("/authors/{author_id}/collaborators", tags=["Analysis"])
@@ -155,6 +197,7 @@ async def get_collaborators(author_id: str):
         result = session.run(query, id=author_id)
         return [dict(record) for record in result]
 
+
 @app.get("/viz/author-network/{author_id}", tags=["Visualization"])
 async def get_author_network(author_id: str):
     """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
@@ -166,7 +209,7 @@ async def get_author_network(author_id: str):
     RETURN n, r, m, co
     LIMIT 50
     """
-    
+
     with driver.session() as session:
         result = session.run(query, author_id=author_id)
         nodes, edges, node_ids = [], [], set()
@@ -174,23 +217,47 @@ async def get_author_network(author_id: str):
         for record in result:
             author, work, co_author = record["a"], record["w"], record["co"]
 
-            if author["id"] not in node_ids:
-                nodes.append({"id": author["id"], "label": author["name"],
-                              "group": "author", "color": "#ff6b6b"})
+            # Add Main Author
+            if author and author["id"] not in node_ids:
+                nodes.append(
+                    {
+                        "id": author["id"],
+                        "label": author["name"],
+                        "group": "author",
+                        "color": "#ff6b6b",
+                    }
+                )
                 node_ids.add(author["id"])
 
-            if work["id"] not in node_ids:
-                nodes.append({"id": work["id"], "label": work["title"][:30] + "...",
-                              "group": "work", "color": "#4ecdc4"})
+            # Add Work Node and Edge
+            if work and work["id"] not in node_ids:
+                nodes.append(
+                    {
+                        "id": work["id"],
+                        "label": work["title"][:30] + "...",
+                        "group": "work",
+                        "color": "#4ecdc4",
+                    }
+                )
                 node_ids.add(work["id"])
             if author and work:
-                edges.append({"from": author["id"], "to": work["id"], "label": "AUTHORED"})
+                edges.append(
+                    {"from": author["id"], "to": work["id"], "label": "AUTHORED"}
+                )
 
             if co_author and co_author["id"] not in node_ids:
-                nodes.append({"id": co_author["id"], "label": co_author["name"],
-                              "group": "author", "color": "#ffadad"})
+                nodes.append(
+                    {
+                        "id": co_author["id"],
+                        "label": co_author["name"],
+                        "group": "author",
+                        "color": "#ffadad",
+                    }
+                )
                 node_ids.add(co_author["id"])
             if co_author and work:
-                edges.append({"from": co_author["id"], "to": work["id"], "label": "AUTHORED"})
+                edges.append(
+                    {"from": co_author["id"], "to": work["id"], "label": "AUTHORED"}
+                )
 
         return {"nodes": nodes, "edges": edges}

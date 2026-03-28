@@ -2,10 +2,6 @@ networks:
   aegisnet:
     driver: bridge
 
-secrets:
-  neo4j_password:
-    file: ./neo4j_password.txt
-
 services:
   milvus-etcd:
     container_name: milvus-etcd
@@ -122,25 +118,14 @@ services:
     ports:
       - "7474:7474"
       - "7687:7687"
-    secrets:
-      - neo4j_password
     volumes:
       - neo4j-data:/data
       - neo4j-logs:/logs
     environment:
       - NEO4J_PLUGINS=["apoc"]
-    # 1. We use bash to read the secret file
-    # 2. We set the standard NEO4J_AUTH variable (Format: neo4j/password)
-    # 3. We call the original Neo4j startup script at its correct location
-    entrypoint:
-      - /bin/bash
-      - -c
-      - |
-        export NEO4J_AUTH="neo4j/$(cat /run/secrets/neo4j_password)"
-        exec /startup/docker-entrypoint.sh neo4j
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
     healthcheck:
-      # We check if the server is up by attempting to log in via cypher-shell
-      test: ["CMD-SHELL", "cypher-shell -u neo4j -p $$(cat /run/secrets/neo4j_password) 'RETURN 1'"]
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD} 'RETURN 1'"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -152,12 +137,11 @@ services:
     build: ../services/graph-db
     ports:
       - 8003:8003
-    secrets:
-      - neo4j_password
     environment:
       - PYTHONUNBUFFERED=1
       - NEO4J_URI=bolt://neo4j:7687
       - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
     depends_on:
       neo4j:
         condition: service_healthy

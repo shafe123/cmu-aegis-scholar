@@ -271,3 +271,6 @@ data/
 *.env
 .env.*
 secrets/
+
+#Node modules
+node_modules/

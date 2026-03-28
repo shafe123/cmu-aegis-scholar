@@ -102,6 +102,12 @@ class GraphLoader:
                         continue
                     work = json.loads(line)
                     work_id = work.get("id")
+
+                    # Temporary debug line in loader.py
+                    if work.get("abstract"):
+                        print(f"DEBUG: Sending abstract for {work.get('id')[:10]}...")
+
+                    # 1. Upsert the Work node itself
                     self.api.upsert_node("works", work)
 
                     for auth in work.get("authors", []):
