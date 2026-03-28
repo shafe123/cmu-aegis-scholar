@@ -1,6 +1,7 @@
 """Pydantic models for API request and response validation."""
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Request Models
@@ -8,35 +9,35 @@ from typing import List, Optional, Dict, Any
 class VectorSearchRequest(BaseModel):
     """Request model for vector search."""
     query_vector: List[float] = Field(
-        ..., 
+        ...,
         description="Query vector for similarity search",
         json_schema_extra={"example": [0.023, -0.145, 0.089] + [0.0] * 381}  # 384-dim vector
     )
     collection_name: Optional[str] = Field(
-        None, 
+        None,
         description="Collection to search in",
         json_schema_extra={"example": "aegis_vectors"}
     )
     limit: int = Field(
-        10, 
-        ge=1, 
-        le=100, 
+        10,
+        ge=1,
+        le=100,
         description="Maximum number of results to return per page",
         json_schema_extra={"example": 10}
     )
     offset: int = Field(
-        0, 
-        ge=0, 
+        0,
+        ge=0,
         description="Number of results to skip for pagination",
         json_schema_extra={"example": 0}
     )
     output_fields: Optional[List[str]] = Field(
-        None, 
+        None,
         description="Fields to include in results",
         json_schema_extra={"example": ["author_id", "author_name", "num_abstracts"]}
     )
     filter_expr: Optional[str] = Field(
-        None, 
+        None,
         description="Filter expression for search",
         json_schema_extra={"example": "num_abstracts > 10"}
     )
@@ -45,8 +46,8 @@ class VectorSearchRequest(BaseModel):
 class TextSearchRequest(BaseModel):
     """Request model for text-based search."""
     query_text: str = Field(
-        ..., 
-        min_length=1, 
+        ...,
+        min_length=1,
         description="Query text to search for",
         json_schema_extra={"example": "adversarial machine learning network security"}
     )
@@ -56,30 +57,30 @@ class TextSearchRequest(BaseModel):
         json_schema_extra={"example": "sentence-transformers/all-MiniLM-L6-v2"}
     )
     collection_name: Optional[str] = Field(
-        None, 
+        None,
         description="Collection to search in",
         json_schema_extra={"example": "aegis_vectors"}
     )
     limit: int = Field(
-        10, 
-        ge=1, 
-        le=100, 
+        10,
+        ge=1,
+        le=100,
         description="Maximum number of results to return per page",
         json_schema_extra={"example": 5}
     )
     offset: int = Field(
-        0, 
-        ge=0, 
+        0,
+        ge=0,
         description="Number of results to skip for pagination",
         json_schema_extra={"example": 0}
     )
     output_fields: Optional[List[str]] = Field(
-        None, 
+        None,
         description="Fields to include in results",
         json_schema_extra={"example": ["author_id", "author_name", "num_abstracts"]}
     )
     filter_expr: Optional[str] = Field(
-        None, 
+        None,
         description="Filter expression for search",
         json_schema_extra={"example": "num_abstracts >= 5"}
     )
@@ -88,22 +89,26 @@ class TextSearchRequest(BaseModel):
 class CreateAuthorEmbeddingRequest(BaseModel):
     """Request model for creating or updating author embedding from abstracts."""
     author_id: str = Field(
-        ..., 
+        ...,
         description="Unique identifier for the author",
         json_schema_extra={"example": "author_d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"}
     )
     author_name: str = Field(
-        ..., 
+        ...,
         description="Name of the author",
         json_schema_extra={"example": "Dr. Sarah Chen"}
     )
     abstracts: List[str] = Field(
-        ..., 
-        min_length=1, 
+        ...,
+        min_length=1,
         description="List of paper abstracts by the author",
         json_schema_extra={"example": [
-            "This paper presents a comprehensive study of adversarial attacks against machine learning-based network security systems. We demonstrate novel attack vectors and propose robust defense mechanisms.",
-            "We explore the application of deep neural networks for real-time intrusion detection in enterprise networks. Our models achieve 98.7% accuracy with low false positive rates."
+            "This paper presents a comprehensive study of adversarial attacks "
+            "against machine learning-based network security systems. "
+            "We demonstrate novel attack vectors and propose robust defense mechanisms.",
+            "We explore the application of deep neural networks for real-time "
+            "intrusion detection in enterprise networks. "
+            "Our models achieve 98.7% accuracy with low false positive rates."
         ]}
     )
     model_name: Optional[str] = Field(
@@ -112,7 +117,7 @@ class CreateAuthorEmbeddingRequest(BaseModel):
         json_schema_extra={"example": "sentence-transformers/all-MiniLM-L6-v2"}
     )
     collection_name: Optional[str] = Field(
-        None, 
+        None,
         description="Collection to store the embedding in",
         json_schema_extra={"example": "aegis_vectors"}
     )
@@ -122,7 +127,7 @@ class CreateAuthorEmbeddingRequest(BaseModel):
         json_schema_extra={"example": 8924}
     )
     metadata: Optional[Dict[str, Any]] = Field(
-        default_factory=dict, 
+        default_factory=dict,
         description="Additional metadata for the author",
         json_schema_extra={"example": {"h_index": 42, "works_count": 156}}
     )
@@ -131,17 +136,17 @@ class CreateAuthorEmbeddingRequest(BaseModel):
 class CreateAuthorVectorRequest(BaseModel):
     """Request model for creating or updating author with pre-computed vector."""
     author_id: str = Field(
-        ..., 
+        ...,
         description="Unique identifier for the author",
         json_schema_extra={"example": "author_e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"}
     )
     author_name: str = Field(
-        ..., 
+        ...,
         description="Name of the author",
         json_schema_extra={"example": "Dr. Michael Rodriguez"}
     )
     embedding: List[float] = Field(
-        ..., 
+        ...,
         description="Pre-computed embedding vector for the author",
         json_schema_extra={"example": [0.025, -0.134, 0.078] + [0.0] * 381}  # 384-dim vector
     )
@@ -151,12 +156,12 @@ class CreateAuthorVectorRequest(BaseModel):
         json_schema_extra={"example": "sentence-transformers/all-MiniLM-L6-v2"}
     )
     num_abstracts: Optional[int] = Field(
-        None, 
+        None,
         description="Number of abstracts used to compute the embedding",
         json_schema_extra={"example": 132}
     )
     collection_name: Optional[str] = Field(
-        None, 
+        None,
         description="Collection to store the embedding in",
         json_schema_extra={"example": "aegis_vectors"}
     )
@@ -166,7 +171,7 @@ class CreateAuthorVectorRequest(BaseModel):
         json_schema_extra={"example": 7234}
     )
     metadata: Optional[Dict[str, Any]] = Field(
-        default_factory=dict, 
+        default_factory=dict,
         description="Additional metadata for the author",
         json_schema_extra={"example": {"h_index": 38, "works_count": 132}}
     )
@@ -176,6 +181,8 @@ class CreateAuthorVectorRequest(BaseModel):
 
 class VectorSearchResult(BaseModel):
     """Single search result with flattened entity fields."""
+    model_config = ConfigDict(extra="allow")  # Allow additional fields from output_fields
+
     distance: float = Field(
         ...,
         description="Distance/similarity score from query",
@@ -201,9 +208,6 @@ class VectorSearchResult(BaseModel):
         description="Author's citation count",
         json_schema_extra={"example": 8924}
     )
-    
-    class Config:
-        extra = "allow"  # Allow additional fields from output_fields
 
 
 class PaginationMetadata(BaseModel):

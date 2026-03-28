@@ -2,13 +2,12 @@
 import gzip
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
 
 from app.loader import VectorDBClient, VectorLoader
-from app.config import Settings
 
 
 # ---------------------------------------------------------------------------
@@ -622,4 +621,3 @@ def test_main():
 
         mock_cls.assert_called_once()
         mock_loader.run.assert_called_once()
-

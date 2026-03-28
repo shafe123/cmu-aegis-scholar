@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
     api_title: str = "Aegis Scholar Graph API"
     api_version: str = "1.0.0"
+    api_version: str = "1.0.0"
     api_description: str = "FastAPI service for Neo4j graph operations"
     api_port: int = 8003
 

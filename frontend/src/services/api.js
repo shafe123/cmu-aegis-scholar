@@ -1,70 +1,44 @@
 const VECTOR_API_URL = 'http://localhost:8002';
-const BASE_API_URL = 'http://localhost:8003';
 
+export const searchAuthors = async (query, activeTab = 'Authors') => {
+  if (activeTab !== 'Authors' && activeTab !== 'Year') {
+    return [];
+  }
 
-export const searchAuthors = async (query) => {
   try {
+    const body = {
+      query_text: query,
+      collection_name: "aegis_vectors", 
+      limit: 10,
+      output_fields: ["author_id", "author_name", "num_abstracts", "citation_count"]
+    };
+
     const response = await fetch(`${VECTOR_API_URL}/search/text`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query_text: query,
-        collection_name: "aegis_vectors", 
-        limit: 10,
-        output_fields: ["*"] 
-      }),
+      body: JSON.stringify(body),
     });
 
-    if (!response.ok) throw new Error('Search failed');
     const data = await response.json();
+    console.log("🔍 Vector DB Raw Response:", data);
 
-    return (data.results || []).map(item => {
-      const e = item.entity || item || {};
+    // If data.results doesn't exist, return empty array safely
+    const rawResults = data.results || [];
+
+    return rawResults.map(item => {
+      // THE FIX: If Milvus wrapped it in 'entity', use that. Otherwise, use the item itself.
+      const e = item.entity ? item.entity : item;
       
-      const rawName = e.author_name || e.name || e.display_name || e.author_id;
-      
-      let finalName = "Unknown Researcher";
-
-      if (rawName && typeof rawName === 'string') {
-        if (rawName.startsWith('author_') && !e.author_name) {
-             finalName = `Researcher ${rawName.split('-')[0].replace('author_', '').toUpperCase()}`;
-        } else {
-             finalName = rawName;
-        }
-      }
-
-      const meta = e.metadata || {};
-
       return {
-        id: e.author_id || e.id || item.id,
-        name: finalName,
-        specialization: e.specialization || "Domain Expert",
-        date: e.last_updated || "2024-03-23",
-        h_index: meta.h_index || e.h_index || 0,
-        works_count: meta.works_count || e.works_count || e.num_abstracts || 0,
-        score: item.distance ? (1 - item.distance).toFixed(2) : "0.00"
+        id: e.author_id || "unknown_id",
+        name: e.author_name || "Unknown Author",
+        specialization: `Expertise Discovery | ${e.num_abstracts || 0} Abstracts • ${e.citation_count || 0} Citations`,
+        h_index: "N/A" 
       };
     });
+    
   } catch (err) {
-    console.error("Search Error:", err);
+    console.error("❌ Vector Search Error:", err);
     return [];
-  }
-};
-
-export const getAuthorNetwork = async (authorId) => {
-  if (!authorId) return { nodes: [], edges: [] };
-
-  try {
-    const response = await fetch(`${BASE_API_URL}/viz/author-network/${authorId}`);
-    
-    if (!response.ok) {
-      console.warn(`Network API returned ${response.status}. Using empty graph.`);
-      return { nodes: [], edges: [] };
-    }
-    
-    return await response.json();
-  } catch (err) {
-    console.error("Network Fetch Error:", err);
-    return { nodes: [], edges: [] };
   }
 };

@@ -1,47 +1,34 @@
 import React, { useState } from 'react';
-import { Search, Users, Settings, Loader2, X, ShieldCheck, Database, Activity, BarChart3 } from 'lucide-react';
+import { Search, Settings, Loader2, X, ShieldCheck, Database, Activity, Target, Calendar, Share2, User } from 'lucide-react';
 import { searchAuthors } from './services/api';
 import NetworkGraph from './components/NetworkGraph';
 
+// CRASH-PROOF ROW COMPONENT
 const ResearcherRow = ({ author, onSelect }) => {
-  const deptStyles = {
-    USA: 'bg-black text-yellow-500 border-yellow-500/50',
-    USN: 'bg-[#003147] text-white border-cyan-500/30',
-    USAF: 'bg-blue-900 text-white border-blue-400/30',
-    USMC: 'bg-[#544d2e] text-red-700 border-red-900/50'
-  };
+  const rawSpecialization = author?.specialization || "Unknown Domain | No Stats Available";
+  const parts = rawSpecialization.split(' | ');
+  const domain = parts[0] || "Unknown Domain";
+  const stats = parts[1] || "";
 
   return (
-    <div className="bg-[#2a2f35]/50 border-b border-slate-800 p-4 flex items-center gap-6 hover:bg-slate-800/50 transition-colors group">
-      <div className={`w-12 h-12 rounded-full border flex items-center justify-center font-bold text-[10px] shadow-lg ${deptStyles[author.dept] || 'bg-slate-700 text-slate-300'}`}>
-        {author.dept || 'CIV'}
-      </div>
-
+    <div 
+      className="bg-[#1a1d21]/50 border-b border-slate-800 p-4 flex items-center gap-6 hover:bg-slate-800/50 transition-colors group cursor-pointer"
+      onClick={() => onSelect(author)}
+    >
       <div className="flex-1">
-        <h3 
-          className="text-aegis-cyan font-bold text-lg group-hover:underline cursor-pointer"
-          onClick={() => onSelect(author)}
-        >
-          {author.name}
+        <h3 className="text-aegis-cyan font-bold text-lg group-hover:underline">
+          {author?.name || "Unknown Name"}
         </h3>
-        <p className="text-slate-400 text-sm truncate max-w-md italic">
-          {author.specialization || "Technical Lead • Cyber Systems"}
-        </p>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-aegis-cyan/70 text-[10px] font-black uppercase tracking-wider bg-aegis-cyan/5 px-2 py-0.5 rounded border border-aegis-cyan/10">
+            {domain}
+          </span>
+          <span className="text-slate-500 text-xs font-mono">{stats}</span>
+        </div>
       </div>
-
-      <div className="text-slate-500 text-[10px] font-mono w-32 text-center uppercase tracking-tighter">
-        {author.date || 'MAR 2026'}
-      </div>
-
-      {/* Mini Visual Metric */}
-      <div className="w-24 flex items-end gap-1 h-8 px-2 opacity-60 group-hover:opacity-100 transition-opacity">
-        {[30, 60, 45, 80].map((h, i) => (
-          <div key={i} className={`bg-slate-600 w-1.5 rounded-t-sm group-hover:bg-aegis-cyan`} style={{ height: `${h}%` }}></div>
-        ))}
-      </div>
-
-      <div className="w-20 text-right font-mono text-xl text-aegis-cyan pr-4 drop-shadow-[0_0_8px_rgba(34,211,238,0.3)]">
-        {author.h_index || '0'}
+      <div className="flex flex-col items-end w-24 pr-4">
+        <div className="text-xl font-mono text-aegis-cyan">{author?.h_index || 'N/A'}</div>
+        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">H-INDEX</div>
       </div>
     </div>
   );
@@ -52,158 +39,211 @@ export default function App() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [activeTab, setActiveTab] = useState('Authors');
+  
+  // Modal & Graph State
   const [selectedAuthor, setSelectedAuthor] = useState(null);
+  const [modalView, setModalView] = useState('profile'); // 'profile' | 'graph'
+  const [inspectedNode, setInspectedNode] = useState(null);
 
-  const tabs = ['Authors', 'Works', 'Orgs', 'Year'];
-
-  const onSearch = async (e) => {
-    e.preventDefault();
+  const handleSearch = async (e) => {
+    if (e) e.preventDefault();
     if (!query) return;
+    
     setLoading(true);
     setHasSearched(true);
+    setResults([]); 
+    
     try {
-      const data = await searchAuthors(query);
-      setResults(data);
-    } catch (err) {
-      console.error("Search failed:", err);
+      const data = await searchAuthors(query, 'Authors'); // Hardcoded to Authors now
+      if (Array.isArray(data)) {
+        setResults(data);
+      } else {
+        setResults([]);
+      }
+    } catch (error) {
+      console.error("Search failed:", error);
+      setResults([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const openAuthorModal = (author) => {
+    setSelectedAuthor(author);
+    setModalView('profile'); // Always start on the profile tab
+    setInspectedNode(null);
+  };
+
+  const closeModal = () => {
+    setSelectedAuthor(null);
+    setInspectedNode(null);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-aegis-dark text-white font-sans selection:bg-aegis-cyan selection:text-navy-900">
-      
-      {/* 1. NAV BAR */}
-      <header className="p-4 flex justify-between items-center border-b border-slate-800 bg-aegis-dark/80 backdrop-blur-md sticky top-0 z-50">
+    <div className="min-h-screen flex flex-col bg-[#0a0c10] text-white font-sans">
+      <header className="p-4 flex justify-between items-center border-b border-slate-800 bg-[#0a0c10]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-aegis-cyan rounded flex items-center justify-center shadow-cyan-glow">
-            <ShieldCheck className="text-aegis-dark" size={20} />
-          </div>
-          <span className="font-bold tracking-[0.3em] text-[11px] uppercase text-slate-200">Aegis Scholar</span>
+          <ShieldCheck className="text-aegis-cyan" size={24} />
+          <span className="font-bold tracking-[0.2em] text-[12px] uppercase text-slate-200">Scholar Search</span>
         </div>
-        <div className="flex items-center gap-4">
-           <button className="text-slate-500 hover:text-aegis-cyan transition-colors"><Settings size={18}/></button>
-           <div className="w-8 h-8 bg-gradient-to-br from-slate-700 to-slate-900 rounded-full border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-300">ADMIN</div>
+        <div className="flex items-center gap-4 text-slate-500">
+          <Settings size={18}/><div className="w-8 h-8 bg-slate-800 rounded-full"></div>
         </div>
       </header>
 
-      {/* 2. CONTENT AREA */}
       <main className={`flex-1 max-w-5xl mx-auto w-full px-6 transition-all duration-700 ${hasSearched ? 'pt-8' : 'pt-32'}`}>
+        {!hasSearched && (
+          <div className="text-center mb-10">
+            <h2 className="text-5xl font-black mb-3 tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500">Aegis Intelligence</h2>
+            <p className="text-slate-500 mb-10 text-lg font-light tracking-wide">Semantic Researcher & Network Discovery</p>
+          </div>
+        )}
         
-        {/* Hero & Search */}
-        <div className="text-center mb-10">
-          {!hasSearched && (
-            <div className="animate-in fade-in slide-in-from-top-4 duration-1000">
-              <h2 className="text-5xl font-black mb-3 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-500">
-                Precision Discovery
-              </h2>
-              <p className="text-slate-500 mb-10 text-lg font-light tracking-wide">Milvus-backed expertise retrieval for the Department of Defense</p>
-            </div>
-          )}
-          
-          <form onSubmit={onSearch} className="relative max-w-2xl mx-auto mb-8">
-            <input 
-              type="text" 
-              className="w-full bg-white text-slate-900 py-4 pl-14 pr-32 rounded-full text-lg shadow-[0_0_40px_rgba(0,0,0,0.5)] outline-none focus:ring-4 focus:ring-aegis-cyan/20 transition-all font-medium"
-              placeholder="Search researchers, topics, or IDs..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <Search className="absolute left-5 top-4.5 text-slate-400" size={22} />
-            <button 
-              type="submit"
-              disabled={loading}
-              className="absolute right-2 top-2 bg-slate-900 hover:bg-black text-aegis-cyan px-8 py-2.5 rounded-full font-bold transition-all flex items-center gap-2 border border-slate-700"
-            >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : "SEARCH"}
-            </button>
-          </form>
+        <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto mb-10">
+          <input 
+            type="text" 
+            className="w-full bg-white text-slate-900 py-4 pl-14 pr-32 rounded-full text-lg shadow-2xl outline-none focus:ring-4 focus:ring-aegis-cyan/20 font-medium transition-all"
+            placeholder="Search research expertise..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <Search className="absolute left-5 top-4 text-slate-400" size={22} />
+          <button type="submit" className="absolute right-2 top-2 bg-slate-900 text-aegis-cyan hover:bg-slate-800 px-8 py-2.5 rounded-full font-bold">
+            {loading ? <Loader2 className="animate-spin" size={20}/> : 'SEARCH'}
+          </button>
+        </form>
 
-          {/* TAB SYSTEM - Retained here */}
-          <div className="flex justify-center gap-3">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] border transition-all ${
-                  activeTab === tab 
-                  ? 'bg-aegis-cyan border-aegis-cyan text-aegis-dark shadow-cyan-glow' 
-                  : 'border-slate-800 text-slate-600 hover:border-slate-600 hover:text-slate-400'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Results View */}
-        {hasSearched && !loading && results.length === 0 ? (
-          <div className="text-center py-24 bg-slate-900/10 rounded-2xl border border-dashed border-slate-800/50">
-            <Activity className="mx-auto text-slate-700 mb-4" size={48} />
-            <p className="text-slate-600 font-mono text-xs uppercase tracking-[0.2em]">Zero intersection matches in current vector space</p>
-          </div>
-        ) : results.length > 0 && (
-          <div className="bg-[#1a1d21]/80 backdrop-blur-sm rounded-2xl border border-slate-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Results Header */}
-            <div className="flex p-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] border-b border-slate-800 bg-slate-900/80">
-              <div className="w-12 ml-4">Org</div>
-              <div className="flex-1 ml-6">Principal Investigator / Domain</div>
-              <div className="w-32 text-center">Reference Date</div>
-              <div className="w-24 text-center">Metrics</div>
-              <div className="w-20 text-right mr-4">H-Index</div>
-            </div>
-            
+        {/* RESULTS WRAPPER */}
+        {results && results.length > 0 && (
+          <div className="bg-[#1a1d21] rounded-2xl border border-slate-800 overflow-hidden shadow-2xl relative z-10">
             {results.map((author, idx) => (
-              <ResearcherRow 
-                key={author.id || idx} 
-                author={author} 
-                onSelect={(a) => setSelectedAuthor(a)}
-              />
+              <ResearcherRow key={author?.id || idx} author={author} onSelect={openAuthorModal} />
             ))}
           </div>
         )}
       </main>
 
-      {/* 3. FOOTER */}
-      <footer className="mt-16 border-t border-slate-800/50 bg-[#0a0c10] py-8 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 opacity-40 hover:opacity-100 transition-opacity">
-          <div className="flex items-center gap-6 text-[9px] font-mono uppercase tracking-widest text-slate-400">
-            <div className="flex items-center gap-2"><Database size={12}/> Milvus v2.6.13</div>
-            <div className="flex items-center gap-2 border-l border-slate-800 pl-6"><Activity size={12}/> Neo4j Graph Ready</div>
-            <div className="flex items-center gap-2 border-l border-slate-800 pl-6 text-aegis-cyan"><BarChart3 size={12}/> System Nominal</div>
-          </div>
-          <div className="text-[9px] text-slate-600 font-mono tracking-[0.3em] uppercase">
-            Aegis Scholar • Department of Defense Capstone • 2026
-          </div>
-        </div>
-      </footer>
-
-      {/* GRAPH MODAL */}
+      {/* DUAL-VIEW MODAL (Profile OR Graph) */}
       {selectedAuthor && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[100] flex items-center justify-center p-6 transition-all animate-in fade-in duration-300">
-          <div className="bg-[#0f1115] border border-slate-800 w-full max-w-6xl h-full max-h-[85vh] rounded-3xl overflow-hidden flex flex-col shadow-[0_0_100px_rgba(0,0,0,1)]">
-            <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/30">
-              <div className="flex items-center gap-5">
-                <div className="p-3 bg-aegis-cyan/5 rounded-xl border border-aegis-cyan/20">
-                  <Users className="text-aegis-cyan" size={20} />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold tracking-tight text-white">{selectedAuthor.name}</h2>
-                  <p className="text-[10px] text-slate-600 font-mono uppercase tracking-widest">Global Graph ID: {selectedAuthor.id}</p>
-                </div>
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[100] flex items-center justify-center p-6">
+          <div className="bg-[#0f1115] border border-slate-800 w-full max-w-7xl h-[90vh] rounded-3xl overflow-hidden flex flex-col relative">
+            
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-[#0f1115]">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <User className="text-aegis-cyan" size={18}/> {selectedAuthor.name}
+                </h2>
+                <p className="text-[10px] text-slate-500 font-mono tracking-tighter uppercase">
+                  {modalView === 'profile' ? 'Subject Profile' : 'Network Explorer'} // {selectedAuthor.id}
+                </p>
               </div>
-              <button 
-                onClick={() => setSelectedAuthor(null)} 
-                className="p-2 hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-colors"
-              >
-                <X size={24} />
-              </button>
+              
+              <div className="flex items-center gap-4">
+                {/* Back to profile button */}
+                {modalView === 'graph' && (
+                   <button 
+                     onClick={() => setModalView('profile')} 
+                     className="text-xs font-bold text-aegis-cyan uppercase tracking-wider hover:text-white transition-colors"
+                   >
+                     ← Back to Profile
+                   </button>
+                )}
+                <button onClick={closeModal} className="text-slate-500 hover:text-white bg-slate-800/50 p-2 rounded-full"><X size={20} /></button>
+              </div>
             </div>
-            <div className="flex-1 relative bg-black/20">
-               <NetworkGraph authorId={selectedAuthor.id} />
+            
+            {/* Modal Body: Conditionally renders Profile or Graph */}
+            <div className="flex-1 relative flex bg-[#0a0c10]">
+               
+               {modalView === 'profile' ? (
+                 
+                 // --- PROFILE VIEW ---
+                 <div className="flex-1 flex flex-col items-center justify-center p-10 relative overflow-hidden">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-aegis-cyan/5 rounded-full blur-[100px] pointer-events-none" />
+                    
+                    <div className="w-24 h-24 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+                      <User size={40} className="text-aegis-cyan" />
+                    </div>
+                    
+                    <h2 className="text-5xl font-black text-white mb-4 tracking-tight">{selectedAuthor.name}</h2>
+                    
+                    <div className="flex gap-4 mb-12">
+                      <div className="bg-[#1a1d21] border border-slate-800 px-6 py-3 rounded-xl flex items-center gap-3">
+                         <Database className="text-slate-400" size={18} />
+                         <span className="text-slate-300 font-mono text-sm">{selectedAuthor.specialization.split(' | ')[1] || "No Data"}</span>
+                      </div>
+                      <div className="bg-[#1a1d21] border border-slate-800 px-6 py-3 rounded-xl flex items-center gap-3">
+                         <Activity className="text-slate-400" size={18} />
+                         <span className="text-slate-300 font-mono text-sm">H-Index: {selectedAuthor.h_index || "N/A"}</span>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => setModalView('graph')}
+                      className="group relative px-8 py-4 bg-aegis-cyan text-black rounded-full font-black text-sm uppercase tracking-widest overflow-hidden shadow-[0_0_40px_rgba(78,205,196,0.2)] hover:shadow-[0_0_60px_rgba(78,205,196,0.4)] transition-all active:scale-95 flex items-center gap-3"
+                    >
+                      <Share2 size={20} />
+                      Explore Connections
+                      <div className="absolute inset-0 h-full w-full bg-white/20 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
+                    </button>
+                 </div>
+
+               ) : (
+
+                 // --- GRAPH VIEW ---
+                 <>
+                   <div className="absolute inset-0 z-0">
+                     <NetworkGraph 
+                        authorId={selectedAuthor.id} 
+                        onNodeSelect={setInspectedNode} 
+                        // expandTrigger removed since we deleted the button
+                     />
+                   </div>
+                   
+                   {/* NODE INSPECTOR SIDEBAR */}
+                   {inspectedNode && (
+                     <div className="w-80 border-l border-slate-800 bg-[#0a0c10]/90 p-6 backdrop-blur-md z-10 overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6">
+                          <span className="bg-aegis-cyan/10 text-aegis-cyan text-[10px] font-black px-2 py-1 rounded border border-aegis-cyan/20 uppercase tracking-widest">
+                            {inspectedNode.group} Details
+                          </span>
+                          <button onClick={() => setInspectedNode(null)} className="text-slate-600 hover:text-white"><X size={16}/></button>
+                        </div>
+
+                        <h3 className="text-white font-bold text-xl mb-6 leading-tight">
+                          {inspectedNode.full_title || inspectedNode.label}
+                        </h3>
+
+                        <div className="space-y-6 border-t border-slate-800 pt-6">
+                          {inspectedNode.group === 'work' ? (
+                            <>
+                              <div className="flex items-center gap-4 text-sm text-slate-300">
+                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Calendar size={20}/></div>
+                                <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Year</p><p className="font-mono text-white text-lg">{inspectedNode.details?.year || 'N/A'}</p></div>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-slate-300">
+                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Target size={20}/></div>
+                                <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Citations</p><p className="font-mono text-white text-lg">{inspectedNode.details?.citations || 0}</p></div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-4 text-sm text-slate-300">
+                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Activity size={20}/></div>
+                                <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">H-Index</p><p className="font-mono text-white text-lg">{inspectedNode.details?.h_index || 0}</p></div>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-slate-300">
+                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Database size={20}/></div>
+                                <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Total Works</p><p className="font-mono text-white text-lg">{inspectedNode.details?.works || 0}</p></div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                     </div>
+                   )}
+                 </>
+               )}
             </div>
           </div>
         </div>

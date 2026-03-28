@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from neo4j import GraphDatabase
 
+
 from app.config import settings
 from app.schemas import AuthorNode, AuthorWorkRel, WorkNode
 
@@ -46,8 +47,28 @@ async def root():
         "status": "online"
     }
 
+# --- 4. Initialize FastAPI ---
+app = FastAPI(
+    title=settings.api_title,
+    version=settings.api_version,
+    description=settings.api_description,
+    lifespan=lifespan
+)
+
+# --- 5. System & Health Endpoints ---
+
+@app.get("/", tags=["System"])
+async def root():
+    """Root endpoint providing service information."""
+    return {
+        "title": settings.api_title,
+        "version": settings.api_version,
+        "status": "online"
+    }
+
 @app.get("/health", tags=["System"])
 async def health_check():
+    """Verifies connectivity to Neo4j."""
     """Verifies connectivity to Neo4j."""
     try:
         with driver.session() as session:
@@ -77,6 +98,7 @@ async def get_stats():
 @app.post("/authors", tags=["Ingestion"])
 async def upsert_author(author: AuthorNode):
     """Upserts an Author node into the graph."""
+    """Upserts an Author node into the graph."""
     query = """
     MERGE (a:Author {id: $id})
     SET a.name = $name, a.h_index = $h_index, a.works_count = $works_count
@@ -89,6 +111,7 @@ async def upsert_author(author: AuthorNode):
 @app.post("/works", tags=["Ingestion"])
 async def upsert_work(work: WorkNode):
     """Upserts a Work node into the graph."""
+    """Upserts a Work node into the graph."""
     query = """
     MERGE (w:Work {id: $id})
     SET w.title = $title, w.year = $year, w.citation_count = $citation_count
@@ -96,10 +119,12 @@ async def upsert_work(work: WorkNode):
     """
     with driver.session() as session:
         session.run(query, **work.model_dump())
+        session.run(query, **work.model_dump())
     return {"status": "success", "id": work.id}
 
 @app.post("/relationships/authored", tags=["Relationships"])
 async def link_author_work(rel: AuthorWorkRel):
+    """Creates an AUTHORED relationship between an Author and a Work."""
     """Creates an AUTHORED relationship between an Author and a Work."""
     query = """
     MATCH (a:Author {id: $author_id})
@@ -108,32 +133,40 @@ async def link_author_work(rel: AuthorWorkRel):
     """
     with driver.session() as session:
         session.run(query, **rel.model_dump())
+        session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
 # --- 7. Search & Analysis Endpoints ---
+# --- 7. Search & Analysis Endpoints ---
 
+@app.get("/authors/{author_id}/collaborators", tags=["Analysis"])
 @app.get("/authors/{author_id}/collaborators", tags=["Analysis"])
 async def get_collaborators(author_id: str):
     """Finds researchers who have shared works with the given author."""
+    """Finds researchers who have shared works with the given author."""
     query = """
+    MATCH (a:Author {id: $id})-[:AUTHORED]->(w:Work)<-[:AUTHORED]-(collab:Author)
     MATCH (a:Author {id: $id})-[:AUTHORED]->(w:Work)<-[:AUTHORED]-(collab:Author)
     WHERE a <> collab
     RETURN DISTINCT collab.name as name, collab.id as id
     """
     with driver.session() as session:
         result = session.run(query, id=author_id)
+        result = session.run(query, id=author_id)
         return [dict(record) for record in result]
 
 @app.get("/viz/author-network/{author_id}", tags=["Visualization"])
 async def get_author_network(author_id: str):
     """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
+    """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
     query = """
-    MATCH (a:Author {id: $author_id})-[:AUTHORED]->(w:Work)
-    OPTIONAL MATCH (w)<-[:AUTHORED]-(co:Author)
-    WHERE co.id <> $author_id
-    RETURN a, w, co
+    MATCH (n {id: $node_id})
+    OPTIONAL MATCH (n)-[r:AUTHORED]-(m)
+    OPTIONAL MATCH (m)-[r2:AUTHORED]-(co)
+    RETURN n, r, m, co
     LIMIT 50
     """
+    
     with driver.session() as session:
         result = session.run(query, author_id=author_id)
         nodes, edges, node_ids = [], [], set()
@@ -150,13 +183,14 @@ async def get_author_network(author_id: str):
                 nodes.append({"id": work["id"], "label": work["title"][:30] + "...",
                               "group": "work", "color": "#4ecdc4"})
                 node_ids.add(work["id"])
-            edges.append({"from": author["id"], "to": work["id"], "label": "AUTHORED"})
+            if author and work:
+                edges.append({"from": author["id"], "to": work["id"], "label": "AUTHORED"})
 
             if co_author and co_author["id"] not in node_ids:
                 nodes.append({"id": co_author["id"], "label": co_author["name"],
                               "group": "author", "color": "#ffadad"})
                 node_ids.add(co_author["id"])
-            if co_author:
+            if co_author and work:
                 edges.append({"from": co_author["id"], "to": work["id"], "label": "AUTHORED"})
 
         return {"nodes": nodes, "edges": edges}

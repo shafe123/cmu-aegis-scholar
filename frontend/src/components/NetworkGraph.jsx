@@ -1,101 +1,137 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { DataSet, Network } from 'vis-network/standalone';
-import { Loader2 } from 'lucide-react';
 
-const NetworkGraph = ({ authorId }) => {
+const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger }) => {
   const containerRef = useRef(null);
   const networkRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // DataSets are reactive containers that allow adding data without a full refresh
+  const nodesRef = useRef(new DataSet([]));
+  const edgesRef = useRef(new DataSet([]));
 
-  useEffect(() => {
-    const loadGraph = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`http://localhost:8003/viz/author-network/${authorId}`);
-        const graphData = await response.json();
-
-        if (!graphData.nodes || graphData.nodes.length === 0) {
-          console.warn("No graph data returned for this author.");
-          setIsLoading(false);
-          return;
-        }
-
-        const data = {
-          nodes: new DataSet(graphData.nodes.map(n => ({
-            ...n,
-            color: n.id === authorId ? '#22d3ee' : '#94a3b8',
-            font: { color: '#f8fafc', size: 14 }
-          }))),
-          edges: new DataSet(graphData.edges.map(e => ({
-            ...e,
-            color: '#334155',
-            arrows: { to: { enabled: true, scaleFactor: 0.5 } }
-          })))
-        };
-
-        const options = {
-          autoResize: true,
-          nodes: {
-            shape: 'dot',
-            size: 20,
-            shadow: { enabled: true, color: 'rgba(34, 211, 238, 0.2)', size: 10 }
-          },
-          physics: {
-            stabilization: { iterations: 150 },
-            forceAtlas2Based: {
-              gravitationalConstant: -50,
-              centralGravity: 0.01,
-              springLength: 100,
-              springConstant: 0.08
-            },
-            solver: 'forceAtlas2Based',
-            adaptiveTimestep: true
-          },
-          interaction: {
-            hover: true,
-            zoomView: true
-          }
-        };
-
-        if (networkRef.current) {
-          networkRef.current.destroy();
-        }
-
-        networkRef.current = new Network(containerRef.current, data, options);
-        
-      } catch (err) {
-        console.error("Failed to load graph:", err);
-      } finally {
-        setIsLoading(false);
+  /**
+   * Fetches data from the Graph API and updates the local DataSet.
+   * Using .update() prevents duplicate ID errors.
+   */
+  const loadNetworkData = async (id) => {
+    console.log("📡 Fetching network for ID:", id);
+    try {
+      const response = await fetch(`http://localhost:8003/viz/author-network/${id}`);
+      if (!response.ok) throw new Error("Graph API error");
+      
+      const data = await response.json();
+      console.log("📦 RAW DATA RECEIVED:", data);
+      
+      if (!data.nodes || data.nodes.length === 0) {
+        console.warn("⚠️ No nodes found for this ID.");
+        return;
       }
-    };
 
-    if (authorId && containerRef.current) {
-      loadGraph();
-    }
+      // Update Nodes: Apply Aegis styling & Force Full Label
+      nodesRef.current.update(data.nodes.map(n => ({
+        ...n,
+        label: n.full_title || n.label, // <-- FIX: Uses full title instead of truncated label
+        shape: 'dot',
+        size: n.group === 'work' ? 12 : 20,
+        font: { color: '#f8fafc', size: 12, face: 'Inter, sans-serif' },
+        borderWidth: 2,
+        color: {
+          border: n.group === 'work' ? '#2d7a74' : '#475569',
+          background: n.group === 'work' ? '#4ecdc4' : '#94a3b8',
+          highlight: { background: '#ffffff', border: '#4ecdc4' }
+        }
+      })));
+      
+      // Update Edges
+      edgesRef.current.update(data.edges.map(e => ({
+        ...e,
+        color: { color: '#334155', highlight: '#4ecdc4' },
+        arrows: { to: { enabled: true, scaleFactor: 0.4 } },
+        smooth: { type: 'continuous' }
+      })));
 
-    return () => {
+      // Gently move the camera to show the new nodes
       if (networkRef.current) {
-        networkRef.current.destroy();
-        networkRef.current = null;
+        networkRef.current.fit({ animation: true });
       }
+
+    } catch (err) {
+      console.error("❌ Graph Load failed:", err);
+    }
+  };
+
+  // INITIAL LOAD: Runs when a user clicks a search result
+  useEffect(() => {
+    if (!authorId || !containerRef.current) return;
+
+    const initGraph = async () => {
+      console.log("🚀 Initializing Graph Instance");
+      
+      // Clear previous graph data for a fresh start
+      nodesRef.current.clear();
+      edgesRef.current.clear();
+      
+      await loadNetworkData(authorId);
+
+      const options = {
+        // <-- FIX: Add width constraints to force word-wrapping on long titles
+        nodes: {
+          widthConstraint: {
+            maximum: 200 // Adjust this to make text wider or narrower before wrapping
+          }
+        },
+        physics: {
+          enabled: true,
+          forceAtlas2Based: {
+            gravitationalConstant: -100,
+            springLength: 100,
+            springConstant: 0.08,
+          },
+          solver: 'forceAtlas2Based',
+          stabilization: { iterations: 150, updateInterval: 25 }
+        },
+        interaction: {
+          hover: true,
+          tooltipDelay: 200,
+          hideEdgesOnDrag: true,
+          selectable: true
+        }
+      };
+
+      // Create the network instance
+      if (networkRef.current) networkRef.current.destroy();
+      
+      networkRef.current = new Network(
+        containerRef.current, 
+        { nodes: nodesRef.current, edges: edgesRef.current }, 
+        options
+      );
+
+      // Listener: Pass clicked node data back to App.jsx Inspector
+      networkRef.current.on("selectNode", (params) => {
+        const nodeId = params.nodes[0];
+        const nodeData = nodesRef.current.get(nodeId);
+        console.log("Selected Node Details:", nodeData);
+        if (onNodeSelect) onNodeSelect(nodeData);
+      });
     };
+
+    initGraph();
   }, [authorId]);
 
+  // EXPANSION LOAD: Runs when "Explore Connections" is clicked in App.jsx
+  useEffect(() => {
+    if (expandTrigger) {
+      loadNetworkData(expandTrigger);
+    }
+  }, [expandTrigger]);
+
   return (
-    <div className="w-full h-full relative min-h-[500px]">
-      {isLoading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/20 z-10">
-          <Loader2 className="animate-spin text-aegis-cyan mb-2" size={32} />
-          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Constructing Neural Map...</span>
-        </div>
-      )}
-      <div 
-        ref={containerRef} 
-        className="w-full h-full min-h-[600px]" 
-        style={{ background: 'transparent' }} 
-      />
-    </div>
+    <div 
+      ref={containerRef} 
+      style={{ height: '100%', minHeight: '600px', width: '100%' }}
+      className="bg-[#0a0c10] cursor-grab active:cursor-grabbing" 
+    />
   );
 };
 
