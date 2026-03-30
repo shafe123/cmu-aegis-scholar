@@ -21,11 +21,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install curl for healthchecks
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY --from=builder /app/requirements.txt .
+
+RUN pip install --upgrade "pip>=25.3"
 
 # Use BuildKit cache mount for pip downloads
 RUN --mount=type=cache,target=/root/.cache/pip \
