@@ -38,14 +38,16 @@
 
 ### Python-Specific Checks (if applicable)
 
+- [ ] Virtual environment dependencies updated (pyproject.toml)
 - [ ] **ruff** linting checks pass (`ruff check .`)
 - [ ] **ruff** formatting checks pass (`ruff format --check .`)
-- [ ] **pylint** checks pass with acceptable score (> 9.0)
-- [ ] **pytest** - All existing tests pass
+- [ ] **pylint** checks pass with acceptable score (> 9.0, `pylint --ignore=.venv ,`)
+- [ ] **pytest** - All existing tests pass (`pytest .`)
 - [ ] **pytest** - New tests added for new functionality
 - [ ] **pytest** - Test coverage is adequate for changes (> 80%)
 - [ ] Type hints added for all methods
-- [ ] Virtual environment dependencies updated (pyproject.toml)
+- [ ] **mypy** all checks pass (`mypy .`)
+- [ ] **Bandit** static security analysis run (`bandit -r app/`)
 
 ### Frontend-Specific Checks (if applicable)
 
@@ -70,6 +72,7 @@
 - [ ] Changes follow the monorepo structure and conventions
 - [ ] Shared libraries updated appropriately (if applicable)
 - [ ] Docker images build successfully (if applicable)
+- [ ] Docker Scout security scan run on images (`docker scout cves <image>`)
 - [ ] Kubernetes manifests updated (if applicable)
 - [ ] Terraform plans reviewed (if applicable)
 
