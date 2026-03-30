@@ -27,6 +27,8 @@ services:
     image: chrislusf/seaweedfs:latest
     environment:
       WEED_MASTER_VOLUME_SIZE_LIMIT_MB: 1024
+      AWS_ACCESS_KEY_ID: ${SEAWEEDFS_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${SEAWEEDFS_SECRET_KEY}
     ports:
       - "8333:8333" # S3 API
       - "9333:9333" # Master server
@@ -56,6 +58,9 @@ services:
     environment:
       ETCD_ENDPOINTS: milvus-etcd:2379
       MINIO_ADDRESS: milvus-seaweedfs:8333
+      MINIO_ACCESS_KEY: ${SEAWEEDFS_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${SEAWEEDFS_SECRET_KEY}
+      MINIO_USE_SSL: "false"
     volumes:
       - milvus-standalone:/var/lib/milvus
     healthcheck:
@@ -118,7 +123,7 @@ services:
     networks:
       - aegisnet
 
-   # --- GRAPH STACK (NEW) ---
+    # --- GRAPH STACK (NEW) ---
   neo4j:
     container_name: neo4j
     image: neo4j:5.12
@@ -132,7 +137,8 @@ services:
       - NEO4J_PLUGINS=["apoc"]
       - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD} 'RETURN 1'"]
+      test:
+        ["CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD} 'RETURN 1'"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -160,7 +166,6 @@ services:
       start_period: 10s
     networks:
       - aegisnet
-
 
   # --- GRAPH LOADER (NEW) ---
   graph-loader:
