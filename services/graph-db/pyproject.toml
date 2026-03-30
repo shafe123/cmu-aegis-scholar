@@ -5,23 +5,23 @@ description = "FastAPI gateway for Neo4j graph operations"
 authors = ["Aegis Scholar Team"]
 
 [tool.poetry.dependencies]
-python = "^3.12"
-fastapi = "^0.100"
-uvicorn = {extras = ["standard"], version = "^0.22"}
-neo4j = "^5.12"
-pydantic = "^2.0"
-pydantic-settings = "^2.0"
-httpx = "^0.24"
+python = ">=3.12"
+fastapi = ">=0.100"
+uvicorn = ">=0.22"
+neo4j = ">=5.12"
+pydantic = ">=2.0"
+pydantic-settings = ">=2.0"
+httpx = ">=0.24"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.0"
-pytest-asyncio = "^0.21"
-pytest-cov = "^4.1"
-pytest-mock = "^3.12"
-httpx = "^0.24"
-ruff = "^0.3.0"
-pylint = "^3.0.0"
-pylint-pydantic = "^0.3.0"
+pytest = ">=7.0"
+pytest-asyncio = ">=0.21"
+pytest-cov = ">=4.1"
+pytest-mock = ">=3.12"
+httpx = ">=0.24"
+ruff = ">=0.3.0"
+pylint = ">=3.0.0"
+pylint-pydantic = ">=0.3.0"
 
 [[tool.poetry.packages]]
 include = "app"
