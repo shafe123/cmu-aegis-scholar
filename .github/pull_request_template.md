@@ -75,6 +75,7 @@
 - [ ] Docker Scout security scan run on images (`docker scout cves <image>`)
 - [ ] Kubernetes manifests updated (if applicable)
 - [ ] Terraform plans reviewed (if applicable)
+- [ ] No merge conflicts when pull request was created (fix any conflicts otherwise)
 
 ## Testing Instructions
 
