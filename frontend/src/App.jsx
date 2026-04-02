@@ -27,11 +27,10 @@ const ResearcherRow = ({ author, onSelect }) => {
       </div>
       <div className="flex flex-col items-end w-24 pr-4">
         <div className="text-xl font-mono text-aegis-cyan">
-          {author.works_count > 0 
-            ? (author.citation_count / author.works_count).toFixed(1) 
-            : '0.0'}
+          {/* USE THE REAL SCORE FROM THE BACKEND */}
+          {author.relevance_score ? author.relevance_score.toFixed(3) : '0.000'}
         </div>
-        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">SCORE</div>
+        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">SIMILARITY</div>
       </div>
     </div>
   );

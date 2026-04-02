@@ -16,7 +16,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger }) => {
   const loadNetworkData = async (id) => {
     console.log("📡 Fetching network for ID:", id);
     try {
-      const response = await fetch(`http://localhost:8003/viz/author-network/${id}`);
+      const response = await fetch(`http://localhost:8000/viz/author-network/${id}`);
       if (!response.ok) throw new Error("Graph API error");
       
       const data = await response.json();

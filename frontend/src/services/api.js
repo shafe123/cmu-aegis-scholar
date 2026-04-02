@@ -1,4 +1,5 @@
-const VECTOR_API_URL = 'http://localhost:8002';
+// Main API URL
+const MAIN_API_URL = 'http://localhost:8000';
 
 export const searchAuthors = async (query, activeTab = 'Authors') => {
   if (activeTab !== 'Authors' && activeTab !== 'Year') {
@@ -6,41 +7,32 @@ export const searchAuthors = async (query, activeTab = 'Authors') => {
   }
 
   try {
-    const body = {
-      query_text: query,
-      collection_name: "aegis_vectors", 
-      limit: 10,
-      output_fields: ["author_id", "author_name", "num_abstracts", "citation_count"]
-    };
+    // Send a standard GET request to the Main API with search query
+    const response = await fetch(`${MAIN_API_URL}/search/authors?q=${encodeURIComponent(query)}`);
 
-    const response = await fetch(`${VECTOR_API_URL}/search/text`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    if (!response.ok) {
+      throw new Error(`HTTP Error! Status: ${response.status}`);
+    }
 
     const data = await response.json();
-    console.log("🔍 Vector DB Raw Response:", data);
+    console.log("Main API Response:", data);
 
-    // If data.results doesn't exist, return empty array safely
     const rawResults = data.results || [];
 
-    const formattedResults = rawResults.map(e => ({
-        id: e.author_id || "unknown_id",
-        name: e.author_name || "Unknown Author",
-        specialization: `Expertise Discovery | Works: ${e.num_abstracts || 0} • Citations: ${e.citation_count || 0}`,
-        works_count: e.num_abstracts || 0,
-        citation_count: e.citation_count || 0
-      }));
+    // Map the clean data returned by Main API's Pydantic schema
+    const formattedResults = rawResults.map(author => ({
+        id: author.id || "unknown_id",
+        name: author.name || "Unknown Author",
+        specialization: `Expertise Discovery | Works: ${author.works_count || 0} • Citations: ${author.citation_count || 0}`,
+        works_count: author.works_count || 0,
+        citation_count: author.citation_count || 0,
+        relevance_score: author.relevance_score || 0
+    }));
 
-      return formattedResults.sort((a, b) => {
-        const impactA = a.works_count > 0 ? a.citation_count / a.works_count : 0;
-        const impactB = b.works_count > 0 ? b.citation_count / b.works_count : 0;
-        return impactB - impactA; // Sorts descending
-      });
+    return formattedResults;
     
   } catch (err) {
-    console.error("❌ Vector Search Error:", err);
+    console.error("Main API Search Error:", err);
     return [];
   }
 };

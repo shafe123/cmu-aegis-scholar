@@ -154,8 +154,6 @@ services:
     networks:
       - aegisnet
 
-
-  # --- GRAPH LOADER (NEW) ---
   graph-loader:
     build: ../jobs/graph-loader
     environment:
@@ -190,6 +188,22 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    networks:
+      - aegisnet
+
+  frontend:
+    build: ../frontend
+    container_name: aegis-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true # Helps Vite catch file changes in Docker
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    depends_on:
+      - graph-db
+      - aegis-scholar-api
     networks:
       - aegisnet
 

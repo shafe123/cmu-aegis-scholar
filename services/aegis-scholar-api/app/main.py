@@ -26,6 +26,7 @@ from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.responses import FileResponse
 from typing import Optional
 import logging
+import math
 from pathlib import Path
 
 import httpx
@@ -93,55 +94,38 @@ app.add_middleware(
     allow_headers=settings.cors_allow_headers,
 )
 
-
 # ---------------------------------------------------------------------------
-# Helper: convert vector-DB results → AuthorSearchResult list
+# Helper: map raw vector results to schema and calculate hybrid scores
 # ---------------------------------------------------------------------------
 
-def _distance_to_relevance(distance: float) -> float:
-    """
-    Convert an L2 distance into a 0-1 relevance score.
-
-    The vector DB uses L2 (Euclidean) distance where 0 = identical.
-    We map this to a score where 1.0 = perfect match using:
-        relevance = 1 / (1 + distance)
-    """
-    return round(1.0 / (1.0 + distance), 4)
-
-
-def _map_vector_results(raw_results: list[dict]) -> list[AuthorSearchResult]:
-    """
-    Transform the flat dicts returned by the vector DB into
-    AuthorSearchResult Pydantic models.
-
-    Vector DB returns:
-        { "distance": 0.45, "author_id": "author_abc...", "author_name": "...",
-          "num_abstracts": 124, "citation_count": 8924 }
-
-    We map to:
-        AuthorSearchResult(id=..., name=..., works_count=..., citation_count=...,
-                           relevance_score=...)
-    """
-    results: list[AuthorSearchResult] = []
-    for hit in raw_results:
-        try:
-            results.append(
-                AuthorSearchResult(
-                    id=hit["author_id"],
-                    name=hit["author_name"],
-                    works_count=hit.get("num_abstracts"),
-                    citation_count=hit.get("citation_count"),
-                    relevance_score=_distance_to_relevance(hit.get("distance", 0)),
-                    # Fields not yet available from the vector DB:
-                    #   org_ids, h_index, sources, last_updated
-                    # These will be populated once the graph DB or a
-                    # metadata store is integrated.
-                )
-            )
-        except Exception as e:
-            logger.warning(f"Skipping malformed vector result: {e}  raw={hit}")
-    return results
-
+def _map_vector_results(vector_results: list) -> list:
+    """Maps raw vector DB distances into a hybrid relevance + authority score."""
+    mapped_results = []
+    
+    for res in vector_results:
+        # 1. Grab data directly from 'res' (NO MORE PAYLOAD VARIABLE!)
+        distance = res.get("distance", 1.0)
+        citation_count = res.get("citation_count", 0)
+        
+        # 2. Base Semantic Relevance (0 to 1)
+        relevance_score = 1 / (1 + distance)
+        
+        # 3. Authority Score (0 to 1) using Log Scale
+        authority_score = min(math.log10(citation_count + 1) / 4.0, 1.0)
+        
+        # 4. The Hybrid Formula: 70% Relevance, 30% Authority
+        hybrid_score = (0.7 * relevance_score) + (0.3 * authority_score)
+        
+        mapped_results.append({
+            "id": res.get("author_id"),                # Directly from res
+            "name": res.get("author_name", "Unknown"), # Directly from res
+            "citation_count": citation_count,
+            "works_count": res.get("num_abstracts", 0),
+            "relevance_score": hybrid_score          
+        })
+        
+    # Sort from highest hybrid score to lowest
+    return sorted(mapped_results, key=lambda x: x["relevance_score"], reverse=True)
 
 # ---------------------------------------------------------------------------
 # Helper: re-sort results if the user requested a non-default sort
@@ -444,12 +428,42 @@ async def get_work_by_id(work_id: str):
 
 @app.get("/search/authors/{author_id}", response_model=Author)
 async def get_author_by_id(author_id: str):
-    """Get a specific author by ID."""
-    logger.info(f"GET /search/authors/{author_id}  (not yet implemented)")
-    raise HTTPException(
-        status_code=501,
-        detail="Author detail lookup is not yet available.",
-    )
+    """Get a specific author by ID by querying the Graph DB."""
+    logger.info(f"GET /search/authors/{author_id}")
+    
+    try:
+        # Ask the Graph DB for the author details
+        # (Assuming your config uses settings.graph_db_url, otherwise hardcode to e.g., "http://graph-db:8003")
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://graph-db:8003/authors/{author_id}", timeout=10.0)
+            
+        # If Graph DB doesn't have it, pass the 404 to the frontend
+        if response.status_code == 404:
+            raise HTTPException(status_code=404, detail="Author not found")
+            
+        response.raise_for_status()
+        graph_data = response.json()
+        
+        # The Graph DB sends organizations as a list of dictionaries, 
+        # but your Main API schema just wants a list of org_ids. Let's map them:
+        org_ids = [org["id"] for org in graph_data.get("organizations", [])]
+        
+        # Return the data formatted perfectly for your Main API schema
+        return {
+            "id": graph_data["id"],
+            "name": graph_data["name"],
+            "h_index": graph_data.get("h_index", 0),
+            "works_count": graph_data.get("works_count", 0),
+            "org_ids": org_ids,
+            "citation_count": 0 # Defaulting to 0 since citation count lives in the Vector DB
+        }
+        
+    except httpx.RequestError as e:
+        logger.error(f"Error communicating with Graph DB: {e}")
+        raise HTTPException(
+            status_code=503, 
+            detail="Graph DB service is currently unavailable."
+        )
 
 
 @app.get("/search/orgs/{org_id}", response_model=Organization)
@@ -471,6 +485,21 @@ async def get_topic_by_id(topic_id: str):
         detail="Topic detail lookup is not yet available.",
     )
 
+@app.get("/viz/author-network/{author_id}")
+async def get_author_network_viz(author_id: str):
+    """Proxy endpoint to fetch graph visualization data for an author."""
+    logger.info(f"GET /viz/author-network/{author_id}")
+    try:
+        # Call the internal graph-db service on its docker network port (8003)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"http://graph-db:8003/viz/author-network/{author_id}", timeout=10.0)
+            
+        response.raise_for_status()
+        return response.json()
+        
+    except httpx.RequestError as e:
+        logger.error(f"Error communicating with Graph DB for viz: {e}")
+        raise HTTPException(status_code=503, detail="Graph visualization service unavailable.")
 
 # ---------------------------------------------------------------------------
 # Entrypoint for local development
