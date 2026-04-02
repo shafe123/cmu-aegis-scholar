@@ -1,3 +1,4 @@
+# pylint: disable=logging-fstring-interpolation
 """
 Aegis Scholar API - Main FastAPI Application
 
@@ -18,33 +19,32 @@ paper-abstract embeddings).  When a user searches, the vector DB converts
 the query text into a 384-dim vector and finds the nearest authors in
 Milvus.  This API reformats those results into the Aegis Scholar schema.
 """
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, Query, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
-from fastapi.responses import FileResponse
-from typing import Optional
 import logging
 import math
+from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
 import httpx
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.schemas import (
+    Author,
     AuthorSearchResponse,
     AuthorSearchResult,
-    OrgSearchResponse,
-    TopicSearchResponse,
-    WorkSearchResponse,
-    Author,
     Organization,
+    OrgSearchResponse,
     Topic,
+    TopicSearchResponse,
     Work,
+    WorkSearchResponse,
 )
 from app.services import vector_db
-from app.services.graph_db import graph_client
 
 # Configure logging
 logging.basicConfig(level=settings.log_level)
@@ -55,8 +55,9 @@ logger = logging.getLogger(__name__)
 # Application lifecycle
 # ---------------------------------------------------------------------------
 
+
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app_instance: FastAPI):  # pylint: disable=unused-argument
     """Start/stop long-lived resources (HTTP client pool, future DB pools)."""
     # ── Startup ──
     await vector_db.init_client()
@@ -98,34 +99,37 @@ app.add_middleware(
 # Helper: map raw vector results to schema and calculate hybrid scores
 # ---------------------------------------------------------------------------
 
+
 def _map_vector_results(vector_results: list) -> list:
     """Maps raw vector DB distances into a hybrid relevance + authority score."""
     mapped_results = []
-    
+
     for res in vector_results:
-        # 1. Grab data directly from 'res' (NO MORE PAYLOAD VARIABLE!)
         distance = res.get("distance", 1.0)
         citation_count = res.get("citation_count", 0)
-        
-        # 2. Base Semantic Relevance (0 to 1)
+
+        # Base Semantic Relevance (0 to 1)
         relevance_score = 1 / (1 + distance)
-        
-        # 3. Authority Score (0 to 1) using Log Scale
+
+        # Authority Score (0 to 1) using Log Scale
         authority_score = min(math.log10(citation_count + 1) / 4.0, 1.0)
-        
-        # 4. The Hybrid Formula: 70% Relevance, 30% Authority
+
+        # The Hybrid Formula: 70% Relevance, 30% Authority
         hybrid_score = (0.7 * relevance_score) + (0.3 * authority_score)
-        
-        mapped_results.append({
-            "id": res.get("author_id"),                # Directly from res
-            "name": res.get("author_name", "Unknown"), # Directly from res
-            "citation_count": citation_count,
-            "works_count": res.get("num_abstracts", 0),
-            "relevance_score": hybrid_score          
-        })
-        
+
+        mapped_results.append(
+            {
+                "id": res.get("author_id"),
+                "name": res.get("author_name", "Unknown"),
+                "citation_count": citation_count,
+                "works_count": res.get("num_abstracts", 0),
+                "relevance_score": hybrid_score,
+            }
+        )
+
     # Sort from highest hybrid score to lowest
     return sorted(mapped_results, key=lambda x: x["relevance_score"], reverse=True)
+
 
 # ---------------------------------------------------------------------------
 # Helper: re-sort results if the user requested a non-default sort
@@ -139,13 +143,7 @@ def _sort_author_results(
     sort_by: Optional[str],
     order: str,
 ) -> list[AuthorSearchResult]:
-    """
-    Optionally re-sort author results.
-
-    By default the vector DB returns results sorted by distance (most
-    relevant first).  If the caller asks for a different sort_by field
-    (e.g. citation_count), we re-sort here.
-    """
+    """Optionally re-sort author results."""
     if not sort_by or sort_by not in _SORTABLE_AUTHOR_FIELDS:
         return results  # keep default relevance order
 
@@ -160,6 +158,7 @@ def _sort_author_results(
 # ---------------------------------------------------------------------------
 # System endpoints
 # ---------------------------------------------------------------------------
+
 
 @app.get("/")
 async def root():
@@ -185,7 +184,7 @@ async def health_check():
     try:
         vdb_health = await vector_db.health()
         vdb_status = vdb_health.get("status", "unknown")
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         vdb_status = f"unreachable: {e}"
 
     return {
@@ -208,6 +207,7 @@ async def favicon():
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
+    """Serve custom Swagger UI html."""
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,
         title=f"{app.title} - Swagger UI",
@@ -217,6 +217,7 @@ async def custom_swagger_ui_html():
 
 @app.get("/redoc", include_in_schema=False)
 async def custom_redoc_html():
+    """Serve custom ReDoc html."""
     return get_redoc_html(
         openapi_url=app.openapi_url,
         title=f"{app.title} - ReDoc",
@@ -228,15 +229,19 @@ async def custom_redoc_html():
 # SEARCH ENDPOINTS — Author (fully wired to vector DB)
 # ---------------------------------------------------------------------------
 
+
 @app.get("/search/authors", response_model=AuthorSearchResponse)
 async def search_authors(
     q: str = Query(..., description="Search query string"),
     limit: int = Query(
-        settings.default_limit, ge=1, le=settings.max_limit,
+        settings.default_limit,
+        ge=1,
+        le=settings.max_limit,
         description="Maximum number of results to return",
     ),
     offset: int = Query(
-        settings.default_offset, ge=0,
+        settings.default_offset,
+        ge=0,
         description="Number of results to skip",
     ),
     sort_by: Optional[str] = Query(
@@ -248,23 +253,14 @@ async def search_authors(
         ),
     ),
     order: Optional[str] = Query(
-        "desc", pattern="^(asc|desc)$",
+        "desc",
+        pattern="^(asc|desc)$",
         description="Sort order: 'asc' or 'desc'",
     ),
 ):
-    """
-    Search for authors by name, affiliation, or research interests.
-
-    The query text is converted into a semantic embedding and compared
-    against author embeddings (averaged paper abstracts) in the vector
-    database.  Results are ranked by relevance unless a different
-    sort_by field is specified.
-    """
+    """Search for authors by name, affiliation, or research interests."""
     logger.info(f"GET /search/authors  q={q!r}  limit={limit}  offset={offset}")
 
-    # When re-sorting by a non-relevance field we need to pull a bigger
-    # window from the vector DB so the re-sort is meaningful.  We fetch
-    # up to max_limit results, re-sort, then slice for the requested page.
     need_resort = sort_by and sort_by in _SORTABLE_AUTHOR_FIELDS and sort_by != "relevance_score"
     fetch_limit = settings.max_limit if need_resort else limit
     fetch_offset = 0 if need_resort else offset
@@ -276,31 +272,29 @@ async def search_authors(
             offset=fetch_offset,
             output_fields=["author_id", "author_name", "num_abstracts", "citation_count"],
         )
-    except httpx.ConnectError:
+    except httpx.ConnectError as exc:
         logger.error("Vector DB service is unreachable")
         raise HTTPException(
             status_code=503,
             detail="Search service temporarily unavailable. Please try again later.",
-        )
+        ) from exc
     except httpx.HTTPStatusError as e:
         logger.error(f"Vector DB returned error: {e.response.status_code} {e.response.text}")
         raise HTTPException(
             status_code=502,
             detail="Upstream search service returned an error.",
-        )
+        ) from e
 
     # Map and optionally re-sort
     authors = _map_vector_results(raw.get("results", []))
     authors = _sort_author_results(authors, sort_by, order or "desc")
 
-    # Apply local pagination when we fetched a larger window for re-sort
     if need_resort:
         total_available = len(authors)
         authors = authors[offset : offset + limit]
     else:
         pagination = raw.get("pagination", {})
         total_available = pagination.get("returned", len(authors))
-        # Vector DB already paginated for us
 
     return AuthorSearchResponse(
         query=q,
@@ -315,7 +309,9 @@ async def search_authors(
 async def search(
     q: str = Query(..., description="Search query string"),
     limit: int = Query(
-        settings.default_limit, ge=1, le=settings.max_limit,
+        settings.default_limit,
+        ge=1,
+        le=settings.max_limit,
         description="Maximum number of results to return",
     ),
     offset: int = Query(settings.default_offset, ge=0, description="Number of results to skip"),
@@ -329,11 +325,7 @@ async def search(
 # ---------------------------------------------------------------------------
 # SEARCH ENDPOINTS — Orgs, Topics, Works  (awaiting graph DB / metadata store)
 # ---------------------------------------------------------------------------
-# These endpoints are structurally complete but return 501 until a
-# backend data source is connected.  The vector DB only stores author
-# embeddings, so we cannot yet search for works, topics, or orgs by
-# semantic similarity.  Once the graph DB is ready, these will be
-# wired in the same pattern as search_authors.
+
 
 @app.get("/search/orgs", response_model=OrgSearchResponse)
 async def search_orgs(
@@ -343,21 +335,12 @@ async def search_orgs(
     org_type: Optional[str] = Query(None, description="Filter by organization type"),
     country: Optional[str] = Query(None, description="Filter by country code"),
 ):
-    """
-    Search for organizations.
-
-    **Status: not yet implemented.**
-    This endpoint requires the graph database or a metadata store to be
-    connected.  It will return organization results once that integration
-    is complete.
-    """
+    """Search for organizations."""
+    # pylint: disable=unused-argument
     logger.info(f"GET /search/orgs  q={q!r}  (not yet implemented)")
     raise HTTPException(
         status_code=501,
-        detail=(
-            "Organization search is not yet available. "
-            "This endpoint will be enabled once the graph database integration is complete."
-        ),
+        detail="Organization search is not yet available.",
     )
 
 
@@ -369,20 +352,12 @@ async def search_topics(
     field: Optional[str] = Query(None, description="Filter by research field"),
     domain: Optional[str] = Query(None, description="Filter by domain"),
 ):
-    """
-    Search for research topics and subject areas.
-
-    **Status: not yet implemented.**
-    Topic search requires the OpenAlex topic taxonomy to be loaded into
-    either the graph database or a metadata store.
-    """
+    """Search for research topics and subject areas."""
+    # pylint: disable=unused-argument
     logger.info(f"GET /search/topics  q={q!r}  (not yet implemented)")
     raise HTTPException(
         status_code=501,
-        detail=(
-            "Topic search is not yet available. "
-            "This endpoint will be enabled once the topic taxonomy is loaded."
-        ),
+        detail="Topic search is not yet available.",
     )
 
 
@@ -395,26 +370,19 @@ async def search_works(
     year_to: Optional[int] = Query(None, description="Filter by publication year (to)"),
     min_citations: Optional[int] = Query(None, ge=0, description="Minimum citation count"),
 ):
-    """
-    Search for research works, papers, and publications.
-
-    **Status: not yet implemented.**
-    Work search requires a metadata store (Cosmos DB / PostgreSQL) or
-    the graph database for structured queries over publication records.
-    """
+    """Search for research works, papers, and publications."""
+    # pylint: disable=unused-argument,too-many-arguments,too-many-positional-arguments
     logger.info(f"GET /search/works  q={q!r}  (not yet implemented)")
     raise HTTPException(
         status_code=501,
-        detail=(
-            "Work search is not yet available. "
-            "This endpoint will be enabled once the metadata store integration is complete."
-        ),
+        detail="Work search is not yet available.",
     )
 
 
 # ---------------------------------------------------------------------------
 # DETAIL ENDPOINTS — single-entity lookups (awaiting metadata store)
 # ---------------------------------------------------------------------------
+
 
 @app.get("/search/works/{work_id}", response_model=Work)
 async def get_work_by_id(work_id: str):
@@ -430,40 +398,37 @@ async def get_work_by_id(work_id: str):
 async def get_author_by_id(author_id: str):
     """Get a specific author by ID by querying the Graph DB."""
     logger.info(f"GET /search/authors/{author_id}")
-    
+
     try:
-        # Ask the Graph DB for the author details
-        # (Assuming your config uses settings.graph_db_url, otherwise hardcode to e.g., "http://graph-db:8003")
         async with httpx.AsyncClient() as client:
-            response = await client.get("http://graph-db:8003/authors/{author_id}", timeout=10.0)
-            
-        # If Graph DB doesn't have it, pass the 404 to the frontend
+            response = await client.get(
+                f"http://graph-db:8003/authors/{author_id}",
+                timeout=10.0
+            )
+
         if response.status_code == 404:
             raise HTTPException(status_code=404, detail="Author not found")
-            
+
         response.raise_for_status()
         graph_data = response.json()
-        
-        # The Graph DB sends organizations as a list of dictionaries, 
-        # but your Main API schema just wants a list of org_ids. Let's map them:
+
         org_ids = [org["id"] for org in graph_data.get("organizations", [])]
-        
-        # Return the data formatted perfectly for your Main API schema
+
         return {
             "id": graph_data["id"],
             "name": graph_data["name"],
             "h_index": graph_data.get("h_index", 0),
             "works_count": graph_data.get("works_count", 0),
             "org_ids": org_ids,
-            "citation_count": 0 # Defaulting to 0 since citation count lives in the Vector DB
+            "citation_count": 0,
         }
-        
+
     except httpx.RequestError as e:
         logger.error(f"Error communicating with Graph DB: {e}")
         raise HTTPException(
             status_code=503, 
             detail="Graph DB service is currently unavailable."
-        )
+        ) from e
 
 
 @app.get("/search/orgs/{org_id}", response_model=Organization)
@@ -485,21 +450,28 @@ async def get_topic_by_id(topic_id: str):
         detail="Topic detail lookup is not yet available.",
     )
 
+
 @app.get("/viz/author-network/{author_id}")
 async def get_author_network_viz(author_id: str):
     """Proxy endpoint to fetch graph visualization data for an author."""
     logger.info(f"GET /viz/author-network/{author_id}")
     try:
-        # Call the internal graph-db service on its docker network port (8003)
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://graph-db:8003/viz/author-network/{author_id}", timeout=10.0)
-            
+            response = await client.get(
+                f"http://graph-db:8003/viz/author-network/{author_id}",
+                timeout=10.0
+            )
+
         response.raise_for_status()
         return response.json()
-        
+
     except httpx.RequestError as e:
         logger.error(f"Error communicating with Graph DB for viz: {e}")
-        raise HTTPException(status_code=503, detail="Graph visualization service unavailable.")
+        raise HTTPException(
+            status_code=503, 
+            detail="Graph visualization service unavailable."
+        ) from e
+
 
 # ---------------------------------------------------------------------------
 # Entrypoint for local development
@@ -507,4 +479,5 @@ async def get_author_network_viz(author_id: str):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host=settings.api_host, port=settings.api_port)

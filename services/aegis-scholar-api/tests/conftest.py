@@ -1,16 +1,14 @@
 """Test configuration and shared fixtures."""
+from unittest.mock import AsyncMock
+
 import pytest
-from unittest.mock import Mock, AsyncMock
 
 
 @pytest.fixture
 def mock_vector_db_client():
     """Mock vector database client for testing."""
     client = AsyncMock()
-    client.search.return_value = {
-        "results": [],
-        "total": 0
-    }
+    client.search.return_value = {"results": [], "total": 0}
     return client
 
 
@@ -24,14 +22,7 @@ def mock_graph_db_client():
 @pytest.fixture
 def sample_search_query():
     """Sample search query for testing."""
-    return {
-        "query": "machine learning",
-        "filters": {
-            "year_min": 2020,
-            "year_max": 2026
-        },
-        "limit": 10
-    }
+    return {"query": "machine learning", "filters": {"year_min": 2020, "year_max": 2026}, "limit": 10}
 
 
 @pytest.fixture
@@ -43,7 +34,7 @@ def sample_author_result():
         "affiliation": "Carnegie Mellon University",
         "works_count": 42,
         "cited_by_count": 1234,
-        "relevance_score": 0.95
+        "relevance_score": 0.95,
     }
 
 
@@ -56,5 +47,5 @@ def sample_work_result():
         "authors": ["John Doe", "Jane Smith"],
         "year": 2025,
         "cited_by_count": 56,
-        "relevance_score": 0.89
+        "relevance_score": 0.89,
     }
