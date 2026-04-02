@@ -118,7 +118,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger }) => {
     };
 
     initGraph();
-  }, [authorId]);
+  }, [authorId, onNodeSelect]);
 
   // EXPANSION LOAD: Runs when "Explore Connections" is clicked in App.jsx
   useEffect(() => {
