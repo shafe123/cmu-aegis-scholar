@@ -2,7 +2,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
     # Graph API settings
     graph_api_url: str = "http://graph-db:8003"
@@ -18,6 +22,5 @@ class Settings(BaseSettings):
     # Processing settings
     batch_size: int = 100
     log_level: str = "INFO"
-
 
 settings = Settings()

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Search, Settings, Loader2, X, ShieldCheck, Database, Activity, Target, Calendar, Share2, User } from 'lucide-react';
+import { Search, Settings, Loader2, X, ShieldCheck, Database, Activity, Target, Calendar, Share2, User, Mail } from 'lucide-react';
 import { searchAuthors } from './services/api';
 import NetworkGraph from './components/NetworkGraph';
 
-// CRASH-PROOF ROW COMPONENT
 const ResearcherRow = ({ author, onSelect }) => {
   const rawSpecialization = author?.specialization || "Unknown Domain | No Stats Available";
   const parts = rawSpecialization.split(' | ');
@@ -27,8 +26,12 @@ const ResearcherRow = ({ author, onSelect }) => {
         </div>
       </div>
       <div className="flex flex-col items-end w-24 pr-4">
-        <div className="text-xl font-mono text-aegis-cyan">{author?.h_index || 'N/A'}</div>
-        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">H-INDEX</div>
+        <div className="text-xl font-mono text-aegis-cyan">
+          {author.works_count > 0 
+            ? (author.citation_count / author.works_count).toFixed(1) 
+            : '0.0'}
+        </div>
+        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">SCORE</div>
       </div>
     </div>
   );
@@ -94,8 +97,15 @@ export default function App() {
       <main className={`flex-1 max-w-5xl mx-auto w-full px-6 transition-all duration-700 ${hasSearched ? 'pt-8' : 'pt-32'}`}>
         {!hasSearched && (
           <div className="text-center mb-10">
-            <h2 className="text-5xl font-black mb-3 tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500">Aegis Intelligence</h2>
-            <p className="text-slate-500 mb-10 text-lg font-light tracking-wide">Semantic Researcher & Network Discovery</p>
+            <img 
+              src="/favicon.svg" 
+              alt="Aegis Scholar Logo" 
+              className="mx-auto mb-8 w-64 bg-white p-6 rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.5)] transition-transform duration-200 ease-in-out hover:-translate-y-1.5" 
+            />
+            
+            <p className="text-slate-500 mb-10 text-lg font-light tracking-wide">
+              Semantic Researcher & Network Discovery
+            </p>
           </div>
         )}
         
@@ -103,7 +113,7 @@ export default function App() {
           <input 
             type="text" 
             className="w-full bg-white text-slate-900 py-4 pl-14 pr-32 rounded-full text-lg shadow-2xl outline-none focus:ring-4 focus:ring-aegis-cyan/20 font-medium transition-all"
-            placeholder="Search research expertise..."
+            placeholder="Search the Aegis database..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -122,6 +132,19 @@ export default function App() {
           </div>
         )}
       </main>
+
+      <footer className="border-t border-slate-800 py-4 text-center text-slate-500 text-sm mt-8">
+        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p>© {new Date().getFullYear()} Aegis Scholar. Capstone Project.</p>
+          
+          <div className="flex gap-6">
+            <a href="#" className="hover:text-aegis-cyan transition-colors">Documentation</a>
+            <a href="#" className="hover:text-aegis-cyan transition-colors">GitHub Repository</a>
+            <a href="#" className="hover:text-aegis-cyan transition-colors">About</a>
+          </div>
+        </div>
+      </footer>
+      {/* ------------------------------- */}
 
       {/* DUAL-VIEW MODAL (Profile OR Graph) */}
       {selectedAuthor && (
@@ -174,8 +197,10 @@ export default function App() {
                          <span className="text-slate-300 font-mono text-sm">{selectedAuthor.specialization.split(' | ')[1] || "No Data"}</span>
                       </div>
                       <div className="bg-[#1a1d21] border border-slate-800 px-6 py-3 rounded-xl flex items-center gap-3">
-                         <Activity className="text-slate-400" size={18} />
-                         <span className="text-slate-300 font-mono text-sm">H-Index: {selectedAuthor.h_index || "N/A"}</span>
+                         <Mail className="text-slate-400" size={18} />
+                         <span className="text-slate-300 font-mono text-sm">
+                           {selectedAuthor.name ? `${selectedAuthor.name.split(' ')[0].toLowerCase()}.${selectedAuthor.name.split(' ').pop().toLowerCase()}@university.edu` : 'contact@university.edu'}
+                         </span>
                       </div>
                     </div>
 
@@ -222,16 +247,24 @@ export default function App() {
                                 <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Calendar size={20}/></div>
                                 <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Year</p><p className="font-mono text-white text-lg">{inspectedNode.details?.year || 'N/A'}</p></div>
                               </div>
-                              <div className="flex items-center gap-4 text-sm text-slate-300">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Target size={20}/></div>
-                                <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Citations</p><p className="font-mono text-white text-lg">{inspectedNode.details?.citations || 0}</p></div>
+                              <div className="w-full text-sm text-slate-300 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2">Abstract</p>
+                                <details className="group cursor-pointer">
+                                  <summary className="font-medium text-aegis-cyan hover:text-white transition-colors outline-none list-none text-xs">
+                                    <span className="group-open:hidden">▶ Read Abstract...</span>
+                                    <span className="hidden group-open:inline">▼ Hide Abstract</span>
+                                  </summary>
+                                  <p className="mt-3 text-xs leading-relaxed max-h-48 overflow-y-auto pr-2 text-slate-400">
+                                    {inspectedNode.details?.abstract}
+                                  </p>
+                                </details>
                               </div>
                             </>
                           ) : (
                             <>
                               <div className="flex items-center gap-4 text-sm text-slate-300">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Activity size={20}/></div>
-                                <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">H-Index</p><p className="font-mono text-white text-lg">{inspectedNode.details?.h_index || 0}</p></div>
+                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Mail size={20}/></div>
+                                <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Contact</p><p className="font-mono text-white text-[13px]">{inspectedNode.details?.email || 'N/A'}</p></div>
                               </div>
                               <div className="flex items-center gap-4 text-sm text-slate-300">
                                 <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Database size={20}/></div>

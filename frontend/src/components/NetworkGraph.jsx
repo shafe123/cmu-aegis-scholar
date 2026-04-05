@@ -45,6 +45,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger }) => {
       // Update Edges
       edgesRef.current.update(data.edges.map(e => ({
         ...e,
+        font: { size: 9, color: '#475569', strokeWidth: 0, align: 'middle' }, 
         color: { color: '#334155', highlight: '#4ecdc4' },
         arrows: { to: { enabled: true, scaleFactor: 0.4 } },
         smooth: { type: 'continuous' }

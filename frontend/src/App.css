@@ -17,6 +17,19 @@
   }
 }
 
+.hero-logo {
+  max-width: 250px; /* Controls how big the logo is */
+  background-color: #ffffff; /* Explicitly sets the badge background to white */
+  padding: 1.5rem; /* Creates nice breathing room around the logo inside the box */
+  border-radius: 16px; /* Smooth, modern rounded corners */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Adds a deep drop shadow so it pops off the dark background */
+  transition: transform 0.2s ease-in-out; /* Optional: smooth animation setup */
+}
+
+.hero-logo:hover {
+  transform: translateY(-5px); 
+}
+
 .hero {
   position: relative;
 
@@ -27,6 +40,8 @@
     margin: 0 auto;
   }
 
+
+  
   .base {
     width: 170px;
     position: relative;

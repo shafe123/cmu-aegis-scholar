@@ -118,6 +118,7 @@ async def link_author_work(rel: AuthorWorkRel):
 
 # --- 7. Search & Analysis Endpoints ---
 
+
 @app.get("/authors/{author_id}/collaborators", tags=["Analysis"])
 async def get_collaborators(author_id: str):
     """Finds researchers who have shared works with the given author."""
