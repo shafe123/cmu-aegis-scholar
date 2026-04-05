@@ -1,15 +1,16 @@
-
 from pydantic import BaseModel, Field
 
 
 class Source(BaseModel):
     """Metadata source information."""
+
     source: str
     id: str
 
 
 class AuthorNode(BaseModel):
     """Graph node representing a researcher."""
+
     id: str = Field(..., description="author_...")
     name: str
     h_index: int | None = 0
@@ -19,6 +20,7 @@ class AuthorNode(BaseModel):
 
 class WorkNode(BaseModel):
     """Graph node representing a research publication."""
+
     id: str = Field(..., description="work_...")
     title: str
     year: int | None = None
@@ -28,6 +30,7 @@ class WorkNode(BaseModel):
 
 class OrgNode(BaseModel):
     """Graph node representing an institution."""
+
     id: str = Field(..., description="org_...")
     name: str
     type: str  # institution, funder, publisher
@@ -37,6 +40,7 @@ class OrgNode(BaseModel):
 
 class TopicNode(BaseModel):
     """Graph node representing a research topic."""
+
     id: str = Field(..., description="topic_...")
     name: str
     field: str | None = None
@@ -46,12 +50,14 @@ class TopicNode(BaseModel):
 
 class AuthorWorkRel(BaseModel):
     """Relationship model for authoring a work."""
+
     author_id: str
     work_id: str
 
 
 class AuthorOrgRel(BaseModel):
     """Relationship model for institutional affiliation."""
+
     author_id: str
     org_id: str
     role: str = "Researcher"
@@ -59,6 +65,7 @@ class AuthorOrgRel(BaseModel):
 
 class WorkTopicRel(BaseModel):
     """Relationship model for topic coverage."""
+
     work_id: str
     topic_id: str
     score: float = 1.0

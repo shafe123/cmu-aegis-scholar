@@ -8,14 +8,15 @@ import httpx
 from app.config import settings
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
 class GraphDBClient:
     """Client for the Graph API service."""
+
     def __init__(self):
-        self.base_url = settings.graph_api_url.rstrip('/')
+        self.base_url = settings.graph_api_url.rstrip("/")
         self.client = httpx.Client(timeout=settings.graph_api_timeout)
 
     def get_stats(self):
@@ -24,7 +25,6 @@ class GraphDBClient:
             r = self.client.get(f"{self.base_url}/stats")
             if r.status_code == 200:
                 return r.json()
-            # If API is up but returns error, log it
             logger.warning("Graph API returned status %s", r.status_code)
             return None
         except Exception as e:
@@ -38,7 +38,7 @@ class GraphDBClient:
             r.raise_for_status()
             return True
         except Exception as e:
-            logger.error("Failed to upsert %s %s: %s", entity_type, data.get('id'), e)
+            logger.error("Failed to upsert %s %s: %s", entity_type, data.get("id"), e)
             return False
 
     def create_relationship(self, rel_type: str, payload: dict):
@@ -54,6 +54,7 @@ class GraphDBClient:
 
 class GraphLoader:
     """Orchestrates loading data from local files into the Graph API."""
+
     def __init__(self, client=None, data_dir=None):
         self.data_dir = Path(data_dir or settings.data_dir)
         self.api = client or GraphDBClient()
@@ -81,7 +82,7 @@ class GraphLoader:
         files = self.get_files(entity_type)
         count = 0
         for file_path in files:
-            with gzip.open(file_path, 'rb') as f:
+            with gzip.open(file_path, "rb") as f:
                 for line in f:
                     if not line.strip():
                         continue
@@ -96,7 +97,7 @@ class GraphLoader:
         logger.info("--- Loading Work nodes and Relationships ---")
         files = self.get_files("works")
         for file_path in files:
-            with gzip.open(file_path, 'rb') as f:
+            with gzip.open(file_path, "rb") as f:
                 for line in f:
                     if not line.strip():
                         continue
@@ -105,26 +106,28 @@ class GraphLoader:
                     self.api.upsert_node("works", work)
 
                     for auth in work.get("authors", []):
-                        # Link Author to Work
                         self.api.create_relationship(
-                            "authored",
-                            {"author_id": auth["author_id"], "work_id": work_id}
+                            "authored", {"author_id": auth["author_id"], "work_id": work_id}
                         )
-                        # Link Author to Org (Affiliation)
                         if auth.get("org_id"):
-                            self.api.create_relationship("affiliated", {
-                                "author_id": auth["author_id"],
-                                "org_id": auth["org_id"],
-                                "role": "Researcher"
-                            })
+                            self.api.create_relationship(
+                                "affiliated",
+                                {
+                                    "author_id": auth["author_id"],
+                                    "org_id": auth["org_id"],
+                                    "role": "Researcher",
+                                },
+                            )
 
                     for topic in work.get("topics", []):
-                        # Link Work to Topic
-                        self.api.create_relationship("covers", {
-                            "work_id": work_id,
-                            "topic_id": topic["topic_id"],
-                            "score": topic.get("score", 1.0)
-                        })
+                        self.api.create_relationship(
+                            "covers",
+                            {
+                                "work_id": work_id,
+                                "topic_id": topic["topic_id"],
+                                "score": topic.get("score", 1.0),
+                            },
+                        )
             logger.info("Processed relationships in %s", file_path.name)
 
     def run(self):
@@ -139,6 +142,11 @@ class GraphLoader:
         logger.info("Graph Load Completed Successfully.")
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the job."""
     loader = GraphLoader()
     loader.run()
+
+
+if __name__ == "__main__":
+    main()
