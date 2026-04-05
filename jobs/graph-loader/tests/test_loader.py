@@ -2,8 +2,6 @@ import gzip
 import json
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from app.loader import GraphDBClient, GraphLoader, main
 
 
@@ -73,11 +71,13 @@ class TestGraphLoader:
 
     def test_load_works_and_rels_with_org(self, tmp_data_dir):
         """Covers Line 113 and Line 123: blank lines and org_id branching."""
-        data = [{
-            "id": "work_1",
-            "authors": [{"author_id": "a1", "org_id": "org_1"}],
-            "topics": [{"topic_id": "t1", "score": 0.5}]
-        }]
+        data = [
+            {
+                "id": "work_1",
+                "authors": [{"author_id": "a1", "org_id": "org_1"}],
+                "topics": [{"topic_id": "t1", "score": 0.5}],
+            }
+        ]
         create_mock_gz(tmp_data_dir / "dtic_works_1.jsonl.gz", data)
 
         api = MagicMock()
@@ -95,8 +95,10 @@ class TestGraphLoader:
         # Ensure it doesn't skip
         loader.api.get_stats.return_value = {"author_count": 0}
 
-        with patch.object(loader, "load_nodes") as m_nodes, \
-             patch.object(loader, "load_works_and_rels") as m_works:
+        with (
+            patch.object(loader, "load_nodes") as m_nodes,
+            patch.object(loader, "load_works_and_rels") as m_works,
+        ):
             loader.run()
             assert m_nodes.call_count == 3
             assert m_works.called
