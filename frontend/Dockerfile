@@ -1,20 +1,28 @@
-# Use a lightweight Node.js image
-FROM node:22-alpine
-
-# Set the working directory
+# --- Stage 1: Base (Common steps for both dev and prod) ---
+FROM node:22-alpine AS base
 WORKDIR /app
-
-# Copy package files first to cache dependencies
 COPY package.json package-lock.json* ./
-
-# Install dependencies
 RUN npm install
-
-# Copy the rest of the frontend code
 COPY . .
 
-# Vite's default port
+# --- Stage 2: Development Environment ---
+FROM base AS development
 EXPOSE 5173
-
-# Start Vite and expose the app outside of the container.
+# Start Vite and expose the app outside of the container
 CMD ["npm", "run", "dev", "--", "--host"]
+
+# --- Stage 3: Build (Compiles the React app for production) ---
+FROM base AS build
+RUN npm run build
+
+# --- Stage 4: Production Environment (Nginx web server) ---
+FROM nginx:alpine AS production
+
+# Patch OS-level vulnerabilities (like zlib)
+RUN apk update && apk upgrade --no-cache
+
+# Copy the built assets from the previous stage to nginx's serving directory
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
