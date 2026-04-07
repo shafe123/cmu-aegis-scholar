@@ -137,9 +137,8 @@ class GraphLoader:
         """Execute the full loading pipeline."""
         logger.info("Starting Graph Loader...")
         
-        # --- TEMPORARILY COMMENTED OUT TO FORCE A RELOAD ---
-        # if self.should_skip_loading():
-        #     return
+        if self.should_skip_loading():
+            return
         
         self.load_nodes("authors")
         self.load_nodes("orgs")
