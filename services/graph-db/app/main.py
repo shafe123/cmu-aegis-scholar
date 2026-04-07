@@ -151,15 +151,34 @@ async def upsert_author(author: AuthorNode):
 @app.post("/works", tags=["Ingestion"])
 async def upsert_work(work: WorkNode):
     """Upserts a Work node into the graph."""
-    """Upserts a Work node into the graph."""
+    
+    # 1. Safely extract the 4-digit year from the publication_date string
+    calculated_year = "N/A"
+    if work.year:
+        calculated_year = str(work.year)
+    elif work.publication_date and len(work.publication_date) >= 4:
+        calculated_year = str(work.publication_date)[:4]
+
+    # 2. Provide a fallback if abstract is missing
+    safe_abstract = work.abstract if work.abstract else "No abstract available."
+
     query = """
     MERGE (w:Work {id: $id})
-    SET w.title = $title, w.year = $year, w.citation_count = $citation_count
+    SET w.title = $title, 
+        w.year = $year, 
+        w.abstract = $abstract,
+        w.citation_count = $citation_count
     RETURN w.id
     """
     with driver.session() as session:
-        session.run(query, **work.model_dump())
-        session.run(query, **work.model_dump())
+        session.run(
+            query, 
+            id=work.id,
+            title=work.title,
+            year=calculated_year,
+            abstract=safe_abstract,
+            citation_count=work.citation_count or 0
+        )
     return {"status": "success", "id": work.id}
 
 
@@ -197,10 +216,40 @@ async def get_collaborators(author_id: str):
         result = session.run(query, id=author_id)
         return [dict(record) for record in result]
 
+@app.get("/authors/{author_id}", tags=["Analysis"])
+async def get_author_profile(author_id: str):
+    """Fetches full author profile including their organizations and total works."""
+    query = """
+    MATCH (a:Author {id: $id})
+    OPTIONAL MATCH (a)-[:AFFILIATED_WITH]->(o:Org)
+    OPTIONAL MATCH (a)-[:AUTHORED]->(w:Work)
+    RETURN a, collect(DISTINCT o) as orgs, count(DISTINCT w) as total_works
+    """
+    with driver.session() as session:
+        result = session.run(query, id=author_id)
+        record = result.single()
+        
+        if not record or not record["a"]:
+            raise HTTPException(status_code=404, detail="Author not found in Graph DB")
+            
+        author_node = record["a"]
+        
+        # Clean up the organizations list (ignore empty ones)
+        organizations = [
+            {"id": org["id"], "name": org.get("name", "Unknown")} 
+            for org in record["orgs"] if org
+        ]
+        
+        return {
+            "id": author_node["id"],
+            "name": author_node.get("name", "Unknown Name"),
+            "h_index": author_node.get("h_index", 0),
+            "works_count": record["total_works"],
+            "organizations": organizations
+        }
 
 @app.get("/viz/author-network/{author_id}", tags=["Visualization"])
 async def get_author_network(author_id: str):
-    """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
     """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
     query = """
     MATCH (n {id: $node_id})
@@ -210,54 +259,91 @@ async def get_author_network(author_id: str):
     LIMIT 50
     """
 
+    def generate_mock_email(name):
+        if not name or name == "Unknown":
+            return "No contact info"
+        # Turns "John Doe" into "john.doe@aegis-research.mil > will be @university.edu after next reload"
+        clean_name = name.lower().replace(".", "").replace("-", "").split()
+        if len(clean_name) >= 2:
+            return f"{clean_name[0]}.{clean_name[-1]}@university.edu"
+        return f"{clean_name[0]}@university.edu"
+
     with driver.session() as session:
-        result = session.run(query, author_id=author_id)
+        result = session.run(query, node_id=author_id)
         nodes, edges, node_ids = [], [], set()
+        
+        # Track works per author to dynamically generate the 'Total Works' count
+        author_works_count = {}
 
         for record in result:
-            author, work, co_author = record["a"], record["w"], record["co"]
+            author, work, co_author = record["n"], record["m"], record["co"]
 
-            # Add Main Author
+            # Count works dynamically for the main author and co-authors
+            if author and work:
+                author_works_count[author["id"]] = author_works_count.get(author["id"], 0) + 1
+            if co_author and work:
+                author_works_count[co_author["id"]] = author_works_count.get(co_author["id"], 0) + 1
+
             if author and author["id"] not in node_ids:
-                nodes.append(
-                    {
-                        "id": author["id"],
-                        "label": author["name"],
-                        "group": "author",
-                        "color": "#ff6b6b",
+                author_name = author.get("name", "Unknown")
+                nodes.append({
+                    "id": author["id"],
+                    "label": author_name,
+                    "full_title": author_name,
+                    "group": "author",
+                    "color": "#ff6b6b",
+                    "details": {
+                        "works": author.get("works_count") or author.get("num_works") or 0,
+                        "email": author.get("email") or generate_mock_email(author_name)
                     }
-                )
+                })
                 node_ids.add(author["id"])
 
-            # Add Work Node and Edge
             if work and work["id"] not in node_ids:
-                nodes.append(
-                    {
-                        "id": work["id"],
-                        "label": work["title"][:30] + "...",
-                        "group": "work",
-                        "color": "#4ecdc4",
+                # Safely pull year and abstract checking multiple common dataset keys
+                work_year = work.get("year") or work.get("published_year") or work.get("publication_date", "N/A")
+                if isinstance(work_year, str) and len(work_year) > 4:
+                    work_year = work_year[:4] # Extract just the year if it's a full date string
+
+                work_abstract = work.get("abstract") or work.get("summary") or "No abstract available in dataset."
+
+                nodes.append({
+                    "id": work["id"],
+                    "label": work.get("title", "Untitled")[:30] + "...",
+                    "full_title": work.get("title", "Untitled"),
+                    "group": "work",
+                    "color": "#4ecdc4",
+                    "details": {
+                        "year": work_year,
+                        "abstract": work_abstract
                     }
-                )
+                })
                 node_ids.add(work["id"])
+                
             if author and work:
-                edges.append(
-                    {"from": author["id"], "to": work["id"], "label": "AUTHORED"}
-                )
+                edges.append({"from": author["id"], "to": work["id"], "label": "AUTHORED"})
 
             if co_author and co_author["id"] not in node_ids:
-                nodes.append(
-                    {
-                        "id": co_author["id"],
-                        "label": co_author["name"],
-                        "group": "author",
-                        "color": "#ffadad",
+                co_name = co_author.get("name", "Unknown")
+                nodes.append({
+                    "id": co_author["id"],
+                    "label": co_name,
+                    "full_title": co_name,
+                    "group": "author",
+                    "color": "#ffadad",
+                    "details": {
+                        "works": co_author.get("works_count") or co_author.get("num_works") or 0,
+                        "email": co_author.get("email") or generate_mock_email(co_name)
                     }
-                )
+                })
                 node_ids.add(co_author["id"])
+                
             if co_author and work:
-                edges.append(
-                    {"from": co_author["id"], "to": work["id"], "label": "AUTHORED"}
-                )
+                edges.append({"from": co_author["id"], "to": work["id"], "label": "AUTHORED"})
+
+        # Second pass: Update the works count dynamically based on the relationships we found
+        for node in nodes:
+            if node["group"] == "author" and node["details"]["works"] == 0:
+                node["details"]["works"] = author_works_count.get(node["id"], 1)
 
         return {"nodes": nodes, "edges": edges}

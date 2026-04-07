@@ -136,8 +136,10 @@ class GraphLoader:
     def run(self):
         """Execute the full loading pipeline."""
         logger.info("Starting Graph Loader...")
+        
         if self.should_skip_loading():
             return
+        
         self.load_nodes("authors")
         self.load_nodes("orgs")
         self.load_nodes("topics")
