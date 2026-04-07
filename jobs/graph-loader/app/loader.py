@@ -2,9 +2,9 @@ import gzip
 import json
 import logging
 from pathlib import Path
+from typing import Any, Optional
 
 import httpx
-
 from app.config import settings
 
 # Configure logging
@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 class GraphDBClient:
     """Client for the Graph API service."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.base_url = settings.graph_api_url.rstrip("/")
         self.client = httpx.Client(timeout=settings.graph_api_timeout)
 
-    def get_stats(self):
+    def get_stats(self) -> Optional[dict[str, Any]]:
         """Check the current population of the graph."""
         try:
             r = self.client.get(f"{self.base_url}/stats")
@@ -32,7 +32,7 @@ class GraphDBClient:
             logger.error("Failed to get stats: %s", e)
             return None
 
-    def upsert_node(self, entity_type: str, data: dict):
+    def upsert_node(self, entity_type: str, data: dict[str,Any]) -> bool:
         """Send a POST request to upsert a node."""
         try:
             r = self.client.post(f"{self.base_url}/{entity_type}", json=data)
@@ -42,7 +42,7 @@ class GraphDBClient:
             logger.error("Failed to upsert %s %s: %s", entity_type, data.get('id'), e)
             return False
 
-    def create_relationship(self, rel_type: str, payload: dict):
+    def create_relationship(self, rel_type: str, payload: dict[str, Any]) -> bool:
         """Send a POST request to create a relationship."""
         try:
             r = self.client.post(f"{self.base_url}/relationships/{rel_type}", json=payload)
@@ -55,7 +55,12 @@ class GraphDBClient:
 
 class GraphLoader:
     """Orchestrates loading data from local files into the Graph API."""
+<<<<<<< HEAD
     def __init__(self, client=None, data_dir=None):
+=======
+
+    def __init__(self, client: Optional[GraphDBClient] = None, data_dir: Optional[Path] = None) -> None:
+>>>>>>> e0204af (Type hints added)
         self.data_dir = Path(data_dir or settings.data_dir)
         self.api = client or GraphDBClient()
 
@@ -72,11 +77,11 @@ class GraphLoader:
                 return True
         return False
 
-    def get_files(self, entity_type: str):
+    def get_files(self, entity_type: str) -> list[Path]:
         """Retrieve list of compressed JSONL files for a type."""
         return sorted(self.data_dir.glob(f"dtic_{entity_type}_*.jsonl.gz"))
 
-    def load_nodes(self, entity_type: str):
+    def load_nodes(self, entity_type: str) -> None:
         """Standard node loader for Authors, Orgs, and Topics."""
         logger.info("--- Loading %s nodes ---", entity_type)
         files = self.get_files(entity_type)
@@ -92,7 +97,7 @@ class GraphLoader:
             logger.info("Processed %s", file_path.name)
         logger.info("Total %s nodes upserted: %s", entity_type, count)
 
-    def load_works_and_rels(self):
+    def load_works_and_rels(self) -> None:
         """Processes Work nodes and establishes all graph relationships."""
         logger.info("--- Loading Work nodes and Relationships ---")
         files = self.get_files("works")
@@ -134,7 +139,7 @@ class GraphLoader:
                         })
             logger.info("Processed relationships in %s", file_path.name)
 
-    def run(self):
+    def run(self) -> None:
         """Execute the full loading pipeline."""
         logger.info("Starting Graph Loader...")
         if self.should_skip_loading():
@@ -146,7 +151,7 @@ class GraphLoader:
         logger.info("Graph Load Completed Successfully.")
 
 
-def main():
+def main() -> None:
     """Main entry point for the job."""
     loader = GraphLoader()
     loader.run()
