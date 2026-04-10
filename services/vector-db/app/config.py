@@ -17,7 +17,7 @@ AVAILABLE_MODELS: Dict[str, Dict[str, any]] = {
 }
 
 
-class Settings(BaseSettings):
+class Settings(BaseSettings):  # pylint: disable=too-few-public-methods
     """Application settings."""
 
     model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8")

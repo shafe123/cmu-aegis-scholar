@@ -92,7 +92,7 @@ def get_or_load_model(model_name: str) -> TextEmbedding:
 
         logger.info("Model '%s' loaded successfully (dimension: %d)", model_name, dim)
         return model
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Failed to load model '%s': %s", model_name, e)
         raise RuntimeError(f"Failed to load model '{model_name}': {str(e)}") from e
 
@@ -138,7 +138,7 @@ def get_milvus_connection():
             "Connected to Milvus at %s:%d", settings.milvus_host, settings.milvus_port
         )
         return True
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Failed to connect to Milvus: %s", e)
         return False
 
@@ -148,7 +148,7 @@ def disconnect_milvus():
     try:
         connections.disconnect("default")
         logger.info("Disconnected from Milvus")
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error disconnecting from Milvus: %s", e)
 
 
@@ -168,7 +168,7 @@ def initialize_default_collection():
                 get_or_load_model(settings.default_embedding_model)
                 # Get dimension from model_dimensions cache (populated during load)
                 embedding_dim = model_dimensions[settings.default_embedding_model]
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 logger.warning(
                     "Could not determine embedding dimension for "
                     "collection initialization: %s",
@@ -214,7 +214,7 @@ def initialize_default_collection():
             )
         else:
             logger.info("Collection '%s' already exists", collection_name)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error initializing default collection: %s", e)
 
 
@@ -237,7 +237,7 @@ async def lifespan(_app: FastAPI):
             "Default model loaded successfully (dimension: %d)",
             model_dimensions[settings.default_embedding_model],
         )
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Failed to load default embedding model: %s", e)
 
     # Initialize default collection
@@ -261,7 +261,7 @@ async def lifespan(_app: FastAPI):
                     "embedding_dim": embedding_field["params"]["dim"]
                 }
             logger.info("Pre-loaded collection '%s' into memory", collection_name)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error pre-loading default collection: %s", e)
 
     yield
@@ -287,7 +287,7 @@ app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 
 
 # Helper Functions
-def _upsert_author_embedding(
+def _upsert_author_embedding(  # pylint: disable=too-many-positional-arguments
     collection_name: str,
     author_id: str,
     author_name: str,
@@ -328,7 +328,7 @@ def _upsert_author_embedding(
         try:
             # Test if collection is accessible
             _ = collection.num_entities
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             # Collection lost connection, reload it
             logger.warning(
                 "Collection '%s' lost connection, reloading: %s", collection_name, e
@@ -384,7 +384,7 @@ def _upsert_author_embedding(
             expr=f'id == "{author_pk}"', output_fields=["id"], limit=1
         )
         is_update = len(existing_entities) > 0
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         # If query fails, assume it's a new insert
         logger.warning("Could not check existence for %s: %s", author_pk, e)
         is_update = False
@@ -433,7 +433,7 @@ async def health_check():
         return HealthResponse(
             status="healthy", milvus_connected=True, collections=collections
         )
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Health check failed: %s", e)
         return HealthResponse(
             status="unhealthy", milvus_connected=False, collections=[]
@@ -488,7 +488,7 @@ async def list_collections():
             )
 
         return collections_info
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error listing collections: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -522,7 +522,7 @@ async def get_collection_info(collection_name: str):
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error getting collection info: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -557,7 +557,7 @@ async def list_models():
         return ModelsResponse(
             models=models_list, default_model=settings.default_embedding_model
         )
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error listing models: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -641,7 +641,7 @@ async def vector_search(request: VectorSearchRequest):
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error performing vector search: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -749,7 +749,7 @@ async def text_search(request: TextSearchRequest):
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error performing text search: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -855,7 +855,7 @@ async def create_author_embedding(request: CreateAuthorEmbeddingRequest):
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error creating author embedding: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -944,7 +944,7 @@ async def create_author_vector(request: CreateAuthorVectorRequest):
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error creating author vector: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
