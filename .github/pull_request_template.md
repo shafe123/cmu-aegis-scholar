@@ -38,9 +38,7 @@
 
 ### Python-Specific Checks (if applicable)
 
-- [ ] this should create a merge conflict
 - [ ] **ruff** linting checks pass (`ruff check .`)
-- [ ] and so should this
 - [ ] **ruff** formatting checks pass (`ruff format --check .`)
 - [ ] **pylint** checks pass with acceptable score (> 9.0)
 - [ ] **pytest** - All existing tests pass
@@ -74,6 +72,7 @@
 - [ ] Docker images build successfully (if applicable)
 - [ ] Kubernetes manifests updated (if applicable)
 - [ ] Terraform plans reviewed (if applicable)
+- [ ] No merge conflicts present when pull request is created
 
 ## Testing Instructions
 
