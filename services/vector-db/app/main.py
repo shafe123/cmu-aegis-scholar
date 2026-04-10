@@ -1,4 +1,5 @@
 """FastAPI application for vector database operations with Milvus."""
+
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -170,7 +171,8 @@ def initialize_default_collection():
             except Exception as e:
                 logger.warning(
                     "Could not determine embedding dimension for "
-                    "collection initialization: %s", e
+                    "collection initialization: %s",
+                    e,
                 )
                 logger.warning("Skipping collection initialization.")
                 return
@@ -207,7 +209,8 @@ def initialize_default_collection():
             collection.create_index(field_name="embedding", index_params=index_params)
             logger.info(
                 "Created collection '%s' with index (dim=%d)",
-                collection_name, embedding_dim
+                collection_name,
+                embedding_dim,
             )
         else:
             logger.info("Collection '%s' already exists", collection_name)
@@ -225,15 +228,14 @@ async def lifespan(_app: FastAPI):
 
     # Preload default embedding model
     logger.info(
-        "Preloading default embedding model: %s",
-        settings.default_embedding_model
+        "Preloading default embedding model: %s", settings.default_embedding_model
     )
     try:
         # Load model into cache (side effect is the purpose)
         get_or_load_model(settings.default_embedding_model)
         logger.info(
             "Default model loaded successfully (dimension: %d)",
-            model_dimensions[settings.default_embedding_model]
+            model_dimensions[settings.default_embedding_model],
         )
     except Exception as e:
         logger.error("Failed to load default embedding model: %s", e)
@@ -329,8 +331,7 @@ def _upsert_author_embedding(
         except Exception as e:
             # Collection lost connection, reload it
             logger.warning(
-                "Collection '%s' lost connection, reloading: %s",
-                collection_name, e
+                "Collection '%s' lost connection, reloading: %s", collection_name, e
             )
             collection = Collection(collection_name)
             collection.load()

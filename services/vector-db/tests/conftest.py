@@ -1,4 +1,5 @@
 """Test configuration and shared fixtures."""
+
 import pytest
 from unittest.mock import Mock, AsyncMock
 
@@ -29,11 +30,7 @@ def sample_vector():
 @pytest.fixture
 def sample_search_params():
     """Sample search parameters."""
-    return {
-        "query": "machine learning research",
-        "limit": 10,
-        "metric_type": "L2"
-    }
+    return {"query": "machine learning research", "limit": 10, "metric_type": "L2"}
 
 
 @pytest.fixture
@@ -44,5 +41,5 @@ def sample_document():
         "title": "Research Paper Title",
         "abstract": "This is a research paper about machine learning...",
         "authors": ["John Doe"],
-        "year": 2025
+        "year": 2025,
     }
