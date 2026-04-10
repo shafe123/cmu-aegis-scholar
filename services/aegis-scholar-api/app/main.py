@@ -19,6 +19,7 @@ paper-abstract embeddings).  When a user searches, the vector DB converts
 the query text into a 384-dim vector and finds the nearest authors in
 Milvus.  This API reformats those results into the Aegis Scholar schema.
 """
+
 import logging
 import math
 from contextlib import asynccontextmanager
@@ -401,10 +402,7 @@ async def get_author_by_id(author_id: str):
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"http://graph-db:8003/authors/{author_id}",
-                timeout=10.0
-            )
+            response = await client.get(f"http://graph-db:8003/authors/{author_id}", timeout=10.0)
 
         if response.status_code == 404:
             raise HTTPException(status_code=404, detail="Author not found")
@@ -425,10 +423,7 @@ async def get_author_by_id(author_id: str):
 
     except httpx.RequestError as e:
         logger.error(f"Error communicating with Graph DB: {e}")
-        raise HTTPException(
-            status_code=503, 
-            detail="Graph DB service is currently unavailable."
-        ) from e
+        raise HTTPException(status_code=503, detail="Graph DB service is currently unavailable.") from e
 
 
 @app.get("/search/orgs/{org_id}", response_model=Organization)
@@ -457,20 +452,14 @@ async def get_author_network_viz(author_id: str):
     logger.info(f"GET /viz/author-network/{author_id}")
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"http://graph-db:8003/viz/author-network/{author_id}",
-                timeout=10.0
-            )
+            response = await client.get(f"http://graph-db:8003/viz/author-network/{author_id}", timeout=10.0)
 
         response.raise_for_status()
         return response.json()
 
     except httpx.RequestError as e:
         logger.error(f"Error communicating with Graph DB for viz: {e}")
-        raise HTTPException(
-            status_code=503, 
-            detail="Graph visualization service unavailable."
-        ) from e
+        raise HTTPException(status_code=503, detail="Graph visualization service unavailable.") from e
 
 
 # ---------------------------------------------------------------------------

@@ -48,3 +48,13 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = ["--import-mode=importlib"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["tests/*", "*/__pycache__/*", "*/.venv/*"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 80.0
