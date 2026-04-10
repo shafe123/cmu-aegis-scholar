@@ -6,6 +6,7 @@ vector database microservice running on port 8002. It uses httpx for
 async HTTP requests and provides a clean interface for searching
 author embeddings by text query.
 """
+
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -41,7 +42,7 @@ async def close_client():
 def _get_client() -> httpx.AsyncClient:
     """Return the active client or raise if not initialized."""
     if _client is None or _client.is_closed:
-        raise RuntimeError("Vector DB client is not initialized. " "Ensure init_client() was called at startup.")
+        raise RuntimeError("Vector DB client is not initialized. Ensure init_client() was called at startup.")
     return _client
 
 

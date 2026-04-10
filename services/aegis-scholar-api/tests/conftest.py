@@ -1,4 +1,5 @@
 """Test configuration and shared fixtures."""
+
 from unittest.mock import AsyncMock
 
 import pytest

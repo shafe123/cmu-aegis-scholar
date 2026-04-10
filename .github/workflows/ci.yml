@@ -45,6 +45,17 @@ jobs:
             - name: Install Poetry
               run: pip install poetry --quiet
 
+            - name: Cache Poetry dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.cache/pypoetry
+                      ~/.cache/pip
+                  key: poetry-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('{0}/poetry.lock', matrix.service)) }}
+                  restore-keys: |
+                      poetry-${{ runner.os }}-${{ matrix.service }}-
+                      poetry-${{ runner.os }}-
+
             - name: Install dependencies
               run: poetry install --no-interaction
 
@@ -89,6 +100,17 @@ jobs:
             - name: Install Poetry
               run: pip install poetry --quiet
 
+            - name: Cache Poetry dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.cache/pypoetry
+                      ~/.cache/pip
+                  key: poetry-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('{0}/poetry.lock', matrix.service)) }}
+                  restore-keys: |
+                      poetry-${{ runner.os }}-${{ matrix.service }}-
+                      poetry-${{ runner.os }}-
+
             - name: Install dependencies
               run: poetry install --no-interaction
 
@@ -118,6 +140,17 @@ jobs:
 
             - name: Install Poetry
               run: pip install poetry --quiet
+
+            - name: Cache Poetry dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.cache/pypoetry
+                      ~/.cache/pip
+                  key: poetry-${{ runner.os }}-tests-${{ hashFiles('tests/poetry.lock') }}
+                  restore-keys: |
+                      poetry-${{ runner.os }}-tests-
+                      poetry-${{ runner.os }}-
 
             - name: Install dependencies
               run: poetry install --no-interaction --no-root

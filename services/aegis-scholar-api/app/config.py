@@ -12,10 +12,7 @@ class Settings(BaseSettings):
     # API Configuration
     api_title: str = "Aegis Scholar API"
     api_version: str = "1.0.0"
-    api_description: str = (
-        "Primary interface for searching research authors, "
-        "organizations, topics, and works"
-    )
+    api_description: str = "Primary interface for searching research authors, organizations, topics, and works"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
