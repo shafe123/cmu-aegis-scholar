@@ -1,41 +1,81 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-// Import your API functions here
-// import { fetchData, postData } from '../../services/api'
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { searchAuthors } from "../../services/api";
 
-describe('API Service', () => {
+describe("api service", () => {
   beforeEach(() => {
-    // Reset mocks before each test
-    vi.clearAllMocks()
-  })
+    global.fetch = vi.fn();
+  });
 
-  it('example test - should be replaced with actual API tests', () => {
-    expect(true).toBe(true)
-  })
+  it("successfully formats author search results", async () => {
+    const mockData = {
+      results: [
+        { id: "auth1", name: "Dr. Smith", works_count: 5, citation_count: 10 },
+      ],
+    };
 
-  // Example of mocking fetch:
-  // describe('fetchData', () => {
-  //   it('should fetch data successfully', async () => {
-  //     global.fetch = vi.fn(() =>
-  //       Promise.resolve({
-  //         ok: true,
-  //         json: () => Promise.resolve({ data: 'test' }),
-  //       })
-  //     )
-  //
-  //     const result = await fetchData('/api/test')
-  //     expect(result).toEqual({ data: 'test' })
-  //     expect(fetch).toHaveBeenCalledWith('/api/test')
-  //   })
-  //
-  //   it('should handle errors', async () => {
-  //     global.fetch = vi.fn(() =>
-  //       Promise.resolve({
-  //         ok: false,
-  //         status: 404,
-  //       })
-  //     )
-  //
-  //     await expect(fetchData('/api/test')).rejects.toThrow()
-  //   })
-  // })
-})
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockData,
+    });
+
+    const results = await searchAuthors("Smith", "Authors");
+
+    expect(results[0].name).toBe("Dr. Smith");
+    expect(results[0].specialization).toContain("Works: 5");
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("q=Smith"),
+    );
+  });
+
+  it("returns empty array on network error", async () => {
+    global.fetch.mockRejectedValueOnce(new Error("API Down"));
+    const results = await searchAuthors("Smith", "Authors");
+    expect(results).toEqual([]);
+  });
+
+  it("returns empty array if tab is not Authors or Year", async () => {
+    const results = await searchAuthors("Smith", "InvalidTab");
+    expect(results).toEqual([]);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("handles non-OK responses (e.g., 500 error)", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+    });
+
+    const results = await searchAuthors("Smith", "Authors");
+    expect(results).toEqual([]); // Should trigger the catch block via the throw
+  });
+
+  it("handles missing data fields by using defaults", async () => {
+    const messyData = {
+      results: [
+        { id: null, name: null }, // Missing everything
+      ],
+    };
+
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => messyData,
+    });
+
+    const results = await searchAuthors("test");
+
+    // This hits the "||" branches in your mapping logic
+    expect(results[0].id).toBe("unknown_id");
+    expect(results[0].name).toBe("Unknown Author");
+    expect(results[0].works_count).toBe(0);
+  });
+
+  it("handles completely missing results key", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({}), // No results key at all
+    });
+
+    const results = await searchAuthors("test");
+    expect(results).toEqual([]); // Hits line 20: data.results || []
+  });
+});
