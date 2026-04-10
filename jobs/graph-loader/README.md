@@ -1,26 +1,31 @@
 # Graph Loader Job
 
-Initializes the Neo4j graph database by processing DTIC scholarly data.
+The Graph Loader is an ETL utility that initializes the Neo4j database by processing compressed DTIC scholarly data.
 
 ## Overview
 
-Unlike the Vector Loader (which focuses on abstracts and meaning), the Graph Loader maps the **structural relationships** of the research ecosystem:
+Unlike the Vector Loader (focused on semantic meaning), the Graph Loader establishes the **structural connective tissue** of the platform:
 
-1. **Nodes**: Creates Authors, Organizations, Topics, and Works.
-2. **Relationships**: Links Authors to Works (`AUTHORED`), Works to Topics (`COVERS`), and Authors to Organizations (`AFFILIATED_WITH`).
+1. **Nodes**: Populates Authors, Organizations, Topics, and Works.
+2. **Relationships**: Establishes `AUTHORED`, `COVERS_TOPIC`, and `AFFILIATED_WITH` edges.
+3. **Idempotency**: Includes "Skip-if-Loaded" logic that queries the API `/stats` endpoint to prevent redundant ingestion if the database is already populated.
 
 ## Ingestion Order
 
-To prevent "orphaned" relationships, the loader processes data in this order:
-1. `authors` nodes
-2. `orgs` nodes
-3. `topics` nodes
-4. `works` nodes (this creates the Work nodes AND all connecting edges)
+To maintain referential integrity and prevent orphaned relationships, data is loaded in this sequence:
+1. `authors`
+2. `orgs`
+3. `topics`
+4. `works` (Creates the Work nodes AND all connecting edges simultaneously)
 
-## Usage
+## Development & Quality Gate
 
-### Local Development (Poetry)
+This job maintains a **10/10 Pylint score** and **91% test coverage**.
+
+### Usage (Local Development)
+Ensure you are in the `jobs/graph-loader` directory:
 ```bash
-cd jobs/graph-loader
-poetry install
-poetry run python -m app.loader
+poetry install --with dev
+
+# Run the loader (points to http://localhost:8003 by default)
+PYTHONPATH=. poetry run python -m app.loader
