@@ -46,13 +46,15 @@ async def root():
 
 
 @app.get("/health", tags=["System"])
-async def health_check():
-    """Verifies connectivity to Neo4j."""
+async def health_check() -> dict[str, str]:
+    """Verifies connectivity to Neo4j and logs failures for troubleshooting."""
     try:
         with driver.session() as session:
             session.run("RETURN 1")
         return {"status": "healthy", "neo4j": "connected"}
     except Exception as e:  # pylint: disable=broad-exception-caught
+        # Feedback Implementation: Log the specific error for DevOps troubleshooting
+        logger.error("Health check failed: Unable to connect to Neo4j. Error: %s", e)
         return {"status": "unhealthy", "error": str(e)}
 
 
@@ -97,7 +99,6 @@ async def upsert_work(work: WorkNode):
     RETURN w.id
     """
     with driver.session() as session:
-        session.run(query, **work.model_dump())
         session.run(query, **work.model_dump())
     return {"status": "success", "id": work.id}
 
