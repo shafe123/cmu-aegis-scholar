@@ -1,4 +1,5 @@
 """Configuration settings for the Vector DB API service."""
+
 from typing import Dict
 
 from pydantic import ConfigDict
@@ -11,17 +12,15 @@ AVAILABLE_MODELS: Dict[str, Dict[str, any]] = {
     "sentence-transformers/all-MiniLM-L6-v2": {
         "dimension": 384,
         "description": "Fast and efficient sentence embeddings (384 dimensions)",
-        "fastembed_name": "sentence-transformers/all-MiniLM-L6-v2"
+        "fastembed_name": "sentence-transformers/all-MiniLM-L6-v2",
     }
 }
 
 
-class Settings(BaseSettings):
+class Settings(BaseSettings):  # pylint: disable=too-few-public-methods
     """Application settings."""
-    model_config = ConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8"
-    )
+
+    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # Milvus Configuration
     milvus_host: str = "localhost"

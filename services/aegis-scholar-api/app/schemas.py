@@ -1,4 +1,5 @@
 """Pydantic models for API request and response validation."""
+
 from datetime import date, datetime
 from typing import List, Literal, Optional
 
@@ -100,7 +101,7 @@ class AuthorSearchResult(Author):
     relevance_score: Optional[float] = Field(
         default=None,
         ge=0.0,
-        description=("Semantic similarity score derived from vector distance. " "Higher is more relevant. Range 0-1."),
+        description=("Semantic similarity score derived from vector distance. Higher is more relevant. Range 0-1."),
     )
 
 
