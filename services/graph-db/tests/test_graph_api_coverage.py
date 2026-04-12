@@ -55,9 +55,10 @@ def test_viz_logic_handling_of_solo_authors():
         if work["id"] not in node_ids:
             nodes.append(work)
             node_ids.add(work["id"])
-        if co_author and co_author["id"] not in node_ids:
-            nodes.append(co_author)
-            node_ids.add(co_author["id"])
+        if co_author is not None:
+            if co_author["id"] not in node_ids:
+                nodes.append(co_author)
+                node_ids.add(co_author["id"])
 
     assert len(nodes) == 2  # Only Author and Work, no Co-Author node
 

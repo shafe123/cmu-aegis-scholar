@@ -2,9 +2,10 @@ import gzip
 import json
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import httpx
+
 from app.config import settings
 
 # Configure logging
@@ -19,7 +20,7 @@ class GraphDBClient:
         self.base_url = settings.graph_api_url.rstrip("/")
         self.client = httpx.Client(timeout=settings.graph_api_timeout)
 
-    def get_stats(self) -> Optional[dict[str, Any]]:
+    def get_stats(self) -> dict[str, Any] | None:
         """Check the current population of the graph."""
         try:
             r = self.client.get(f"{self.base_url}/stats")
@@ -56,7 +57,7 @@ class GraphDBClient:
 class GraphLoader:
     """Orchestrates loading data from local files into the Graph API."""
 
-    def __init__(self, client: Optional[GraphDBClient] = None, data_dir: Optional[Path] = None) -> None:
+    def __init__(self, client: GraphDBClient | None = None, data_dir: Path | None = None) -> None:
         self.data_dir = Path(data_dir or settings.data_dir)
         self.api = client or GraphDBClient()
 

@@ -68,6 +68,8 @@ disable = [
     "C0115", # Missing class docstring
     "C0116", # Missing function docstring
     "R0903", # Too few public methods (common in Pydantic models)
+    "W0621", # Redefining name from outer scope (Pytest fixtures)
+    "C0415", # Import outside toplevel (Used to prevent early DB init)
 ]
 
 [tool.pylint.MASTER]

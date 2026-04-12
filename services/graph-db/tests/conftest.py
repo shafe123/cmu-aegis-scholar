@@ -1,5 +1,4 @@
 from unittest.mock import MagicMock, patch
-
 import pytest
 from fastapi.testclient import TestClient
 
