@@ -9,7 +9,7 @@ import httpx
 from app.config import settings
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -33,14 +33,14 @@ class GraphDBClient:
             logger.error("Failed to get stats: %s", e)
             return None
 
-    def upsert_node(self, entity_type: str, data: dict[str,Any]) -> bool:
+    def upsert_node(self, entity_type: str, data: dict[str, Any]) -> bool:
         """Send a POST request to upsert a node."""
         try:
             r = self.client.post(f"{self.base_url}/{entity_type}", json=data)
             r.raise_for_status()
             return True
         except Exception as e:
-            logger.error("Failed to upsert %s %s: %s", entity_type, data.get('id'), e)
+            logger.error("Failed to upsert %s %s: %s", entity_type, data.get("id"), e)
             return False
 
     def create_relationship(self, rel_type: str, payload: dict[str, Any]) -> bool:
@@ -116,24 +116,29 @@ class GraphLoader:
                     for auth in work.get("authors", []):
                         # Link Author to Work
                         self.api.create_relationship(
-                            "authored",
-                            {"author_id": auth["author_id"], "work_id": work_id}
+                            "authored", {"author_id": auth["author_id"], "work_id": work_id}
                         )
                         # Link Author to Org (Affiliation)
                         if auth.get("org_id"):
-                            self.api.create_relationship("affiliated", {
-                                "author_id": auth["author_id"],
-                                "org_id": auth["org_id"],
-                                "role": "Researcher"
-                            })
+                            self.api.create_relationship(
+                                "affiliated",
+                                {
+                                    "author_id": auth["author_id"],
+                                    "org_id": auth["org_id"],
+                                    "role": "Researcher",
+                                },
+                            )
 
                     for topic in work.get("topics", []):
                         # Link Work to Topic
-                        self.api.create_relationship("covers", {
-                            "work_id": work_id,
-                            "topic_id": topic["topic_id"],
-                            "score": topic.get("score", 1.0)
-                        })
+                        self.api.create_relationship(
+                            "covers",
+                            {
+                                "work_id": work_id,
+                                "topic_id": topic["topic_id"],
+                                "score": topic.get("score", 1.0),
+                            },
+                        )
             logger.info("Processed relationships in %s", file_path.name)
 
     def run(self) -> None:

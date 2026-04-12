@@ -1,10 +1,10 @@
 """Test configuration and shared fixtures for graph-loader."""
 
 from unittest.mock import MagicMock
+
 import pytest
+
 from app.config import Settings
-
-
 
 # ---------------------------------------------------------------------------
 # 1. Configuration Fixtures
