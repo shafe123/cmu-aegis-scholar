@@ -26,6 +26,8 @@ class WorkNode(BaseModel):
     year: int | None = None
     citation_count: int | None = 0
     sources: list[Source] | None = []
+    abstract: str | None = None
+    publication_date: str | None = None
 
 
 class OrgNode(BaseModel):
