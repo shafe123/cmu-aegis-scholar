@@ -4,6 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.config import Settings
+
 # ---------------------------------------------------------------------------
 # 1. Configuration Fixtures
 # ---------------------------------------------------------------------------
@@ -12,7 +14,6 @@ import pytest
 @pytest.fixture
 def mock_settings():
     """Provide mock settings for graph-loader tests."""
-    from app.config import Settings
 
     return Settings(
         graph_api_url="http://test-graph:8003",
