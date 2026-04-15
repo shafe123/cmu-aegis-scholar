@@ -1,0 +1,31 @@
+# Example Terraform Variables for Kubernetes Deployment
+# Copy this file to terraform.tfvars and customize for your environment
+
+# Environment
+environment = "dev"
+
+# Kubernetes Configuration
+kubeconfig_path      = "~/.kube/config"
+kubernetes_namespace = "aegis-dev"
+
+# Helm Configuration
+helm_release_name = "aegis-scholar"
+helm_chart_path   = "../k8s/charts/aegis-scholar"
+
+# Container Registry
+image_registry = "ghcr.io/shafe123/cmu-aegis-scholar"  # Change to your registry
+image_tag      = "latest"
+
+# Secrets (IMPORTANT: Do not commit actual secrets to version control)
+# Better approach: Use environment variables or secret management systems
+# Example: export TF_VAR_neo4j_password="your-password"
+neo4j_password = ""  # Set via environment variable TF_VAR_neo4j_password
+
+# Registry Credentials (if using private registry)
+registry_username = ""  # Set via environment variable TF_VAR_registry_username
+registry_password = ""  # Set via environment variable TF_VAR_registry_password
+registry_email    = ""
+
+# Azure Configuration (if using Azure resources)
+location      = "eastus"
+acr_base_name = "aegisscholarbase"
