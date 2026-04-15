@@ -31,10 +31,10 @@ ingress:
   className: traefik
   annotations: {}
   hosts:
-    - host: aegis-scholar.local
-      paths:
-        - path: /vector
-          pathType: Prefix
+  - host: aegis-scholar.local
+    paths:
+    - path: /vector
+      pathType: Prefix
   tls: []
 
 resources:
@@ -60,7 +60,7 @@ affinity: {}
 
 # Milvus connection configuration
 milvus:
-  host: "aegis-scholar-milvus"  # Will be set by parent chart
+  host: "aegis-scholar-milvus" # Will be set by parent chart
   port: "19530"
   collection: "aegis_vectors"
 
@@ -72,28 +72,28 @@ embedding:
 # Persistent volume for model cache
 persistence:
   enabled: true
-  storageClass: ""  # Use default storage class
+  storageClass: "" # Use default storage class
   accessMode: ReadWriteOnce
   size: 10Gi
   mountPath: /app/.cache
 
 # Environment variables
 env:
-  - name: PYTHONUNBUFFERED
-    value: "1"
-  - name: LOG_LEVEL
-    value: "info"
+- name: PYTHONUNBUFFERED
+  value: "1"
+- name: LOG_LEVEL
+  value: "info"
 
 # Environment variables from Milvus connection
 envFromValues:
-  - name: MILVUS_HOST
-    value: "{{ .Values.milvus.host }}"
-  - name: MILVUS_PORT
-    value: "{{ .Values.milvus.port }}"
-  - name: DEFAULT_COLLECTION
-    value: "{{ .Values.milvus.collection }}"
-  - name: EMBEDDING_MODEL_NAME
-    value: "{{ .Values.embedding.modelName }}"
+- name: MILVUS_HOST
+  value: "{{ .Values.milvus.host }}"
+- name: MILVUS_PORT
+  value: "{{ .Values.milvus.port }}"
+- name: DEFAULT_COLLECTION
+  value: "{{ .Values.milvus.collection }}"
+- name: EMBEDDING_MODEL_NAME
+  value: "{{ .Values.embedding.modelName }}"
 
 envFrom: []
 

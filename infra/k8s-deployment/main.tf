@@ -2,7 +2,7 @@
 # This module deploys the AEGIS Scholar application to a Kubernetes cluster using Helm
 
 locals {
-  namespace = var.kubernetes_namespace != "" ? var.kubernetes_namespace : "aegis-${var.environment}"
+  namespace  = var.kubernetes_namespace != "" ? var.kubernetes_namespace : "aegis-${var.environment}"
   chart_path = var.helm_chart_path
 }
 
@@ -61,11 +61,11 @@ resource "kubernetes_secret" "registry_credentials" {
 
 # Deploy AEGIS Scholar using Helm
 resource "helm_release" "aegis_scholar" {
-  name       = var.helm_release_name
-  namespace  = kubernetes_namespace.aegis_scholar.metadata[0].name
-  chart      = local.chart_path
-  timeout    = 600
-  wait       = true
+  name      = var.helm_release_name
+  namespace = kubernetes_namespace.aegis_scholar.metadata[0].name
+  chart     = local.chart_path
+  timeout   = 600
+  wait      = true
 
   # Use environment-specific values file
   values = [

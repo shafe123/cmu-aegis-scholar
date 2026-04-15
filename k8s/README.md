@@ -95,6 +95,286 @@ kubectl port-forward -n aegis-dev svc/aegis-scholar-graph-db 8003:8003
 curl http://aegis-dev.local/api/health
 ```
 
+## Local Development with Docker Desktop
+
+### Prerequisites for Local Development
+
+1. **Install Docker Desktop** and enable Kubernetes:
+   - Open Docker Desktop → Settings → Kubernetes
+   - Check "Enable Kubernetes"
+   - Click "Apply & Restart"
+   - Wait 2-3 minutes for Kubernetes to start
+
+2. **Verify Kubernetes is running:**
+   ```powershell
+   kubectl cluster-info
+   # Should show: Kubernetes control plane is running at https://kubernetes.docker.internal:6443
+   ```
+
+3. **System Requirements:**
+   - 8GB+ RAM available for containers
+   - 10GB+ disk space for images and volumes
+
+### Step 1: Build Local Images
+
+Build all service images with the `:local` tag:
+
+```powershell
+# Navigate to repository root
+cd C:\Users\Ethan Shafer\Homework\CMU\cmu-aegis-scholar
+
+# Build API service
+docker build -t aegis-scholar-api:local ./services/aegis-scholar-api
+
+# Build Vector DB service
+docker build -t vector-db:local ./services/vector-db
+
+# Build Graph DB service
+docker build -t graph-db:local ./services/graph-db
+
+# Verify images were created
+docker images | Select-String "aegis-scholar|vector-db|graph-db"
+```
+
+> **Note:** Docker Desktop automatically makes locally built images available to the Kubernetes cluster.
+
+### Step 2: Install Traefik Ingress Controller
+
+```powershell
+# Add Traefik Helm repository
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+
+# Install Traefik
+helm install traefik traefik/traefik `
+  -n traefik-system `
+  --create-namespace `
+  --set ports.web.port=80
+
+# Verify installation
+kubectl get pods -n traefik-system
+```
+
+### Step 3: Create Namespace and Secrets
+
+```powershell
+# Create namespace
+kubectl apply -f namespaces.yaml
+
+# Copy and edit secrets
+cp secrets.example.yaml secrets.yaml
+notepad secrets.yaml  # Edit with your credentials
+
+# Apply secrets
+kubectl apply -f secrets.yaml -n aegis-dev
+```
+
+### Step 4: Prepare Helm Dependencies
+
+```powershell
+cd k8s/charts/aegis-scholar
+
+# Add required repositories
+helm repo add milvus https://zilliztech.github.io/milvus-helm
+helm repo add neo4j https://neo4j.github.io/helm-charts
+helm repo update
+
+# Build dependencies (downloads Milvus and Neo4j charts)
+helm dependency build
+```
+
+### Step 5: Deploy with Local Images
+
+```powershell
+# Deploy using local images (no registry)
+helm install aegis-scholar . `
+  -f values-dev.yaml `
+  -n aegis-dev `
+  --set global.imageRegistry="" `
+  --set aegis-scholar-api.image.repository=aegis-scholar-api `
+  --set aegis-scholar-api.image.tag=local `
+  --set aegis-scholar-api.image.pullPolicy=IfNotPresent `
+  --set vector-db.image.repository=vector-db `
+  --set vector-db.image.tag=local `
+  --set vector-db.image.pullPolicy=IfNotPresent `
+  --set graph-db.image.repository=graph-db `
+  --set graph-db.image.tag=local `
+  --set graph-db.image.pullPolicy=IfNotPresent
+
+# Watch deployment progress
+kubectl get pods -n aegis-dev --watch
+# Press Ctrl+C when all pods are Running
+```
+
+### Step 6: Verify Deployment
+
+```powershell
+# Check pod status
+kubectl get pods -n aegis-dev
+
+# Check services
+kubectl get svc -n aegis-dev
+
+# View API logs
+kubectl logs -n aegis-dev -l app.kubernetes.io/name=aegis-scholar-api --tail=50
+```
+
+Expected pods:
+- `aegis-scholar-aegis-scholar-api-xxx` (2 replicas)
+- `aegis-scholar-vector-db-xxx`
+- `aegis-scholar-graph-db-xxx`
+- `aegis-scholar-milvus-xxx` + etcd, seaweedfs
+- `aegis-scholar-neo4j-xxx`
+
+> **Note:** Milvus may take 5-10 minutes to fully start due to initialization.
+
+### Step 7: Access Services Locally
+
+**Option A: Port Forwarding (Recommended)**
+
+```powershell
+# API Service
+kubectl port-forward -n aegis-dev svc/aegis-scholar-aegis-scholar-api 8000:8000
+
+# Vector DB (in another terminal)
+kubectl port-forward -n aegis-dev svc/aegis-scholar-vector-db 8002:8002
+
+# Graph DB (in another terminal)
+kubectl port-forward -n aegis-dev svc/aegis-scholar-graph-db 8003:8003
+
+# Neo4j Browser (optional, in another terminal)
+kubectl port-forward -n aegis-dev svc/aegis-scholar-neo4j 7474:7474
+```
+
+Access endpoints:
+- API: http://localhost:8000/health
+- Vector DB: http://localhost:8002/health
+- Graph DB: http://localhost:8003/health
+- Neo4j Browser: http://localhost:7474
+
+**Option B: Via Ingress**
+
+```powershell
+# Port forward to Traefik
+kubectl port-forward -n traefik-system svc/traefik 8080:80
+
+# Add to hosts file (run PowerShell as Administrator)
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "127.0.0.1 aegis.local"
+```
+
+Access via ingress:
+- http://aegis.local:8080/api/health
+- http://aegis.local:8080/vector/health
+- http://aegis.local:8080/graph/health
+
+### Testing and Validation
+
+**Quick health check from inside the cluster:**
+
+```powershell
+kubectl run -it --rm debug --image=curlimages/curl -n aegis-dev --restart=Never -- sh -c '
+  echo "Testing API..."
+  curl -s http://aegis-scholar-aegis-scholar-api:8000/health
+  echo -e "\n\nTesting Vector DB..."
+  curl -s http://aegis-scholar-vector-db:8002/health
+  echo -e "\n\nTesting Graph DB..."
+  curl -s http://aegis-scholar-graph-db:8003/health
+'
+```
+
+**Test Milvus connectivity:**
+
+```powershell
+$POD = kubectl get pod -n aegis-dev -l app.kubernetes.io/name=vector-db -o jsonpath='{.items[0].metadata.name}'
+kubectl exec -it -n aegis-dev $POD -- python -c "from pymilvus import connections; connections.connect('default', host='aegis-scholar-milvus', port='19530'); print('Milvus connected!')"
+```
+
+**Test Neo4j connectivity:**
+
+```powershell
+$POD = kubectl get pod -n aegis-dev -l app.kubernetes.io/name=graph-db -o jsonpath='{.items[0].metadata.name}'
+kubectl exec -it -n aegis-dev $POD -- python -c "from neo4j import GraphDatabase; driver = GraphDatabase.driver('bolt://aegis-scholar-neo4j:7687', auth=('neo4j', 'your-password')); driver.verify_connectivity(); print('Neo4j connected!')"
+```
+
+### Updating After Code Changes
+
+```powershell
+# 1. Rebuild the changed service image
+docker build -t aegis-scholar-api:local ./services/aegis-scholar-api
+
+# 2. Restart the deployment to pick up the new image
+kubectl rollout restart deployment aegis-scholar-aegis-scholar-api -n aegis-dev
+
+# 3. Watch the rollout
+kubectl rollout status deployment aegis-scholar-aegis-scholar-api -n aegis-dev
+
+# View logs of new pods
+kubectl logs -n aegis-dev -l app.kubernetes.io/name=aegis-scholar-api -f
+```
+
+### Local Troubleshooting
+
+**ImagePullBackOff with local images:**
+```powershell
+# Verify image exists locally
+docker images | Select-String "aegis-scholar-api:local"
+
+# Check pod description for pull policy
+kubectl describe pod <pod-name> -n aegis-dev | Select-String "pull"
+
+# Ensure pullPolicy is set to IfNotPresent in your Helm values
+```
+
+**Docker Desktop resource constraints:**
+```powershell
+# Check Docker Desktop settings
+# Settings → Resources → increase Memory to 8GB+
+
+# Check node resources
+kubectl describe node docker-desktop
+
+# View resource usage
+kubectl top nodes
+kubectl top pods -n aegis-dev
+```
+
+**Milvus startup issues:**
+```powershell
+# Milvus requires significant resources and time
+kubectl get pods -n aegis-dev | Select-String milvus
+
+# Check Milvus logs
+kubectl logs -n aegis-dev -l app.kubernetes.io/name=milvus --tail=100
+
+# Verify etcd and storage pods are running
+kubectl get pods -n aegis-dev
+```
+
+**Neo4j authentication issues:**
+```powershell
+# Verify secret is correct
+kubectl get secret neo4j-auth -n aegis-dev -o jsonpath='{.data.NEO4J_AUTH_PASSWORD}' | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
+
+# Check Neo4j logs
+kubectl logs -n aegis-dev -l app.kubernetes.io/name=neo4j --tail=50
+```
+
+### Cleaning Up Local Environment
+
+```powershell
+# Uninstall Helm release
+helm uninstall aegis-scholar -n aegis-dev
+
+# Delete persistent volumes (this deletes all data!)
+kubectl delete pvc -n aegis-dev --all
+
+# Delete namespace
+kubectl delete namespace aegis-dev
+
+# Optional: Reset Kubernetes cluster completely
+# Docker Desktop → Settings → Kubernetes → Reset Kubernetes Cluster
+```
+
 ## Environment-Specific Deployments
 
 ### Development

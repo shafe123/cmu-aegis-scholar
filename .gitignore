@@ -271,6 +271,7 @@ data/
 *.env
 .env
 secrets/
+secrets.yaml
 
 #Node modules
 node_modules/

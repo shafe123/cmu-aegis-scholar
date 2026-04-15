@@ -1,10 +1,10 @@
 # Global settings for all subcharts
 global:
   # Container registry settings
-  imageRegistry: ""  # Override with your registry (e.g., myregistry.azurecr.io)
+  imageRegistry: "" # Override with your registry (e.g., myregistry.azurecr.io)
   imagePullSecrets: []
-  storageClass: ""  # Override with your storage class
-  
+  storageClass: "" # Override with your storage class
+
   # Namespace to deploy to (can be overridden at install time)
   namespace: default
 
@@ -39,16 +39,16 @@ ingress:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
   hosts:
-    - host: aegis-scholar.local
-      paths:
-        - path: /api
-          pathType: Prefix
-          service: aegis-scholar-api
-          port: 8000
-        - path: /vector
-          pathType: Prefix
-          service: vector-db
-          port: 8002
+  - host: aegis-scholar.local
+    paths:
+    - path: /api
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /vector
+      pathType: Prefix
+      service: vector-db
+      port: 8002
   tls: []
   #  - secretName: aegis-scholar-tls
   #    hosts:

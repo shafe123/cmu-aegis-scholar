@@ -2,7 +2,7 @@
 # Override with: helm install aegis-scholar ./charts/aegis-scholar -f values-dev.yaml -n aegis-dev
 
 global:
-  imageRegistry: ""  # Use local images or set your dev registry
+  imageRegistry: "" # Use local images or set your dev registry
   namespace: aegis-dev
 
 # API service configuration
@@ -19,10 +19,10 @@ aegis-scholar-api:
       cpu: 100m
       memory: 128Mi
   env:
-    - name: LOG_LEVEL
-      value: "debug"
-    - name: ENVIRONMENT
-      value: "development"
+  - name: LOG_LEVEL
+    value: "debug"
+  - name: ENVIRONMENT
+    value: "development"
 
 # Vector DB configuration
 vector-db:
@@ -84,17 +84,17 @@ ingress:
   enabled: true
   className: traefik
   hosts:
-    - host: aegis-dev.local
-      paths:
-        - path: /api
-          pathType: Prefix
-          service: aegis-scholar-api
-          port: 8000
-        - path: /vector
-          pathType: Prefix
-          service: vector-db
-          port: 8002
-        - path: /graph
-          pathType: Prefix
-          service: graph-db
-          port: 8003
+  - host: aegis-dev.local
+    paths:
+    - path: /api
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /vector
+      pathType: Prefix
+      service: vector-db
+      port: 8002
+    - path: /graph
+      pathType: Prefix
+      service: graph-db
+      port: 8003

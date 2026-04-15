@@ -43,7 +43,7 @@ variable "kubeconfig_path" {
 variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace for AEGIS Scholar deployment"
-  default     = ""  # Will default to aegis-{environment}
+  default     = "" # Will default to aegis-{environment}
 }
 
 variable "kubernetes_host" {

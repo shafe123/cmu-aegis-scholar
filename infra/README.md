@@ -150,20 +150,20 @@ Deploy to Azure Container Apps using the existing modules.
 
 ### Required Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `environment` | Deployment environment | `dev`, `staging`, `prod` |
-| `kubeconfig_path` | Path to kubeconfig | `~/.kube/config` |
-| `helm_chart_path` | Path to Helm chart | `../k8s/charts/aegis-scholar` |
+| Variable          | Description            | Example                       |
+| ----------------- | ---------------------- | ----------------------------- |
+| `environment`     | Deployment environment | `dev`, `staging`, `prod`      |
+| `kubeconfig_path` | Path to kubeconfig     | `~/.kube/config`              |
+| `helm_chart_path` | Path to Helm chart     | `../k8s/charts/aegis-scholar` |
 
 ### Optional Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `kubernetes_namespace` | K8s namespace | `aegis-{environment}` |
-| `helm_release_name` | Helm release name | `aegis-scholar` |
-| `image_registry` | Container registry URL | `` |
-| `image_tag` | Container image tag | `latest` |
+| Variable               | Description            | Default               |
+| ---------------------- | ---------------------- | --------------------- |
+| `kubernetes_namespace` | K8s namespace          | `aegis-{environment}` |
+| `helm_release_name`    | Helm release name      | `aegis-scholar`       |
+| `image_registry`       | Container registry URL | ``                    |
+| `image_tag`            | Container image tag    | `latest`              |
 
 ### Sensitive Variables
 

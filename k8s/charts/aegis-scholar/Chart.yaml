@@ -5,27 +5,27 @@ type: application
 version: 0.1.0
 appVersion: "1.0"
 keywords:
-  - aegis
-  - scholar
-  - research
-  - vector-search
+- aegis
+- scholar
+- research
+- vector-search
 maintainers:
-  - name: AEGIS Scholar Team
+- name: AEGIS Scholar Team
 home: https://github.com/shafe123/cmu-aegis-scholar
 dependencies:
-  - name: aegis-scholar-api
-    version: 0.1.0
-    repository: file://./aegis-scholar-api
-    condition: aegis-scholar-api.enabled
-  - name: vector-db
-    version: 0.1.0
-    repository: file://./vector-db
-    condition: vector-db.enabled
-  - name: graph-db
-    version: 0.1.0
-    repository: file://./graph-db
-    condition: graph-db.enabled
-  - name: milvus
-    version: 4.2.8
-    repository: https://zilliztech.github.io/milvus-helm
-    condition: milvus.enabled
+- name: aegis-scholar-api
+  version: 0.1.0
+  repository: file://./aegis-scholar-api
+  condition: aegis-scholar-api.enabled
+- name: vector-db
+  version: 0.1.0
+  repository: file://./vector-db
+  condition: vector-db.enabled
+- name: graph-db
+  version: 0.1.0
+  repository: file://./graph-db
+  condition: graph-db.enabled
+- name: milvus
+  version: 4.2.8
+  repository: https://zilliztech.github.io/milvus-helm
+  condition: milvus.enabled

@@ -18,8 +18,7 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+podSecurityContext: {} # fsGroup: 2000
 
 securityContext: {}
   # capabilities:
@@ -38,10 +37,10 @@ ingress:
   className: traefik
   annotations: {}
   hosts:
-    - host: aegis-scholar.local
-      paths:
-        - path: /api
-          pathType: Prefix
+  - host: aegis-scholar.local
+    paths:
+    - path: /api
+      pathType: Prefix
   tls: []
 
 resources:
@@ -67,10 +66,10 @@ affinity: {}
 
 # Environment variables
 env:
-  - name: PYTHONUNBUFFERED
-    value: "1"
-  - name: LOG_LEVEL
-    value: "info"
+- name: PYTHONUNBUFFERED
+  value: "1"
+- name: LOG_LEVEL
+  value: "info"
 
 # Additional environment variables from secrets or configmaps
 envFrom: []
