@@ -91,11 +91,6 @@ def sample_dtic_organization():
 # ---------------------------------------------------------------------------
 # 4. File System Fixtures
 # ---------------------------------------------------------------------------
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main
-
 @pytest.fixture
 def tmp_data_dir(tmp_path):
     """Provides a temporary path for creating mock .jsonl.gz files."""
