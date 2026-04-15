@@ -32,49 +32,51 @@ src/tests/
 ## Writing Tests
 
 ### Component Tests
+
 Use React Testing Library for component tests:
 
 ```jsx
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import MyComponent from '../../components/MyComponent'
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import MyComponent from "../../components/MyComponent";
 
-describe('MyComponent', () => {
-  it('renders correctly', () => {
-    render(<MyComponent />)
-    expect(screen.getByText('Hello')).toBeInTheDocument()
-  })
+describe("MyComponent", () => {
+  it("renders correctly", () => {
+    render(<MyComponent />);
+    expect(screen.getByText("Hello")).toBeInTheDocument();
+  });
 
-  it('handles user interaction', async () => {
-    const user = userEvent.setup()
-    render(<MyComponent />)
-    
-    await user.click(screen.getByRole('button'))
-    expect(screen.getByText('Clicked')).toBeInTheDocument()
-  })
-})
+  it("handles user interaction", async () => {
+    const user = userEvent.setup();
+    render(<MyComponent />);
+
+    await user.click(screen.getByRole("button"));
+    expect(screen.getByText("Clicked")).toBeInTheDocument();
+  });
+});
 ```
 
 ### Service Tests
+
 Mock API calls and external dependencies:
 
 ```js
-import { vi } from 'vitest'
-import { fetchData } from '../../services/api'
+import { vi } from "vitest";
+import { fetchData } from "../../services/api";
 
-describe('API Service', () => {
-  it('fetches data', async () => {
-    global.fetch = vi.fn(() => 
+describe("API Service", () => {
+  it("fetches data", async () => {
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ data: 'test' })
-      })
-    )
+        json: () => Promise.resolve({ data: "test" }),
+      }),
+    );
 
-    const result = await fetchData('/api/endpoint')
-    expect(result).toEqual({ data: 'test' })
-  })
-})
+    const result = await fetchData("/api/endpoint");
+    expect(result).toEqual({ data: "test" });
+  });
+});
 ```
 
 ## Coverage Requirements

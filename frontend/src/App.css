@@ -27,7 +27,7 @@
 }
 
 .hero-logo:hover {
-  transform: translateY(-5px); 
+  transform: translateY(-5px);
 }
 
 .hero {
@@ -40,8 +40,6 @@
     margin: 0 auto;
   }
 
-
-  
   .base {
     width: 170px;
     position: relative;
@@ -182,7 +180,7 @@
 
   &::before,
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: -4.5px;
     border: 5px solid transparent;

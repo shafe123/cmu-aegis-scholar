@@ -1,8 +1,8 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Body, HTTPException
-from neo4j import GraphDatabase
 
+from fastapi import FastAPI, HTTPException
+from neo4j import GraphDatabase
 
 from app.config import settings
 from app.schemas import AuthorNode, AuthorWorkRel, WorkNode
@@ -17,7 +17,7 @@ driver = GraphDatabase.driver(
 )
 
 
-# --- 3. Application Lifespan (Startup/Shutdown) ---
+# --- 3. Application Lifespan ---
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Handles clean startup and shutdown of resources."""
@@ -39,80 +39,23 @@ app = FastAPI(
 # --- 5. System & Health Endpoints ---
 
 
+@app.get("/", tags=["System"])
+async def root():
+    """Root endpoint providing service information."""
+    return {"title": settings.api_title, "version": settings.api_version, "status": "online"}
+
+
 @app.get("/health", tags=["System"])
-async def health_check():
-    """Health check endpoint that verifies Neo4j connectivity."""
+async def health_check() -> dict[str, str]:
+    """Verifies connectivity to Neo4j and logs failures for troubleshooting."""
     try:
         with driver.session() as session:
             session.run("RETURN 1")
         return {"status": "healthy", "neo4j": "connected"}
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        # Feedback Implementation: Log the specific error for DevOps troubleshooting
+        logger.error("Health check failed: Unable to connect to Neo4j. Error: %s", e)
         return {"status": "unhealthy", "error": str(e)}
-
-
-@app.post("/orgs", tags=["Ingestion"])
-async def create_org(payload: dict = Body(...)):
-    """Upserts an Organization node into Neo4j."""
-    query = "MERGE (o:Org {id: $id}) SET o.name = $name"
-    with driver.session() as session:
-        session.run(query, id=payload["id"], name=payload.get("name", "Unknown Org"))
-    return {"status": "success"}
-
-
-@app.post("/topics", tags=["Ingestion"])
-async def create_topic(payload: dict = Body(...)):
-    """Upserts a Topic node into Neo4j."""
-    query = "MERGE (t:Topic {id: $id}) SET t.name = $name"
-    with driver.session() as session:
-        session.run(query, id=payload["id"], name=payload.get("name", "Unknown Topic"))
-    return {"status": "success"}
-
-
-@app.post("/relationships/{rel_type}", tags=["Ingestion"])
-async def create_relationship(rel_type: str, payload: dict = Body(...)):
-    """Creates edges (lines) between nodes in Neo4j, guaranteeing they exist first."""
-    with driver.session() as session:
-        if rel_type == "authored":
-            # Using MERGE instead of MATCH prevents silent failures!
-            query = """
-            MERGE (a:Author {id: $author_id})
-            MERGE (w:Work {id: $work_id})
-            MERGE (a)-[:AUTHORED]->(w)
-            """
-            session.run(
-                query, author_id=payload["author_id"], work_id=payload["work_id"]
-            )
-
-        elif rel_type == "affiliated":
-            query = """
-            MERGE (a:Author {id: $author_id})
-            MERGE (o:Org {id: $org_id})
-            MERGE (a)-[:AFFILIATED_WITH]->(o)
-            """
-            session.run(query, author_id=payload["author_id"], org_id=payload["org_id"])
-
-        elif rel_type == "covers":
-            query = """
-            MERGE (w:Work {id: $work_id})
-            MERGE (t:Topic {id: $topic_id})
-            MERGE (w)-[:COVERS]->(t)
-            """
-            session.run(query, work_id=payload["work_id"], topic_id=payload["topic_id"])
-
-    return {"status": "success"}
-
-
-# --- 6. Root Endpoint ---
-
-
-@app.get("/", tags=["System"])
-async def root():
-    """Root endpoint providing service information."""
-    return {
-        "title": settings.api_title,
-        "version": settings.api_version,
-        "status": "online",
-    }
 
 
 @app.get("/stats", tags=["System"])
@@ -128,15 +71,14 @@ async def get_stats():
         logger.error("Database error in /stats: %s", e)
         raise HTTPException(
             status_code=500, detail=f"Graph database connection error: {str(e)}"
-        )
+        ) from e
 
 
-# --- 7. Ingestion Endpoints ---
+# --- 6. Ingestion Endpoints ---
 
 
 @app.post("/authors", tags=["Ingestion"])
 async def upsert_author(author: AuthorNode):
-    """Upserts an Author node into the graph."""
     """Upserts an Author node into the graph."""
     query = """
     MERGE (a:Author {id: $id})
@@ -151,7 +93,6 @@ async def upsert_author(author: AuthorNode):
 @app.post("/works", tags=["Ingestion"])
 async def upsert_work(work: WorkNode):
     """Upserts a Work node into the graph."""
-    """Upserts a Work node into the graph."""
     query = """
     MERGE (w:Work {id: $id})
     SET w.title = $title, w.year = $year, w.citation_count = $citation_count
@@ -159,13 +100,11 @@ async def upsert_work(work: WorkNode):
     """
     with driver.session() as session:
         session.run(query, **work.model_dump())
-        session.run(query, **work.model_dump())
     return {"status": "success", "id": work.id}
 
 
 @app.post("/relationships/authored", tags=["Relationships"])
 async def link_author_work(rel: AuthorWorkRel):
-    """Creates an AUTHORED relationship between an Author and a Work."""
     """Creates an AUTHORED relationship between an Author and a Work."""
     query = """
     MATCH (a:Author {id: $author_id})
@@ -178,13 +117,11 @@ async def link_author_work(rel: AuthorWorkRel):
     return {"status": "linked"}
 
 
-# --- 8. Search & Analysis Endpoints ---
+# --- 7. Search & Analysis Endpoints ---
 
 
-@app.get("/authors/{author_id}/collaborators", tags=["Analysis"])
 @app.get("/authors/{author_id}/collaborators", tags=["Analysis"])
 async def get_collaborators(author_id: str):
-    """Finds researchers who have shared works with the given author."""
     """Finds researchers who have shared works with the given author."""
     query = """
     MATCH (a:Author {id: $id})-[:AUTHORED]->(w:Work)<-[:AUTHORED]-(collab:Author)
@@ -201,7 +138,6 @@ async def get_collaborators(author_id: str):
 @app.get("/viz/author-network/{author_id}", tags=["Visualization"])
 async def get_author_network(author_id: str):
     """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
-    """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
     query = """
     MATCH (n {id: $node_id})
     OPTIONAL MATCH (n)-[r:AUTHORED]-(m)
@@ -217,8 +153,7 @@ async def get_author_network(author_id: str):
         for record in result:
             author, work, co_author = record["a"], record["w"], record["co"]
 
-            # Add Main Author
-            if author and author["id"] not in node_ids:
+            if author["id"] not in node_ids:
                 nodes.append(
                     {
                         "id": author["id"],
@@ -229,8 +164,7 @@ async def get_author_network(author_id: str):
                 )
                 node_ids.add(author["id"])
 
-            # Add Work Node and Edge
-            if work and work["id"] not in node_ids:
+            if work["id"] not in node_ids:
                 nodes.append(
                     {
                         "id": work["id"],
@@ -241,9 +175,7 @@ async def get_author_network(author_id: str):
                 )
                 node_ids.add(work["id"])
             if author and work:
-                edges.append(
-                    {"from": author["id"], "to": work["id"], "label": "AUTHORED"}
-                )
+                edges.append({"from": author["id"], "to": work["id"], "label": "AUTHORED"})
 
             if co_author and co_author["id"] not in node_ids:
                 nodes.append(
@@ -256,8 +188,6 @@ async def get_author_network(author_id: str):
                 )
                 node_ids.add(co_author["id"])
             if co_author and work:
-                edges.append(
-                    {"from": co_author["id"], "to": work["id"], "label": "AUTHORED"}
-                )
+                edges.append({"from": co_author["id"], "to": work["id"], "label": "AUTHORED"})
 
         return {"nodes": nodes, "edges": edges}

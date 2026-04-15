@@ -1,16 +1,29 @@
-import React, { useState } from 'react';
-import { Search, Settings, Loader2, X, ShieldCheck, Database, Activity, Target, Calendar, Share2, User, Mail } from 'lucide-react';
-import { searchAuthors } from './services/api';
-import NetworkGraph from './components/NetworkGraph';
+import React, { useState } from "react";
+import {
+  Search,
+  Settings,
+  Loader2,
+  X,
+  ShieldCheck,
+  Database,
+  Activity,
+  Calendar,
+  Share2,
+  Mail,
+  Filter,
+} from "lucide-react";
+import { searchAuthors } from "./services/api";
+import NetworkGraph from "./components/NetworkGraph";
 
 const ResearcherRow = ({ author, onSelect }) => {
-  const rawSpecialization = author?.specialization || "Unknown Domain | No Stats Available";
-  const parts = rawSpecialization.split(' | ');
+  const rawSpecialization =
+    author?.specialization || "Unknown Domain | No Stats Available";
+  const parts = rawSpecialization.split(" | ");
   const domain = parts[0] || "Unknown Domain";
   const stats = parts[1] || "";
 
   return (
-    <div 
+    <div
       className="bg-[#1a1d21]/50 border-b border-slate-800 p-4 flex items-center gap-6 hover:bg-slate-800/50 transition-colors group cursor-pointer"
       onClick={() => onSelect(author)}
     >
@@ -27,256 +40,423 @@ const ResearcherRow = ({ author, onSelect }) => {
       </div>
       <div className="flex flex-col items-end w-24 pr-4">
         <div className="text-xl font-mono text-aegis-cyan">
-          {author.works_count > 0 
-            ? (author.citation_count / author.works_count).toFixed(1) 
-            : '0.0'}
+          {(author?.relevance_score || 0).toFixed(3)}
         </div>
-        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">SCORE</div>
+        <div className="text-[9px] text-slate-500 font-bold tracking-widest uppercase">
+          Match Index
+        </div>
       </div>
     </div>
   );
 };
 
 export default function App() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  
-  // Modal & Graph State
+  const [hasSearched, setHasSearched] = useState(false); // Tracks if we are on the Home or Results screen
+
   const [selectedAuthor, setSelectedAuthor] = useState(null);
-  const [modalView, setModalView] = useState('profile'); // 'profile' | 'graph'
+  const [modalView, setModalView] = useState("profile");
   const [inspectedNode, setInspectedNode] = useState(null);
+
+  // Filter & Sort States
+  const [minWorks, setMinWorks] = useState(0);
+  const [minCitations, setMinCitations] = useState(0);
+  const [sortBy, setSortBy] = useState("relevance");
 
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
     if (!query) return;
-    
-    setLoading(true);
+
     setHasSearched(true);
-    setResults([]); 
-    
+    setLoading(true);
     try {
-      const data = await searchAuthors(query, 'Authors'); // Hardcoded to Authors now
-      if (Array.isArray(data)) {
-        setResults(data);
-      } else {
-        setResults([]);
-      }
+      const data = await searchAuthors(query);
+      setResults(data);
     } catch (error) {
-      console.error("Search failed:", error);
-      setResults([]);
+      console.error("Search error:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const openAuthorModal = (author) => {
-    setSelectedAuthor(author);
-    setModalView('profile'); // Always start on the profile tab
-    setInspectedNode(null);
+  const goHome = () => {
+    setHasSearched(false);
+    setQuery("");
+    setResults([]);
+    setMinWorks(0);
+    setMinCitations(0);
+    setSortBy("relevance");
   };
 
   const closeModal = () => {
     setSelectedAuthor(null);
     setInspectedNode(null);
+    setModalView("profile");
   };
 
+  const processedResults = results
+    .filter(
+      (author) =>
+        author.works_count >= minWorks && author.citation_count >= minCitations,
+    )
+    .sort((a, b) => {
+      if (sortBy === "works") return b.works_count - a.works_count;
+      if (sortBy === "citations") return b.citation_count - a.citation_count;
+      return b.relevance_score - a.relevance_score;
+    });
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0c10] text-white font-sans">
-      <header className="p-4 flex justify-between items-center border-b border-slate-800 bg-[#0a0c10]/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <ShieldCheck className="text-aegis-cyan" size={24} />
-          <span className="font-bold tracking-[0.2em] text-[12px] uppercase text-slate-200">Scholar Search</span>
-        </div>
-        <div className="flex items-center gap-4 text-slate-500">
-          <Settings size={18}/><div className="w-8 h-8 bg-slate-800 rounded-full"></div>
-        </div>
-      </header>
-
-      <main className={`flex-1 max-w-5xl mx-auto w-full px-6 transition-all duration-700 ${hasSearched ? 'pt-8' : 'pt-32'}`}>
-        {!hasSearched && (
-          <div className="text-center mb-10">
-            <img 
-              src="/favicon.svg" 
-              alt="Aegis Scholar Logo" 
-              className="mx-auto mb-8 w-64 bg-white p-6 rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.5)] transition-transform duration-200 ease-in-out hover:-translate-y-1.5" 
-            />
-            
-            <p className="text-slate-500 mb-10 text-lg font-light tracking-wide">
-              Semantic Researcher & Network Discovery
-            </p>
-          </div>
-        )}
-        
-        <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto mb-10">
-          <input 
-            type="text" 
-            className="w-full bg-white text-slate-900 py-4 pl-14 pr-32 rounded-full text-lg shadow-2xl outline-none focus:ring-4 focus:ring-aegis-cyan/20 font-medium transition-all"
-            placeholder="Search the Aegis database..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+    <div className="flex flex-col min-h-screen bg-[#0a0c10] text-slate-300 font-sans selection:bg-aegis-cyan selection:text-[#0a0c10]">
+      {!hasSearched ? (
+        /* --- ORIGINAL CENTERED HOME SCREEN --- */
+        <main className="flex-1 flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
+          <img
+            src="/favicon.svg"
+            alt="Aegis Logo"
+            className="w-56 h-56 mb-6 hover:scale-110 hover:-translate-y-2 transition-all duration-300 cursor-pointer"
           />
-          <Search className="absolute left-5 top-4 text-slate-400" size={22} />
-          <button type="submit" className="absolute right-2 top-2 bg-slate-900 text-aegis-cyan hover:bg-slate-800 px-8 py-2.5 rounded-full font-bold">
-            {loading ? <Loader2 className="animate-spin" size={20}/> : 'SEARCH'}
-          </button>
-        </form>
+          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase mb-2">
+            AEGIS Scholar Discovery
+          </h1>
+          <p className="text-slate-400 mb-10 font-mono text-sm uppercase tracking-widest text-center">
+            Advanced Researcher & Entity Network Analysis
+          </p>
 
-        {/* RESULTS WRAPPER */}
-        {results && results.length > 0 && (
-          <div className="bg-[#1a1d21] rounded-2xl border border-slate-800 overflow-hidden shadow-2xl relative z-10">
-            {results.map((author, idx) => (
-              <ResearcherRow key={author?.id || idx} author={author} onSelect={openAuthorModal} />
-            ))}
-          </div>
-        )}
-      </main>
-
-      <footer className="border-t border-slate-800 py-4 text-center text-slate-500 text-sm mt-8">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>© {new Date().getFullYear()} Aegis Scholar. Capstone Project.</p>
-          
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-aegis-cyan transition-colors">Documentation</a>
-            <a href="#" className="hover:text-aegis-cyan transition-colors">GitHub Repository</a>
-            <a href="#" className="hover:text-aegis-cyan transition-colors">About</a>
-          </div>
-        </div>
-      </footer>
-      {/* ------------------------------- */}
-
-      {/* DUAL-VIEW MODAL (Profile OR Graph) */}
-      {selectedAuthor && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[100] flex items-center justify-center p-6">
-          <div className="bg-[#0f1115] border border-slate-800 w-full max-w-7xl h-[90vh] rounded-3xl overflow-hidden flex flex-col relative">
-            
-            {/* Modal Header */}
-            <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-[#0f1115]">
-              <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <User className="text-aegis-cyan" size={18}/> {selectedAuthor.name}
-                </h2>
-                <p className="text-[10px] text-slate-500 font-mono tracking-tighter uppercase">
-                  {modalView === 'profile' ? 'Subject Profile' : 'Network Explorer'} // {selectedAuthor.id}
-                </p>
+          <form onSubmit={handleSearch} className="w-full max-w-2xl relative">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search researchers, papers, or expertise domains..."
+              className="w-full bg-[#161b22] border-2 border-slate-800 rounded-full py-4 pl-14 pr-6 text-lg text-white focus:outline-none focus:border-aegis-cyan transition-all shadow-2xl"
+            />
+            <Search
+              className="absolute left-5 top-4.5 text-slate-500"
+              size={24}
+            />
+            <button
+              type="submit"
+              className="absolute right-2 top-2 bg-aegis-cyan text-[#0a0c10] font-black px-6 py-3 rounded-full hover:bg-white transition-colors"
+            >
+              SEARCH
+            </button>
+          </form>
+        </main>
+      ) : (
+        /* --- RESULTS SCREEN WITH TOP BAR --- */
+        <>
+          <header className="border-b border-slate-800 bg-[#0d1117] sticky top-0 z-10 animate-in slide-in-from-top duration-300">
+            <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+              {/* Clicking the logo now returns the user to the home screen */}
+              <div
+                className="flex items-center gap-2 cursor-pointer group"
+                onClick={goHome}
+              >
+                <ShieldCheck
+                  className="text-aegis-cyan group-hover:scale-110 transition-transform"
+                  size={24}
+                />
+                <h1 className="text-white font-bold tracking-tighter text-lg uppercase group-hover:text-aegis-cyan transition-colors hidden md:block">
+                  AEGIS Scholar
+                </h1>
               </div>
-              
-              <div className="flex items-center gap-4">
-                {/* Back to profile button */}
-                {modalView === 'graph' && (
-                   <button 
-                     onClick={() => setModalView('profile')} 
-                     className="text-xs font-bold text-aegis-cyan uppercase tracking-wider hover:text-white transition-colors"
-                   >
-                     ← Back to Profile
-                   </button>
-                )}
-                <button onClick={closeModal} className="text-slate-500 hover:text-white bg-slate-800/50 p-2 rounded-full"><X size={20} /></button>
+
+              <form
+                onSubmit={handleSearch}
+                className="flex-1 max-w-xl mx-4 md:mx-8 relative"
+              >
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search researchers, papers, or expertise domains..."
+                  className="w-full bg-[#161b22] border border-slate-700 rounded-full py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-aegis-cyan transition-all"
+                />
+                <Search
+                  className="absolute left-3 top-2.5 text-slate-500"
+                  size={16}
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1.5 bg-aegis-cyan text-[#0a0c10] text-[10px] font-black px-3 py-1 rounded-full hover:bg-white transition-colors"
+                >
+                  SEARCH
+                </button>
+              </form>
+              <div className="flex items-center gap-4 text-slate-500">
+                <Settings
+                  size={20}
+                  className="cursor-pointer hover:text-white transition-colors"
+                />
               </div>
             </div>
-            
-            {/* Modal Body: Conditionally renders Profile or Graph */}
-            <div className="flex-1 relative flex bg-[#0a0c10]">
-               
-               {modalView === 'profile' ? (
-                 
-                 // --- PROFILE VIEW ---
-                 <div className="flex-1 flex flex-col items-center justify-center p-10 relative overflow-hidden">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-aegis-cyan/5 rounded-full blur-[100px] pointer-events-none" />
-                    
-                    <div className="w-24 h-24 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
-                      <User size={40} className="text-aegis-cyan" />
-                    </div>
-                    
-                    <h2 className="text-5xl font-black text-white mb-4 tracking-tight">{selectedAuthor.name}</h2>
-                    
-                    <div className="flex gap-4 mb-12">
-                      <div className="bg-[#1a1d21] border border-slate-800 px-6 py-3 rounded-xl flex items-center gap-3">
-                         <Database className="text-slate-400" size={18} />
-                         <span className="text-slate-300 font-mono text-sm">{selectedAuthor.specialization.split(' | ')[1] || "No Data"}</span>
-                      </div>
-                      <div className="bg-[#1a1d21] border border-slate-800 px-6 py-3 rounded-xl flex items-center gap-3">
-                         <Mail className="text-slate-400" size={18} />
-                         <span className="text-slate-300 font-mono text-sm">
-                           {selectedAuthor.name ? `${selectedAuthor.name.split(' ')[0].toLowerCase()}.${selectedAuthor.name.split(' ').pop().toLowerCase()}@university.edu` : 'contact@university.edu'}
-                         </span>
-                      </div>
+          </header>
+
+          <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-12">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <Loader2 className="text-aegis-cyan animate-spin" size={40} />
+                <p className="text-xs font-mono uppercase tracking-widest text-slate-500">
+                  Querying Database...
+                </p>
+              </div>
+            ) : (
+              <>
+                {results.length > 0 && (
+                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+                      <h3 className="text-white font-bold text-sm tracking-widest uppercase flex items-center gap-2">
+                        <Database size={16} className="text-aegis-cyan" />
+                        Search Results ({processedResults.length})
+                      </h3>
                     </div>
 
-                    <button 
-                      onClick={() => setModalView('graph')}
-                      className="group relative px-8 py-4 bg-aegis-cyan text-black rounded-full font-black text-sm uppercase tracking-widest overflow-hidden shadow-[0_0_40px_rgba(78,205,196,0.2)] hover:shadow-[0_0_60px_rgba(78,205,196,0.4)] transition-all active:scale-95 flex items-center gap-3"
-                    >
-                      <Share2 size={20} />
-                      Explore Connections
-                      <div className="absolute inset-0 h-full w-full bg-white/20 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
-                    </button>
-                 </div>
+                    <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-[#161b22] border border-slate-800 rounded-xl shadow-lg">
+                      <div className="flex items-center gap-2 text-slate-400">
+                        <Filter size={16} />
+                        <span className="text-xs font-bold uppercase tracking-widest">
+                          Filters:
+                        </span>
+                      </div>
 
-               ) : (
+                      <select
+                        value={minWorks}
+                        onChange={(e) => setMinWorks(Number(e.target.value))}
+                        className="bg-[#0d1117] border border-slate-700 text-sm text-slate-300 rounded px-3 py-1.5 focus:border-aegis-cyan focus:outline-none cursor-pointer"
+                      >
+                        <option value="0">Any Works</option>
+                        <option value="5">5+ Works</option>
+                        <option value="20">20+ Works</option>
+                        <option value="50">50+ Works</option>
+                      </select>
 
-                 // --- GRAPH VIEW ---
-                 <>
-                   <div className="absolute inset-0 z-0">
-                     <NetworkGraph 
-                        authorId={selectedAuthor.id} 
-                        onNodeSelect={setInspectedNode} 
-                        // expandTrigger removed since we deleted the button
-                     />
-                   </div>
-                   
-                   {/* NODE INSPECTOR SIDEBAR */}
-                   {inspectedNode && (
-                     <div className="w-80 border-l border-slate-800 bg-[#0a0c10]/90 p-6 backdrop-blur-md z-10 overflow-y-auto">
-                        <div className="flex justify-between items-center mb-6">
-                          <span className="bg-aegis-cyan/10 text-aegis-cyan text-[10px] font-black px-2 py-1 rounded border border-aegis-cyan/20 uppercase tracking-widest">
-                            {inspectedNode.group} Details
-                          </span>
-                          <button onClick={() => setInspectedNode(null)} className="text-slate-600 hover:text-white"><X size={16}/></button>
+                      <select
+                        value={minCitations}
+                        onChange={(e) =>
+                          setMinCitations(Number(e.target.value))
+                        }
+                        className="bg-[#0d1117] border border-slate-700 text-sm text-slate-300 rounded px-3 py-1.5 focus:border-aegis-cyan focus:outline-none cursor-pointer"
+                      >
+                        <option value="0">Any Citations</option>
+                        <option value="50">50+ Citations</option>
+                        <option value="500">500+ Citations</option>
+                        <option value="1000">1000+ Citations</option>
+                      </select>
+
+                      <div className="ml-auto flex items-center gap-3">
+                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                          Sort:
+                        </span>
+                        <select
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value)}
+                          className="bg-[#0d1117] border border-slate-700 text-sm text-slate-300 rounded px-3 py-1.5 focus:border-aegis-cyan focus:outline-none cursor-pointer"
+                        >
+                          <option value="relevance">Highest Match</option>
+                          <option value="works">Most Works</option>
+                          <option value="citations">Most Citations</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      {processedResults.length > 0 ? (
+                        processedResults.map((author) => (
+                          <ResearcherRow
+                            key={author.id}
+                            author={author}
+                            onSelect={setSelectedAuthor}
+                          />
+                        ))
+                      ) : (
+                        <div className="text-center py-12 text-slate-500 italic">
+                          No results match your current filters.
                         </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </main>
+        </>
+      )}
 
-                        <h3 className="text-white font-bold text-xl mb-6 leading-tight">
-                          {inspectedNode.full_title || inspectedNode.label}
+      {/* --- NEW FOOTER --- */}
+      <footer className="border-t border-slate-800 bg-[#0d1117] mt-auto py-6">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col items-center justify-center text-center gap-2">
+          <div className="flex items-center gap-2 text-slate-500">
+            <ShieldCheck size={16} className="text-aegis-cyan" />
+            <span className="text-xs font-mono uppercase tracking-widest font-bold">
+              AEGIS Network Systems
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-600 uppercase tracking-widest font-bold">
+            © {new Date().getFullYear()} Scholar Discovery Platform. All Rights
+            Reserved.
+          </p>
+        </div>
+      </footer>
+
+      {/* Profile Modal */}
+      {selectedAuthor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#0a0c10]/80 backdrop-blur-sm">
+          <div className="bg-[#0d1117] w-full max-w-6xl h-full max-h-[800px] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-[#161b22]">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-aegis-cyan/10 rounded-lg text-aegis-cyan">
+                  <ShieldCheck size={24} />
+                </div>
+                <div>
+                  <h2 className="text-white font-bold text-xl tracking-tight">
+                    Subject Profile // {selectedAuthor.id}
+                  </h2>
+                </div>
+              </div>
+              <button
+                onClick={closeModal}
+                data-testid="close-modal"
+                className="text-slate-500 hover:text-white bg-slate-800/50 p-2 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex bg-[#0d1117] border-b border-slate-800 px-6">
+              <button
+                onClick={() => setModalView("profile")}
+                className={`px-6 py-4 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${modalView === "profile" ? "border-aegis-cyan text-aegis-cyan bg-aegis-cyan/5" : "border-transparent text-slate-500 hover:text-white"}`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setModalView("graph")}
+                className={`px-6 py-4 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${modalView === "graph" ? "border-aegis-cyan text-aegis-cyan bg-aegis-cyan/5" : "border-transparent text-slate-500 hover:text-white"}`}
+              >
+                Explore Connections
+              </button>
+            </div>
+
+            <div className="flex-1 flex overflow-hidden">
+              {modalView === "profile" ? (
+                <div className="flex-1 p-12 overflow-y-auto">
+                  <div className="max-w-2xl">
+                    <h1 className="text-5xl font-black text-white mb-4 tracking-tighter">
+                      {selectedAuthor.name}
+                    </h1>
+                    <p className="text-aegis-cyan font-mono text-sm mb-8">
+                      {selectedAuthor.specialization}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex-1 relative">
+                    <NetworkGraph
+                      authorId={selectedAuthor.id}
+                      onNodeSelect={setInspectedNode}
+                    />
+                  </div>
+
+                  {inspectedNode && (
+                    <div className="w-80 bg-[#1a1d21] border-l border-slate-800 p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-white font-bold flex items-center gap-2">
+                          <Activity size={18} className="text-aegis-cyan" />
+                          Inspector
                         </h3>
+                        <button
+                          onClick={() => setInspectedNode(null)}
+                          data-testid="close-inspector"
+                          className="text-slate-500 hover:text-white p-1"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
 
-                        <div className="space-y-6 border-t border-slate-800 pt-6">
-                          {inspectedNode.group === 'work' ? (
-                            <>
-                              <div className="flex items-center gap-4 text-sm text-slate-300">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Calendar size={20}/></div>
-                                <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Year</p><p className="font-mono text-white text-lg">{inspectedNode.details?.year || 'N/A'}</p></div>
-                              </div>
-                              <div className="w-full text-sm text-slate-300 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2">Abstract</p>
-                                <details className="group cursor-pointer">
-                                  <summary className="font-medium text-aegis-cyan hover:text-white transition-colors outline-none list-none text-xs">
-                                    <span className="group-open:hidden">▶ Read Abstract...</span>
-                                    <span className="hidden group-open:inline">▼ Hide Abstract</span>
-                                  </summary>
-                                  <p className="mt-3 text-xs leading-relaxed max-h-48 overflow-y-auto pr-2 text-slate-400">
-                                    {inspectedNode.details?.abstract}
-                                  </p>
-                                </details>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex items-center gap-4 text-sm text-slate-300">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Mail size={20}/></div>
-                                <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Contact</p><p className="font-mono text-white text-[13px]">{inspectedNode.details?.email || 'N/A'}</p></div>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm text-slate-300">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan"><Database size={20}/></div>
-                                <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Total Works</p><p className="font-mono text-white text-lg">{inspectedNode.details?.works || 0}</p></div>
-                              </div>
-                            </>
-                          )}
+                      <div className="space-y-6">
+                        <div className="p-4 bg-slate-800/30 rounded-xl border border-slate-800">
+                          <p className="text-[10px] text-slate-500 uppercase font-black mb-1 tracking-widest">
+                            Selected Entity
+                          </p>
+                          <p className="text-white font-bold text-sm leading-tight">
+                            {inspectedNode.label}
+                          </p>
+                          <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded bg-aegis-cyan/10 text-aegis-cyan border border-aegis-cyan/20 font-mono uppercase">
+                            {inspectedNode.group}
+                          </span>
                         </div>
-                     </div>
-                   )}
-                 </>
-               )}
+
+                        {inspectedNode.group === "work" ? (
+                          <>
+                            <div className="flex items-center gap-4 text-sm text-slate-300">
+                              <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan">
+                                <Calendar size={20} />
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                                  Publication Year
+                                </p>
+                                <p className="font-mono text-white text-lg">
+                                  {inspectedNode.details?.year || "N/A"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="pt-4 border-t border-slate-800">
+                              <details className="group" open>
+                                <summary className="text-[10px] text-slate-500 uppercase font-bold tracking-widest cursor-pointer list-none flex items-center justify-between">
+                                  Abstract Preview{" "}
+                                  <Share2
+                                    size={12}
+                                    className="group-open:rotate-180 transition-transform"
+                                  />
+                                </summary>
+                                <p className="mt-3 text-[13px] leading-relaxed text-slate-400 italic font-serif">
+                                  "
+                                  {inspectedNode.details?.abstract ||
+                                    "No abstract available for this record."}
+                                  "
+                                </p>
+                              </details>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-4 text-sm text-slate-300">
+                              <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan">
+                                <Mail size={20} />
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                                  Contact
+                                </p>
+                                <p className="font-mono text-white text-[13px]">
+                                  {inspectedNode.details?.email || "N/A"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-slate-300">
+                              <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan">
+                                <Database size={20} />
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                                  Total Works
+                                </p>
+                                <p className="font-mono text-white text-lg">
+                                  {inspectedNode.details?.works || 0}
+                                </p>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

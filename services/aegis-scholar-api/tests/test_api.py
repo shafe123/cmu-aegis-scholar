@@ -1,6 +1,4 @@
 """Tests for Aegis Scholar API endpoints."""
-import pytest
-from fastapi.testclient import TestClient
 # from app.main import app  # Uncomment when ready
 
 # client = TestClient(app)

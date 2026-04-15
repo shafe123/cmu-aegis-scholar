@@ -35,6 +35,16 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = ["--import-mode=importlib"]
 
+[tool.coverage.run]
+source = ["app"]
+omit = ["tests/*", "*/__pycache__/*", "*/.venv/*"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 80.0
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -58,6 +68,8 @@ disable = [
     "C0115", # Missing class docstring
     "C0116", # Missing function docstring
     "R0903", # Too few public methods (common in Pydantic models)
+    "W0621", # Redefining name from outer scope (Pytest fixtures)
+    "C0415", # Import outside toplevel (Used to prevent early DB init)
 ]
 
 [tool.pylint.MASTER]
