@@ -1,0 +1,29 @@
+# Kubernetes Namespaces for AEGIS Scholar
+#
+# This file defines the namespace structure for different environments.
+# Apply with: kubectl apply -f namespaces.yaml
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aegis-dev
+  labels:
+    name: aegis-dev
+    environment: development
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aegis-staging
+  labels:
+    name: aegis-staging
+    environment: staging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aegis-prod
+  labels:
+    name: aegis-prod
+    environment: production

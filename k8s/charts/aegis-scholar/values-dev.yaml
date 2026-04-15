@@ -1,0 +1,100 @@
+# Development Environment Values
+# Override with: helm install aegis-scholar ./charts/aegis-scholar -f values-dev.yaml -n aegis-dev
+
+global:
+  imageRegistry: ""  # Use local images or set your dev registry
+  namespace: aegis-dev
+
+# API service configuration
+aegis-scholar-api:
+  enabled: true
+  replicaCount: 1
+  image:
+    tag: "dev"
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  env:
+    - name: LOG_LEVEL
+      value: "debug"
+    - name: ENVIRONMENT
+      value: "development"
+
+# Vector DB configuration
+vector-db:
+  enabled: true
+  replicaCount: 1
+  image:
+    tag: "dev"
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  persistence:
+    enabled: true
+    size: 5Gi
+  milvus:
+    host: "aegis-scholar-milvus"
+
+# Graph DB configuration
+graph-db:
+  enabled: true
+  replicaCount: 1
+  image:
+    tag: "dev"
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  neo4j:
+    enabled: true
+    volumes:
+      data:
+        defaultStorageClass:
+          requests:
+            storage: 5Gi
+
+# Milvus configuration (standalone for dev)
+milvus:
+  enabled: true
+  cluster:
+    enabled: false
+  standalone:
+    enabled: true
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: traefik
+  hosts:
+    - host: aegis-dev.local
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: aegis-scholar-api
+          port: 8000
+        - path: /vector
+          pathType: Prefix
+          service: vector-db
+          port: 8002
+        - path: /graph
+          pathType: Prefix
+          service: graph-db
+          port: 8003
