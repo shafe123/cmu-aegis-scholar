@@ -31,10 +31,10 @@ ingress:
   className: traefik
   annotations: {}
   hosts:
-    - host: aegis-scholar.local
-      paths:
-        - path: /graph
-          pathType: Prefix
+  - host: aegis-scholar.local
+    paths:
+    - path: /graph
+      pathType: Prefix
   tls: []
 
 resources:
@@ -85,7 +85,7 @@ neo4j:
 
 # Connection to Neo4j
 neo4jConnection:
-  host: "aegis-scholar-neo4j"  # Will match the neo4j service name
+  host: "aegis-scholar-neo4j" # Will match the neo4j service name
   port: "7687"
   scheme: "bolt"
   database: "neo4j"
@@ -96,17 +96,17 @@ neo4jConnection:
 
 # Environment variables
 env:
-  - name: PYTHONUNBUFFERED
-    value: "1"
-  - name: LOG_LEVEL
-    value: "info"
+- name: PYTHONUNBUFFERED
+  value: "1"
+- name: LOG_LEVEL
+  value: "info"
 
 # Environment variables from Neo4j connection
 envFromValues:
-  - name: NEO4J_URI
-    value: "{{ .Values.neo4jConnection.scheme }}://{{ .Values.neo4jConnection.host }}:{{ .Values.neo4jConnection.port }}"
-  - name: NEO4J_DATABASE
-    value: "{{ .Values.neo4jConnection.database }}"
+- name: NEO4J_URI
+  value: "{{ .Values.neo4jConnection.scheme }}://{{ .Values.neo4jConnection.host }}:{{ .Values.neo4jConnection.port }}"
+- name: NEO4J_DATABASE
+  value: "{{ .Values.neo4jConnection.database }}"
 
 envFrom: []
 

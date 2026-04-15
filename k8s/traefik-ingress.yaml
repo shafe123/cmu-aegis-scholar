@@ -4,13 +4,12 @@
 # Traefik must be installed in your cluster for this to work.
 #
 # Apply with: kubectl apply -f traefik-ingress.yaml -n <namespace>
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: aegis-scholar-ingress
-  namespace: aegis-dev  # Change to your namespace
+  namespace: aegis-dev # Change to your namespace
   annotations:
     # Traefik-specific annotations
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
@@ -20,36 +19,35 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: aegis-scholar.local  # Change to your domain
-      http:
-        paths:
-          # API Service routes
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: aegis-scholar-aegis-scholar-api  # Helm generates: <release>-<chart>
-                port:
-                  number: 8000
-          
-          # Vector DB Service routes
-          - path: /vector
-            pathType: Prefix
-            backend:
-              service:
-                name: aegis-scholar-vector-db
-                port:
-                  number: 8002
-          
-          # Graph DB Service routes
-          - path: /graph
-            pathType: Prefix
-            backend:
-              service:
-                name: aegis-scholar-graph-db
-                port:
-                  number: 8003
-  
+  - host: aegis-scholar.local # Change to your domain
+    http:
+      paths:
+      # API Service routes
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: aegis-scholar-aegis-scholar-api # Helm generates: <release>-<chart>
+            port:
+              number: 8000
+
+      # Vector DB Service routes
+      - path: /vector
+        pathType: Prefix
+        backend:
+          service:
+            name: aegis-scholar-vector-db
+            port:
+              number: 8002
+
+      # Graph DB Service routes
+      - path: /graph
+        pathType: Prefix
+        backend:
+          service:
+            name: aegis-scholar-graph-db
+            port:
+              number: 8003
   # TLS configuration (optional, requires cert-manager or manual certificate)
   # tls:
   #   - hosts:

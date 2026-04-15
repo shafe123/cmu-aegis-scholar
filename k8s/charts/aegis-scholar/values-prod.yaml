@@ -2,9 +2,9 @@
 # Override with: helm install aegis-scholar ./charts/aegis-scholar -f values-prod.yaml -n aegis-prod
 
 global:
-  imageRegistry: ""  # Set to your production registry (e.g., myregistry.azurecr.io)
+  imageRegistry: "" # Set to your production registry (e.g., myregistry.azurecr.io)
   imagePullSecrets:
-    - name: registry-credentials
+  - name: registry-credentials
   namespace: aegis-prod
 
 # API service configuration
@@ -26,10 +26,10 @@ aegis-scholar-api:
     maxReplicas: 10
     targetCPUUtilizationPercentage: 70
   env:
-    - name: LOG_LEVEL
-      value: "info"
-    - name: ENVIRONMENT
-      value: "production"
+  - name: LOG_LEVEL
+    value: "info"
+  - name: ENVIRONMENT
+    value: "production"
 
 # Vector DB configuration
 vector-db:
@@ -113,21 +113,21 @@ ingress:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     traefik.ingress.kubernetes.io/router.tls: "true"
   hosts:
-    - host: api.aegis-scholar.com  # Change to your production domain
-      paths:
-        - path: /api
-          pathType: Prefix
-          service: aegis-scholar-api
-          port: 8000
-        - path: /vector
-          pathType: Prefix
-          service: vector-db
-          port: 8002
-        - path: /graph
-          pathType: Prefix
-          service: graph-db
-          port: 8003
+  - host: api.aegis-scholar.com # Change to your production domain
+    paths:
+    - path: /api
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /vector
+      pathType: Prefix
+      service: vector-db
+      port: 8002
+    - path: /graph
+      pathType: Prefix
+      service: graph-db
+      port: 8003
   tls:
-    - secretName: aegis-scholar-tls
-      hosts:
-        - api.aegis-scholar.com
+  - secretName: aegis-scholar-tls
+    hosts:
+    - api.aegis-scholar.com

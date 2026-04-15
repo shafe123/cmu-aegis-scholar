@@ -2,7 +2,6 @@
 #
 # This file defines the namespace structure for different environments.
 # Apply with: kubectl apply -f namespaces.yaml
-
 ---
 apiVersion: v1
 kind: Namespace
