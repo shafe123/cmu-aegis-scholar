@@ -6,22 +6,27 @@ authors = ["you <you@example.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"  # FastEmbed requires <3.13
-fastapi = "^0.110"
-uvicorn = "^0.22"  # Removed [standard] extras for smaller image
-pymilvus = "^2.3"
-pydantic = "^2.0"
-pydantic-settings = "^2.0"
-fastembed = "^0.3"  # ONNX-based embeddings (much smaller than PyTorch)
-numpy = "^2.0"
+fastapi = ">=0.115"  # >=0.115 required for starlette >=0.47.2 (CVE-2024-47874, CVE-2025-54121)
+starlette = ">=0.47.2"  # CVE-2024-47874 (DoS multipart), CVE-2025-54121 (event-loop block)
+uvicorn = ">=0.22"  # Removed [standard] extras for smaller image
+h11 = ">=0.16.0"  # CVE-2025-43859 (HTTP request smuggling, critical 9.1; transitive via uvicorn)
+pymilvus = ">=2.3"
+pydantic = ">=2.0"
+pydantic-settings = ">=2.0"
+fastembed = ">=0.4"  # 0.3.x hard-caps pillow<11; >=0.4 allows pillow>=12.1.1 (CVE-2026-25990)
+numpy = ">=2.0"
+pillow = ">=12.1.1"  # CVE-2026-25990 (out-of-bounds write on PSD load)
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.0"
-httpx = "^0.24"
-pytest-asyncio = "^0.21"
-pytest-cov = "^4.1"
-pytest-mock = "^3.12"
-ruff = "^0.15.8"
-pylint = "^4.0.5"
+pytest = ">=7.0"
+httpx = ">=0.24"
+pytest-asyncio = ">=0.21"
+pytest-cov = ">=4.1"
+pytest-mock = ">=3.12"
+ruff = ">=0.15.8"
+pylint = ">=4.0.5"
+bandit = ">=1.9.4"
+mypy = ">=1.19.1"
 
 
 [[tool.poetry.packages]]
