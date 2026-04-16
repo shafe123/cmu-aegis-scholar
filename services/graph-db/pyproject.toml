@@ -22,6 +22,8 @@ httpx = ">=0.24"
 ruff = ">=0.3.0"
 pylint = ">=3.0.0"
 pylint-pydantic = ">=0.3.0"
+bandit = ">=1.9.0"
+mypy = ">=1.0.0"
 
 [[tool.poetry.packages]]
 include = "app"
@@ -74,3 +76,8 @@ disable = [
 
 [tool.pylint.MASTER]
 load-plugins = "pylint_pydantic" # Helps Pylint understand Pydantic v2 fields
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true

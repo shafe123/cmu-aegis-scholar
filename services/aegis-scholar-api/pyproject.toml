@@ -7,13 +7,13 @@ readme = "README.md"
 packages = [{include = "app"}]
 
 [tool.poetry.dependencies]
-python = ">=3.12"
-fastapi = ">=0.109.0"
-uvicorn = ">=0.27.0"
-pydantic = ">=2.5.0"
-pydantic-settings = ">=2.0"
-python-dotenv = ">=1.0.0"
-httpx = ">=0.26.0"
+python = "^3.12"
+fastapi = "^0.109.0"
+uvicorn = {extras = ["standard"], version = "^0.27.0"}
+pydantic = "^2.5.0"
+pydantic-settings = "^2.0"
+python-dotenv = "^1.0.0"
+httpx = "^0.26.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
@@ -22,19 +22,14 @@ pytest-cov = "^4.1.0"
 pytest-mock = "^3.12"
 black = "^23.12.0"
 ruff = "^0.1.9"
-pylint = "^4.0.5"
+pylint = "^3.0.0"
+pylint-pydantic = "^0.3.0"
+bandit = "^1.9.0"
+mypy = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-line-length = 120
-target-version = ['py312']
-
-[tool.ruff]
-line-length = 120
-target-version = "py312"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -53,3 +48,37 @@ precision = 2
 show_missing = true
 skip_covered = false
 fail_under = 80.0
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pylint."MESSAGES CONTROL"]
+max-line-length = 120
+disable = [
+    "C0114",  # Missing module docstring
+    "C0115",  # Missing class docstring
+    "C0116",  # Missing function docstring
+    "R0903",  # Too few public methods (common in Pydantic models)
+    "W0621",  # Redefining name from outer scope (pytest fixtures)
+    "C0415",  # Import outside toplevel
+]
+
+[tool.pylint.MASTER]
+load-plugins = "pylint_pydantic"
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
