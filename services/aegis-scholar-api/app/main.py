@@ -24,7 +24,6 @@ import logging
 import math
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query
@@ -141,7 +140,7 @@ _SORTABLE_AUTHOR_FIELDS = {"relevance_score", "citation_count", "works_count"}
 
 def _sort_author_results(
     results: list[AuthorSearchResult],
-    sort_by: Optional[str],
+    sort_by: str | None,
     order: str,
 ) -> list[AuthorSearchResult]:
     """Optionally re-sort author results."""
@@ -245,7 +244,7 @@ async def search_authors(
         ge=0,
         description="Number of results to skip",
     ),
-    sort_by: Optional[str] = Query(
+    sort_by: str | None = Query(
         None,
         description=(
             "Field to sort by. Supported: 'relevance_score', "
@@ -253,7 +252,7 @@ async def search_authors(
             "Default: relevance_score (most relevant first)."
         ),
     ),
-    order: Optional[str] = Query(
+    order: str | None = Query(
         "desc",
         pattern="^(asc|desc)$",
         description="Sort order: 'asc' or 'desc'",
@@ -316,8 +315,8 @@ async def search(
         description="Maximum number of results to return",
     ),
     offset: int = Query(settings.default_offset, ge=0, description="Number of results to skip"),
-    sort_by: Optional[str] = Query(None, description="Field to sort by"),
-    order: Optional[str] = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
+    sort_by: str | None = Query(None, description="Field to sort by"),
+    order: str | None = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
 ):
     """Convenience alias — delegates to /search/authors."""
     return await search_authors(q=q, limit=limit, offset=offset, sort_by=sort_by, order=order)
@@ -333,8 +332,8 @@ async def search_orgs(
     q: str = Query(..., description="Search query string"),
     limit: int = Query(settings.default_limit, ge=1, le=settings.max_limit),
     offset: int = Query(settings.default_offset, ge=0),
-    org_type: Optional[str] = Query(None, description="Filter by organization type"),
-    country: Optional[str] = Query(None, description="Filter by country code"),
+    org_type: str | None = Query(None, description="Filter by organization type"),
+    country: str | None = Query(None, description="Filter by country code"),
 ):
     """Search for organizations."""
     # pylint: disable=unused-argument
@@ -350,8 +349,8 @@ async def search_topics(
     q: str = Query(..., description="Search query string"),
     limit: int = Query(settings.default_limit, ge=1, le=settings.max_limit),
     offset: int = Query(settings.default_offset, ge=0),
-    field: Optional[str] = Query(None, description="Filter by research field"),
-    domain: Optional[str] = Query(None, description="Filter by domain"),
+    field: str | None = Query(None, description="Filter by research field"),
+    domain: str | None = Query(None, description="Filter by domain"),
 ):
     """Search for research topics and subject areas."""
     # pylint: disable=unused-argument
@@ -367,9 +366,9 @@ async def search_works(
     q: str = Query(..., description="Search query string"),
     limit: int = Query(settings.default_limit, ge=1, le=settings.max_limit),
     offset: int = Query(settings.default_offset, ge=0),
-    year_from: Optional[int] = Query(None, description="Filter by publication year (from)"),
-    year_to: Optional[int] = Query(None, description="Filter by publication year (to)"),
-    min_citations: Optional[int] = Query(None, ge=0, description="Minimum citation count"),
+    year_from: int | None = Query(None, description="Filter by publication year (from)"),
+    year_to: int | None = Query(None, description="Filter by publication year (to)"),
+    min_citations: int | None = Query(None, ge=0, description="Minimum citation count"),
 ):
     """Search for research works, papers, and publications."""
     # pylint: disable=unused-argument,too-many-arguments,too-many-positional-arguments
