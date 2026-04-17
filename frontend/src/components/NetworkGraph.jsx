@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { DataSet, Network } from "vis-network/standalone";
 import { Download, Loader2, AlertCircle } from "lucide-react";
+import { buildApiUrl } from "../services/api";
 
 const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorName, activeFilters, onDataLoad }) => {
   const containerRef = useRef(null);
@@ -31,7 +32,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     setIsLoading(true);
     setNoData(false);
     try {
-      const response = await fetch(`/api/viz/author-network/${id}`);
+      const response = await fetch(buildApiUrl(`/viz/author-network/${id}`));
       if (!response.ok) throw new Error("Graph API error");
       const data = await response.json();
       if (onDataLoad) onDataLoad(data);

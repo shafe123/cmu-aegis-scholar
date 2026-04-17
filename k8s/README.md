@@ -5,6 +5,7 @@ This directory contains Helm charts and Kubernetes manifests for deploying the A
 ## Architecture
 
 The application consists of:
+- **frontend**: React web application served through Traefik at `/`
 - **aegis-scholar-api**: REST API for research discovery
 - **vector-db**: Vector similarity search service using Milvus
 - **graph-db**: Graph database API service using Neo4j
@@ -67,8 +68,6 @@ kubectl cluster-info
 ### Step 2: Prepare DTIC Data Volume
 
 **⚠️ Important:** Load your DTIC data BEFORE deploying the application. The loader jobs will read from this data during deployment.
-
-#### 2.1 Create Namespace
 
 #### 2.1 Create Namespace
 
@@ -168,7 +167,7 @@ kubectl apply -f secrets.yaml -n aegis-dev
 
 ---
 
-### Step 4: Install Traefik Ingress Controller (Optional)
+### Step 4: Install Traefik Ingress Controller
 
 ```powershell
 # Add Traefik Helm repository
@@ -212,6 +211,7 @@ Deploy the chart with the built-in registry enabled:
 helm install aegis-scholar . `
   -f values-dev.yaml `
   -n aegis-dev `
+  --set frontend.enabled=false `
   --set aegis-scholar-api.enabled=false `
   --set vector-db.enabled=false `
   --set graph-db.enabled=false `
@@ -236,36 +236,29 @@ kubectl get pods -n aegis-dev | Select-String docker-registry
 
 ### Step 7: Build and Push Images
 
-#### 7.1 Start Port Forward (keep running in a separate terminal)
-
-**Open a new PowerShell window** and run:
-
-```powershell
-# Port forward to the registry - KEEP THIS RUNNING
-kubectl port-forward -n aegis-dev svc/aegis-scholar-docker-registry 5000:5000
-```
-
-#### 7.2 Build and Push Service Images
+#### 7.1 Build and Push Service Images
 
 In your main terminal:
 
 ```powershell
 # Build images with localhost:5000 tag (for pushing via port-forward)
+docker build -t localhost:5000/frontend:latest ./frontend
 docker build -t localhost:5000/aegis-scholar-api:latest ./services/aegis-scholar-api
 docker build -t localhost:5000/vector-db:latest ./services/vector-db
 docker build -t localhost:5000/graph-db:latest ./services/graph-db
 
 # Push to the cluster registry (via port-forward)
+docker push localhost:5000/frontend:latest
 docker push localhost:5000/aegis-scholar-api:latest
 docker push localhost:5000/vector-db:latest
 docker push localhost:5000/graph-db:latest
 
 # Verify images were pushed
 curl http://localhost:5000/v2/_catalog
-# Should return: {"repositories":["aegis-scholar-api","graph-db","vector-db"]}
+# Should return: {"repositories":["aegis-scholar-api","frontend","graph-db","vector-db"]}
 ```
 
-#### 7.3 Build and Push Loader Images
+#### 7.2 Build and Push Loader Images
 
 ```powershell
 # Build loader images
@@ -278,7 +271,7 @@ docker push localhost:5000/vector-loader:latest
 
 # Verify all images
 curl http://localhost:5000/v2/_catalog
-# Should return: {"repositories":["aegis-scholar-api","graph-db","graph-loader","vector-db","vector-loader"]}
+# Should return: {"repositories":["aegis-scholar-api","frontend","graph-db","graph-loader","vector-db","vector-loader"]}
 ```
 
 ---
@@ -298,7 +291,8 @@ kubectl get pods -n aegis-dev --watch
 
 **Expected pods:**
 - `aegis-scholar-0` (Neo4j StatefulSet)
-- `aegis-scholar-aegis-scholar-api-xxx` (2 replicas)
+- `aegis-scholar-frontend-xxx`
+- `aegis-scholar-aegis-scholar-api-xxx`
 - `aegis-scholar-vector-db-xxx`
 - `aegis-scholar-graph-db-xxx`
 - `aegis-scholar-milvus-standalone-xxx` + supporting services (etcd, minio)
@@ -356,13 +350,11 @@ kubectl exec -n aegis-dev deployment/aegis-scholar-vector-db -- `
 ### Step 11: Access Services
 
 ```powershell
-# Port forward to Traefik
-kubectl port-forward -n traefik-system svc/traefik 8080:80
-
-# Access via ingress
-curl http://localhost:8080/api/health
-curl http://localhost:8080/vector/health
-curl http://localhost:8080/graph/health
+# Open the frontend and verify backend routes via Traefik
+start http://localhost/
+curl http://localhost/api/health
+curl http://localhost/vector/health
+curl http://localhost/graph/health
 ```
 
 ---
@@ -375,12 +367,12 @@ When you modify code, rebuild and push images, then restart deployments:
 # Ensure port-forward to registry is running
 kubectl port-forward -n aegis-dev svc/aegis-scholar-docker-registry 5000:5000
 
-# Rebuild and push (example: API service)
-docker build -t localhost:5000/aegis-scholar-api:latest ./services/aegis-scholar-api
-docker push localhost:5000/aegis-scholar-api:latest
+# Rebuild and push (example: frontend)
+docker build -t localhost:5000/frontend:latest ./frontend
+docker push localhost:5000/frontend:latest
 
 # Restart deployment to pull new image
-kubectl rollout restart deployment aegis-scholar-aegis-scholar-api -n aegis-dev
+kubectl rollout restart deployment aegis-scholar-frontend -n aegis-dev
 
 # Watch the rollout
 kubectl rollout status deployment aegis-scholar-aegis-scholar-api -n aegis-dev

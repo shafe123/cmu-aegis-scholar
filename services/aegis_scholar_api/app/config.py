@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     graph_db_url: str = "http://localhost:8003"
     graph_db_timeout: int = 30
 
+    # Database Configuration (to be implemented)
+    database_url: str = ""
+
     # Identity Service Configuration
     identity_api_url: str = "http://localhost:8005"
     identity_api_timeout: int = 30

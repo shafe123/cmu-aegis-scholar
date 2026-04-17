@@ -17,6 +17,10 @@ dependencies:
   version: 0.1.0
   repository: file://./aegis-scholar-api
   condition: aegis-scholar-api.enabled
+- name: frontend
+  version: 0.1.0
+  repository: file://./frontend
+  condition: frontend.enabled
 - name: vector-db
   version: 0.1.0
   repository: file://./vector-db
