@@ -22,7 +22,7 @@ _client: httpx.AsyncClient | None = None  # pylint: disable=invalid-name
 
 async def init_client():
     """Create the async HTTP client. Call once at app startup."""
-    global _client # pylint: disable=global-statement
+    global _client  # pylint: disable=global-statement
     _client = httpx.AsyncClient(
         base_url=settings.vector_db_url,
         timeout=httpx.Timeout(settings.vector_db_timeout),
@@ -32,7 +32,7 @@ async def init_client():
 
 async def close_client():
     """Close the async HTTP client. Call once at app shutdown."""
-    global _client # pylint: disable=global-statement
+    global _client  # pylint: disable=global-statement
     if _client and not _client.is_closed:
         await _client.aclose()
         _client = None

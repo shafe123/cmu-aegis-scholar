@@ -18,9 +18,7 @@ class GraphDBClient:
     async def get_viz_data(self, author_id: str):
         """Fetch graph visualization data for a given author ID."""
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"http://graph-db:8003/viz/author-network/{author_id}"
-            )
+            response = await client.get(f"http://graph-db:8003/viz/author-network/{author_id}")
             return response.json()
 
 

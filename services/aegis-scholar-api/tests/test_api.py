@@ -14,15 +14,18 @@ import pytest
 # Helpers — test in isolation without HTTP overhead
 # ---------------------------------------------------------------------------
 
+
 def test_distance_to_relevance_perfect_match():
     """Distance of 0 should give relevance of 1.0."""
     from app.main import _distance_to_relevance
+
     assert _distance_to_relevance(0.0) == 1.0
 
 
 def test_distance_to_relevance_typical():
     """Typical distance should give a score between 0 and 1."""
     from app.main import _distance_to_relevance
+
     score = _distance_to_relevance(0.5)
     assert 0 < score < 1
 
@@ -30,6 +33,7 @@ def test_distance_to_relevance_typical():
 def test_distance_to_relevance_large():
     """Large distance should give a score close to 0."""
     from app.main import _distance_to_relevance
+
     score = _distance_to_relevance(999.0)
     assert score < 0.01
 
@@ -37,6 +41,7 @@ def test_distance_to_relevance_large():
 def test_map_vector_results_valid():
     """Valid results should be mapped to AuthorSearchResult objects."""
     from app.main import _map_vector_results
+
     raw = [
         {
             "author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab",
@@ -58,6 +63,7 @@ def test_map_vector_results_valid():
 def test_map_vector_results_malformed_skipped():
     """Malformed results missing required fields should be skipped."""
     from app.main import _map_vector_results
+
     raw = [{"bad_field": "no_id_here"}]
     results = _map_vector_results(raw)
     assert len(results) == 0
@@ -66,17 +72,29 @@ def test_map_vector_results_malformed_skipped():
 def test_map_vector_results_empty():
     """Empty input should return empty list."""
     from app.main import _map_vector_results
+
     assert _map_vector_results([]) == []
 
 
 def test_sort_author_results_by_citation_desc():
     """Results should be sortable by citation_count descending."""
     from app.main import _map_vector_results, _sort_author_results
+
     raw = [
-        {"author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab", "author_name": "Low", "num_abstracts": 1,
-         "citation_count": 10, "distance": 0.1},
-        {"author_id": "author_2b3c4d5e-2345-6789-bcde-2345678901bc", "author_name": "High", "num_abstracts": 1,
-         "citation_count": 9999, "distance": 0.5},
+        {
+            "author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab",
+            "author_name": "Low",
+            "num_abstracts": 1,
+            "citation_count": 10,
+            "distance": 0.1,
+        },
+        {
+            "author_id": "author_2b3c4d5e-2345-6789-bcde-2345678901bc",
+            "author_name": "High",
+            "num_abstracts": 1,
+            "citation_count": 9999,
+            "distance": 0.5,
+        },
     ]
     results = _map_vector_results(raw)
     sorted_results = _sort_author_results(results, "citation_count", "desc")
@@ -86,11 +104,22 @@ def test_sort_author_results_by_citation_desc():
 def test_sort_author_results_by_citation_asc():
     """Results should be sortable by citation_count ascending."""
     from app.main import _map_vector_results, _sort_author_results
+
     raw = [
-        {"author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab", "author_name": "Low", "num_abstracts": 1,
-         "citation_count": 10, "distance": 0.1},
-        {"author_id": "author_2b3c4d5e-2345-6789-bcde-2345678901bc", "author_name": "High", "num_abstracts": 1,
-         "citation_count": 9999, "distance": 0.5},
+        {
+            "author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab",
+            "author_name": "Low",
+            "num_abstracts": 1,
+            "citation_count": 10,
+            "distance": 0.1,
+        },
+        {
+            "author_id": "author_2b3c4d5e-2345-6789-bcde-2345678901bc",
+            "author_name": "High",
+            "num_abstracts": 1,
+            "citation_count": 9999,
+            "distance": 0.5,
+        },
     ]
     results = _map_vector_results(raw)
     sorted_results = _sort_author_results(results, "citation_count", "asc")
@@ -100,9 +129,15 @@ def test_sort_author_results_by_citation_asc():
 def test_sort_author_results_invalid_field_returns_original():
     """Invalid sort field should return results unchanged."""
     from app.main import _map_vector_results, _sort_author_results
+
     raw = [
-        {"author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab", "author_name": "First", "num_abstracts": 1,
-         "citation_count": 10, "distance": 0.1},
+        {
+            "author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab",
+            "author_name": "First",
+            "num_abstracts": 1,
+            "citation_count": 10,
+            "distance": 0.1,
+        },
     ]
     results = _map_vector_results(raw)
     sorted_results = _sort_author_results(results, "nonexistent_field", "desc")
@@ -112,9 +147,15 @@ def test_sort_author_results_invalid_field_returns_original():
 def test_sort_author_results_no_sort_field():
     """None sort field should return results unchanged."""
     from app.main import _map_vector_results, _sort_author_results
+
     raw = [
-        {"author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab", "author_name": "First", "num_abstracts": 1,
-         "citation_count": 10, "distance": 0.1},
+        {
+            "author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab",
+            "author_name": "First",
+            "num_abstracts": 1,
+            "citation_count": 10,
+            "distance": 0.1,
+        },
     ]
     results = _map_vector_results(raw)
     sorted_results = _sort_author_results(results, None, "desc")
@@ -124,6 +165,7 @@ def test_sort_author_results_no_sort_field():
 # ---------------------------------------------------------------------------
 # System endpoints
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_root_endpoint(async_client):
@@ -163,6 +205,7 @@ async def test_health_check_vector_db_unreachable(async_client):
 # ---------------------------------------------------------------------------
 # Search endpoints — authors (primary functionality)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_search_authors_success(async_client, mock_vector_db_search):
@@ -204,9 +247,7 @@ async def test_search_authors_sort_by_citation(async_client, mock_vector_db_sear
     """sort_by=citation_count should re-sort results."""
     with patch("app.services.vector_db.search_by_text", new_callable=AsyncMock) as mock_search:
         mock_search.return_value = mock_vector_db_search
-        response = await async_client.get(
-            "/search/authors?q=ai&sort_by=citation_count&order=desc"
-        )
+        response = await async_client.get("/search/authors?q=ai&sort_by=citation_count&order=desc")
     assert response.status_code == 200
     results = response.json()["results"]
     assert results[0]["citation_count"] >= results[-1]["citation_count"]
@@ -228,9 +269,7 @@ async def test_search_authors_upstream_error(async_client):
         mock_response = MagicMock()
         mock_response.status_code = 500
         mock_response.text = "Internal Server Error"
-        mock_search.side_effect = httpx.HTTPStatusError(
-            "error", request=MagicMock(), response=mock_response
-        )
+        mock_search.side_effect = httpx.HTTPStatusError("error", request=MagicMock(), response=mock_response)
         response = await async_client.get("/search/authors?q=test")
     assert response.status_code == 502
 
@@ -248,6 +287,7 @@ async def test_search_alias_delegates_to_search_authors(async_client, mock_vecto
 # ---------------------------------------------------------------------------
 # Search endpoints — orgs, topics, works (all 501 Not Implemented)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_search_orgs_not_implemented(async_client):
@@ -274,6 +314,7 @@ async def test_search_works_not_implemented(async_client):
 # Detail endpoints — all 501 Not Implemented
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_work_by_id_not_implemented(async_client):
     response = await async_client.get("/search/works/work_abc123")
@@ -298,9 +339,7 @@ async def test_get_author_by_id_success(async_client):
         }
         mock_instance.get.return_value = mock_response
         mock_client_class.return_value = mock_instance
-        response = await async_client.get(
-            "/search/authors/author_1a2b3c4d-1234-5678-abcd-1234567890ab"
-        )
+        response = await async_client.get("/search/authors/author_1a2b3c4d-1234-5678-abcd-1234567890ab")
     assert response.status_code == 200
     assert response.json()["name"] == "Dr. Jane Smith"
 
@@ -316,9 +355,7 @@ async def test_get_author_by_id_not_found(async_client):
         mock_response.status_code = 404
         mock_instance.get.return_value = mock_response
         mock_client_class.return_value = mock_instance
-        response = await async_client.get(
-            "/search/authors/author_1a2b3c4d-1234-5678-abcd-1234567890ab"
-        )
+        response = await async_client.get("/search/authors/author_1a2b3c4d-1234-5678-abcd-1234567890ab")
     assert response.status_code == 404
 
 
@@ -331,9 +368,7 @@ async def test_get_author_by_id_graph_db_unavailable(async_client):
         mock_instance.__aexit__ = AsyncMock(return_value=False)
         mock_instance.get.side_effect = httpx.ConnectError("refused")
         mock_client_class.return_value = mock_instance
-        response = await async_client.get(
-            "/search/authors/author_1a2b3c4d-1234-5678-abcd-1234567890ab"
-        )
+        response = await async_client.get("/search/authors/author_1a2b3c4d-1234-5678-abcd-1234567890ab")
     assert response.status_code == 503
 
 
@@ -348,14 +383,17 @@ async def test_get_topic_by_id_not_implemented(async_client):
     response = await async_client.get("/search/topics/topic_abc123")
     assert response.status_code == 501
 
+
 # ---------------------------------------------------------------------------
 # vector_db service — init, close, get_client
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_vector_db_init_and_close():
     """init_client and close_client should create and destroy the client."""
     from app.services import vector_db
+
     await vector_db.init_client()
     assert vector_db._client is not None
     await vector_db.close_client()
@@ -366,18 +404,22 @@ async def test_vector_db_init_and_close():
 async def test_vector_db_get_client_raises_when_not_initialized():
     """_get_client should raise RuntimeError if client is None."""
     from app.services import vector_db
+
     vector_db._client = None
     with pytest.raises(RuntimeError):
         vector_db._get_client()
+
 
 # ---------------------------------------------------------------------------
 # graph_db service — basic client behavior
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_graph_db_client_get_collaborators():
     """get_collaborators should call the graph DB service."""
     from app.services.graph_db import GraphDBClient
+
     client = GraphDBClient()
     mock_response = MagicMock()
     mock_response.json.return_value = [{"id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab", "name": "Test"}]
@@ -391,6 +433,7 @@ async def test_graph_db_client_get_collaborators():
 async def test_graph_db_client_get_viz_data():
     """get_viz_data should call the graph DB visualization endpoint."""
     from app.services.graph_db import GraphDBClient
+
     client = GraphDBClient()
     mock_response = MagicMock()
     mock_response.json.return_value = {"nodes": [], "edges": []}
