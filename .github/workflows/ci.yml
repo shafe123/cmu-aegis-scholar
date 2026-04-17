@@ -265,22 +265,16 @@ jobs:
                   image: local://${{ matrix.image }}:ci
                   only-severities: critical,high
                   exit-code: false
-                  format: sarif
-                  output: scout-report.sarif
+                  sarif-file: ${{ matrix.service }}/scout-report.json
               continue-on-error: true
-
-            - name: Move report to service directory
-              if: always()
-              run: |
-                  mkdir -p ${{ matrix.service }}
-                  mv scout-report.sarif ${{ matrix.service }}/scout-report.sarif || true
 
             - name: Upload Docker Scout report
               uses: actions/upload-artifact@v7
               if: always()
               with:
                   name: docker-scout-report-${{ matrix.image }}
-                  path: ${{ matrix.service }}/scout-report.sarif
+                  path: ${{ matrix.service }}/scout-report.json
+                  if-no-files-found: warn
 
     # ---------------------------------------------------------------------------
     # FRONTEND — lint, build, test (unchanged)
