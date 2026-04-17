@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
+
 class Source(BaseModel):
     """Source identifier from external databases."""
 
