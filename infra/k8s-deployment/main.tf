@@ -2,12 +2,13 @@
 # This module recreates the current local Helm-based Kubernetes stack in Terraform.
 
 locals {
-  namespace         = var.kubernetes_namespace != "" ? var.kubernetes_namespace : "aegis-${var.environment}"
-  chart_path        = abspath(var.helm_chart_path)
-  values_file       = var.values_file != "" ? abspath(var.values_file) : "${local.chart_path}/values-${var.environment}.yaml"
-  phase             = lower(var.deployment_phase)
-  deploy_data_layer = contains(["data", "app", "all"], local.phase)
-  deploy_app_layer  = contains(["app", "all"], local.phase)
+  namespace              = var.kubernetes_namespace != "" ? var.kubernetes_namespace : "aegis-${var.environment}"
+  chart_path             = abspath(var.helm_chart_path)
+  values_file            = var.values_file != "" ? abspath(var.values_file) : "${local.chart_path}/values-${var.environment}.yaml"
+  phase                  = lower(var.deployment_phase)
+  deploy_data_layer      = contains(["data", "app", "all"], local.phase)
+  deploy_app_layer       = contains(["app", "all"], local.phase)
+  deploy_registry_layer  = contains(["bootstrap", "data", "app", "all"], local.phase)
 }
 
 resource "kubernetes_namespace" "aegis_scholar" {
@@ -74,10 +75,16 @@ resource "helm_release" "traefik" {
   name             = "traefik"
   repository       = "https://traefik.github.io/charts"
   chart            = "traefik"
+  version          = var.traefik_chart_version
   namespace        = var.traefik_namespace
   create_namespace = true
   wait             = true
   timeout          = 600
+
+  set {
+    name  = "image.tag"
+    value = var.traefik_image_tag
+  }
 
   set {
     name  = "ports.web.port"
@@ -91,8 +98,15 @@ resource "helm_release" "aegis_scholar" {
   chart             = local.chart_path
   dependency_update = true
   cleanup_on_fail   = true
-  timeout           = 600
-  wait              = true
+  timeout           = local.deploy_app_layer ? 600 : 120
+  wait              = local.deploy_app_layer
+
+  lifecycle {
+    precondition {
+      condition     = !local.deploy_app_layer || trimspace(var.neo4j_password) != ""
+      error_message = "neo4j_password must be set before running the app or all deployment phase. In PowerShell, set $env:TF_VAR_neo4j_password in the same terminal where you run terraform apply."
+    }
+  }
 
   values = [
     file(local.values_file)
@@ -106,6 +120,11 @@ resource "helm_release" "aegis_scholar" {
   set {
     name  = "dticData.enabled"
     value = local.deploy_data_layer ? "true" : "false"
+  }
+
+  set {
+    name  = "docker-registry.enabled"
+    value = local.deploy_registry_layer ? "true" : "false"
   }
 
   set {
@@ -233,19 +252,8 @@ resource "kubernetes_manifest" "registry_config" {
               image = "alpine:latest"
               command = [
                 "sh",
-                "-c",
-                <<-EOT
-                  set -ex
-                  mkdir -p /host/etc/containerd/certs.d/aegis-scholar-docker-registry.${local.namespace}.svc.cluster.local
-                  cat > /host/etc/containerd/certs.d/aegis-scholar-docker-registry.${local.namespace}.svc.cluster.local/hosts.toml <<EOF
-                  server = "http://localhost:5000"
-
-                  [host."http://localhost:5000"]
-                    capabilities = ["pull", "resolve"]
-                    skip_verify = true
-                  EOF
-                  nsenter --target 1 --mount --uts --ipc --net --pid -- systemctl restart containerd || true
-                EOT
+                "-ec",
+                "REG_DIR=/host/etc/containerd/certs.d/aegis-scholar-docker-registry.${local.namespace}.svc.cluster.local; mkdir -p \"$REG_DIR\"; printf 'server = \"http://localhost:5000\"\\n\\n[host.\"http://localhost:5000\"]\\n  capabilities = [\"pull\", \"resolve\"]\\n  skip_verify = true\\n' > \"$REG_DIR/hosts.toml\"; nsenter --target 1 --mount --uts --ipc --net --pid -- sh -c 'systemctl restart containerd || true'; cat \"$REG_DIR/hosts.toml\""
               ]
               securityContext = {
                 privileged = true
@@ -279,4 +287,25 @@ resource "kubernetes_manifest" "registry_config" {
   }
 
   depends_on = [helm_release.aegis_scholar]
+}
+
+resource "terraform_data" "destroy_service_finalizer_cleanup" {
+  input = local.namespace
+
+  depends_on = [
+    helm_release.aegis_scholar,
+    kubernetes_manifest.registry_config,
+  ]
+
+  provisioner "local-exec" {
+    when        = destroy
+    interpreter = ["PowerShell", "-Command"]
+    command     = <<-EOT
+      $ns = "${self.input}"
+      $ErrorActionPreference = "SilentlyContinue"
+      kubectl get svc -n $ns -o name 2>$null | ForEach-Object {
+        kubectl patch $_ -n $ns -p '{"metadata":{"finalizers":[]}}' --type=merge 2>$null | Out-Null
+      }
+    EOT
+  }
 }

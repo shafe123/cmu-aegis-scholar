@@ -23,6 +23,8 @@ values_file       = "../k8s/charts/aegis-scholar/values-dev.yaml"
 # Match the current local ingress setup
 install_traefik                  = true
 traefik_namespace                = "traefik-system"
+traefik_chart_version            = "39.0.7"
+traefik_image_tag                = "v3.6.12"
 traefik_web_port                 = 80
 create_registry_config_daemonset = true
 
@@ -39,7 +41,3 @@ neo4j_password = "" # Prefer TF_VAR_neo4j_password
 registry_username = ""
 registry_password = ""
 registry_email    = ""
-
-# Legacy Azure variables kept for future cloud work
-location      = "eastus"
-acr_base_name = "aegisscholarbase"
