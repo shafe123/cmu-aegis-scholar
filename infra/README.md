@@ -53,97 +53,28 @@ Deploy to any Kubernetes cluster (local, cloud, or on-premises).
    export TF_VAR_registry_password="your-password"
    ```
 
-4. **Enable Kubernetes Module**
-   Edit `main.tf` and uncomment the `k8s_deployment` module block.
+4. **Apply by stage (recommended for local development)**
 
-5. **Plan Deployment**
+   **Bootstrap phase** — namespace, Traefik, local registry wiring:
    ```bash
-   terraform plan
+   terraform apply -var="deployment_phase=bootstrap"
    ```
 
-6. **Apply Configuration**
+   **Data phase** — creates the shared DTIC PVC:
    ```bash
-   terraform apply
+   terraform apply -var="deployment_phase=data"
    ```
 
-#### Connecting to Different Kubernetes Clusters
+   Load your DTIC files into the PVC, then deploy the rest.
 
-**Local Clusters (minikube, kind, Docker Desktop)**
-```hcl
-# terraform.tfvars
-kubeconfig_path = "~/.kube/config"
-```
-
-**Azure AKS**
-```bash
-# Get credentials
-az aks get-credentials --resource-group <rg> --name <cluster-name>
-
-# Terraform will use default kubeconfig
-kubeconfig_path = "~/.kube/config"
-```
-
-**AWS EKS**
-```bash
-# Get credentials
-aws eks update-kubeconfig --name <cluster-name> --region <region>
-
-# Terraform will use default kubeconfig
-kubeconfig_path = "~/.kube/config"
-```
-
-**GCP GKE**
-```bash
-# Get credentials
-gcloud container clusters get-credentials <cluster-name> --zone <zone>
-
-# Terraform will use default kubeconfig
-kubeconfig_path = "~/.kube/config"
-```
-
-**Custom/Self-Hosted Cluster**
-```hcl
-# terraform.tfvars
-kubeconfig_path = "/path/to/your/kubeconfig"
-```
-
-Or configure inline credentials in `main.tf`:
-```hcl
-provider "kubernetes" {
-  host                   = var.kubernetes_host
-  token                  = var.kubernetes_token
-  cluster_ca_certificate = base64decode(var.kubernetes_ca_cert)
-}
-```
-
-### Option 2: Azure Container Apps (Legacy)
-
-Deploy to Azure Container Apps using the existing modules.
-
-#### Prerequisites
-
-1. **Azure Subscription**: Active Azure subscription
-2. **Azure CLI**: Logged in with `az login`
-3. **Terraform**: v1.5.0 or later
-
-#### Setup Steps
-
-1. **Initialize Terraform**
+   **App phase** — installs the full application stack and loader jobs:
    ```bash
-   cd infra
-   terraform init
+   terraform apply -var="deployment_phase=app"
    ```
 
-2. **Configure Variables**
+   Or do a one-shot deployment:
    ```bash
-   # Edit variables in terraform.tfvars or use defaults
-   environment = "dev"
-   location = "eastus"
-   ```
-
-3. **Apply Configuration**
-   ```bash
-   terraform apply
+   terraform apply -var="deployment_phase=all"
    ```
 
 ## Configuration Variables
@@ -173,41 +104,6 @@ Set these via environment variables (recommended) or in `terraform.tfvars` (not 
 export TF_VAR_neo4j_password="secure-password"
 export TF_VAR_registry_username="username"
 export TF_VAR_registry_password="password"
-```
-
-## Managing State
-
-### Remote State (Azure Backend)
-
-The configuration uses Azure Storage for remote state:
-
-```hcl
-backend "azurerm" {
-  resource_group_name  = "aegis_scholar_essential"
-  storage_account_name = "aegisscholarterraform"
-  container_name       = "tfstate"
-  key                  = "terraform.tfstate"
-}
-```
-
-### Multiple Environments
-
-Use workspaces for multiple environments:
-
-```bash
-# Create and switch to dev workspace
-terraform workspace new dev
-terraform workspace select dev
-
-# Apply dev configuration
-terraform apply -var="environment=dev"
-
-# Create and switch to prod workspace
-terraform workspace new prod
-terraform workspace select prod
-
-# Apply prod configuration
-terraform apply -var="environment=prod"
 ```
 
 ## Outputs

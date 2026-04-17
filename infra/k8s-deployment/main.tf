@@ -2,9 +2,12 @@
 # This module recreates the current local Helm-based Kubernetes stack in Terraform.
 
 locals {
-  namespace   = var.kubernetes_namespace != "" ? var.kubernetes_namespace : "aegis-${var.environment}"
-  chart_path  = abspath(var.helm_chart_path)
-  values_file = var.values_file != "" ? abspath(var.values_file) : "${local.chart_path}/values-${var.environment}.yaml"
+  namespace         = var.kubernetes_namespace != "" ? var.kubernetes_namespace : "aegis-${var.environment}"
+  chart_path        = abspath(var.helm_chart_path)
+  values_file       = var.values_file != "" ? abspath(var.values_file) : "${local.chart_path}/values-${var.environment}.yaml"
+  phase             = lower(var.deployment_phase)
+  deploy_data_layer = contains(["data", "app", "all"], local.phase)
+  deploy_app_layer  = contains(["app", "all"], local.phase)
 }
 
 resource "kubernetes_namespace" "aegis_scholar" {
@@ -98,6 +101,51 @@ resource "helm_release" "aegis_scholar" {
   set {
     name  = "global.namespace"
     value = local.namespace
+  }
+
+  set {
+    name  = "dticData.enabled"
+    value = local.deploy_data_layer ? "true" : "false"
+  }
+
+  set {
+    name  = "ingress.enabled"
+    value = local.deploy_app_layer ? "true" : "false"
+  }
+
+  set {
+    name  = "frontend.enabled"
+    value = local.deploy_app_layer ? "true" : "false"
+  }
+
+  set {
+    name  = "aegis-scholar-api.enabled"
+    value = local.deploy_app_layer ? "true" : "false"
+  }
+
+  set {
+    name  = "vector-db.enabled"
+    value = local.deploy_app_layer ? "true" : "false"
+  }
+
+  set {
+    name  = "vector-db.loader.enabled"
+    value = local.deploy_app_layer ? "true" : "false"
+  }
+
+  set {
+    name  = "graph-db.enabled"
+    value = local.deploy_app_layer ? "true" : "false"
+  }
+
+  set {
+    name  = "graph-db.loader.enabled"
+    value = local.deploy_app_layer ? "true" : "false"
+  }
+
+  set {
+    name  = "milvus.enabled"
+    value = local.deploy_app_layer ? "true" : "false"
   }
 
   dynamic "set" {

@@ -3,6 +3,12 @@ variable "environment" {
   description = "Deployment environment (dev, staging, prod)"
 }
 
+variable "deployment_phase" {
+  type        = string
+  description = "Deployment phase for staged applies: bootstrap, data, app, or all"
+  default     = "all"
+}
+
 variable "kubernetes_namespace" {
   type        = string
   description = "Kubernetes namespace for deployment"

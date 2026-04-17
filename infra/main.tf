@@ -25,6 +25,7 @@ module "k8s_deployment" {
   source = "./k8s-deployment"
 
   environment                       = var.environment
+  deployment_phase                  = var.deployment_phase
   kubernetes_namespace              = var.kubernetes_namespace
   create_namespace                  = var.create_namespace
   helm_release_name                 = var.helm_release_name

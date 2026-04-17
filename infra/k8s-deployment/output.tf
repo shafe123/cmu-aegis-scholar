@@ -22,3 +22,8 @@ output "traefik_enabled" {
   description = "Whether Traefik is managed by this module"
   value       = var.install_traefik
 }
+
+output "deployment_phase" {
+  description = "Current staged deployment phase"
+  value       = var.deployment_phase
+}
