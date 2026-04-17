@@ -158,7 +158,7 @@ jobs:
               uses: actions/upload-artifact@v7
               if: always()
               with:
-                  name: coverage-report-${{ strategy.job-index }}
+                  name: coverage-report-${{ matrix.service }}
                   path: ${{ matrix.service }}/coverage.xml
 
     # ---------------------------------------------------------------------------
