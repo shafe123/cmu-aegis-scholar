@@ -85,12 +85,13 @@ def get_or_load_model(model_name: str) -> TextEmbedding:
         model = TextEmbedding(model_name=fastembed_model)
 
         embedding_models[model_name] = model
+        model_dimensions[model_name] = AVAILABLE_MODELS[model_name]["dimension"]
 
-        # Cache the dimension
-        dim = AVAILABLE_MODELS[model_name]["dimension"]
-        model_dimensions[model_name] = dim
-
-        logger.info("Model '%s' loaded successfully (dimension: %d)", model_name, dim)
+        logger.info(
+            "Model '%s' loaded successfully (dimension: %d)",
+            model_name,
+            model_dimensions[model_name],
+        )
         return model
     except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Failed to load model '%s': %s", model_name, e)
@@ -106,6 +107,9 @@ def get_model_dimension(model_name: str) -> int:
 
     Returns:
         int: Dimension of the model's embeddings
+
+    Raises:
+        ValueError: If model is not available or dimension not configured
     """
     # Check cache first
     if model_name in model_dimensions:
@@ -118,9 +122,11 @@ def get_model_dimension(model_name: str) -> int:
     ):
         return AVAILABLE_MODELS[model_name]["dimension"]
 
-    # Need to load the model to determine dimension
-    get_or_load_model(model_name)
-    return model_dimensions[model_name]
+    # Model not found or dimension not configured
+    available = ", ".join(AVAILABLE_MODELS.keys())
+    raise ValueError(
+        f"Model '{model_name}' is not available. Available models: {available}"
+    )
 
 
 # Milvus connection management
@@ -672,9 +678,13 @@ async def text_search(request: TextSearchRequest):
         # Get or load the embedding model
         try:
             model = get_or_load_model(model_name)
-        except (ValueError, RuntimeError) as e:
+        except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+            ) from e
+        except RuntimeError as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
             ) from e
 
         # Check if collection exists
@@ -788,9 +798,13 @@ async def create_author_embedding(request: CreateAuthorEmbeddingRequest):
         # Get or load the embedding model
         try:
             model = get_or_load_model(model_name)
-        except (ValueError, RuntimeError) as e:
+        except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+            ) from e
+        except RuntimeError as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
             ) from e
 
         # Validate abstracts
@@ -910,7 +924,7 @@ async def create_author_vector(request: CreateAuthorVectorRequest):
                             f"got {embedding_dim}"
                         ),
                     )
-            except (ValueError, RuntimeError) as e:
+            except ValueError as e:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Error validating model dimension: {str(e)}",

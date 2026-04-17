@@ -15,7 +15,7 @@ class VectorSearchRequest(BaseModel):
         ...,
         description="Query vector for similarity search",
         json_schema_extra={
-            "example": {"query_vector": [0.023, -0.145, 0.089]}
+            "example": [0.023, -0.145, 0.089] + [0.0] * 381  # type: ignore[dict-item]
         },  # 384-dim vector
     )
     collection_name: Optional[str] = Field(
@@ -157,7 +157,7 @@ class CreateAuthorVectorRequest(BaseModel):
         ...,
         description="Pre-computed embedding vector for the author",
         json_schema_extra={
-            "example": {"embedding": [0.025, -0.134, 0.078]}
+            "example": [0.025, -0.134, 0.078] + [0.0] * 381  # type: ignore[dict-item]
         },  # 384-dim vector
     )
     model_name: Optional[str] = Field(

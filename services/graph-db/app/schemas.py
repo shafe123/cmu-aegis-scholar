@@ -1,3 +1,5 @@
+"""Pydantic models for Graph DB API request and response validation."""
+
 from pydantic import BaseModel, Field
 
 

@@ -62,18 +62,14 @@ extend-select = ["B"]
 ignore = [".venv", "tests"]
 
 [tool.pylint.design]
-max-args = 7  # Allow up to 7 arguments (default is 5)
-max-locals = 20  # Allow up to 20 local variables (default is 15)
-max-nested-blocks = 6  # Allow up to 6 nested blocks (default is 5)
+max-args = 7
+max-locals = 20
+max-nested-blocks = 6
 
-[tool.pylint.basic]
-# Allow single-char variable names for common cases (e.g., 'e' for exceptions)
-good-names = ["i", "j", "k", "e", "ex", "id", "_"]
+[tool.pylint.format]
+max-line-length = 120
 
 [tool.mypy]
 python_version = "3.12"
 ignore_missing_imports = true
 warn_unused_ignores = true
-
-[tool.pylint.MASTER]
-load-plugins = "pylint_pydantic"
