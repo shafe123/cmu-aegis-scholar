@@ -5,7 +5,9 @@ from fastapi import FastAPI, HTTPException
 from neo4j import GraphDatabase
 
 from app.config import settings
-from app.schemas import AuthorNode, AuthorOrgRel, AuthorWorkRel, OrgNode, WorkNode
+from app.schemas import (
+    AuthorNode, AuthorOrgRel, AuthorWorkRel, 
+    OrgNode, WorkNode, TopicNode, WorkTopicRel)
 
 # --- 1. Setup Logging ---
 logging.basicConfig(level=logging.INFO)
@@ -77,6 +79,17 @@ async def get_stats():
 
 # --- 6. Ingestion Endpoints ---
 
+@app.post("/topics", tags=["Ingestion"])
+async def upsert_topic(topic: TopicNode) -> dict[str, str]:
+    """Upserts a Topic node into the graph."""
+    query = """
+    MERGE (t:Topic {id: $id})
+    SET t.name = $name, t.field = $field, t.domain = $domain
+    RETURN t.id
+    """
+    with driver.session() as session:
+        session.run(query, **topic.model_dump())
+    return {"status": "success", "id": topic.id}
 
 @app.post("/authors", tags=["Ingestion"])
 async def upsert_author(author: AuthorNode):
@@ -114,7 +127,6 @@ async def link_author_work(rel: AuthorWorkRel):
     """
     with driver.session() as session:
         session.run(query, **rel.model_dump())
-        session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
 
@@ -138,6 +150,18 @@ async def link_author_org(rel: AuthorOrgRel):
     MATCH (a:Author {id: $author_id})
     MATCH (o:Organization {id: $org_id})
     MERGE (a)-[:AFFILIATED_WITH {role: $role}]->(o)
+    """
+    with driver.session() as session:
+        session.run(query, **rel.model_dump())
+    return {"status": "linked"}
+
+@app.post("/relationships/covers", tags=["Relationships"])
+async def link_work_topic(rel: WorkTopicRel) -> dict[str, str]:
+    """Links a Work to a Topic (Covers)."""
+    query = """
+    MATCH (w:Work {id: $work_id})
+    MATCH (t:Topic {id: $topic_id})
+    MERGE (w)-[:COVERS_TOPIC {score: $score}]->(t)
     """
     with driver.session() as session:
         session.run(query, **rel.model_dump())
