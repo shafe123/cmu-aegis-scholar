@@ -8,6 +8,13 @@ global:
   # Namespace to deploy to (can be overridden at install time)
   namespace: default
 
+# Shared data volume for DTIC compressed data
+dticData:
+  enabled: true
+  size: 20Gi
+  storageClass: "" # Use default storage class
+  accessMode: ReadOnlyMany
+
 # Enable/disable components
 aegis-scholar-api:
   enabled: true
