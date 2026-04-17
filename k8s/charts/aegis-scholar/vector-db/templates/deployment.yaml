@@ -52,12 +52,12 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- range .Values.envFromValues }}
-        - name: {{ .name }}
-          value: {{ tpl .value $ | quote }}
+          - name: {{ .name }}
+            value: {{ tpl .value $ | quote }}
         {{- end }}
-        {{- with .Values.envFrom }}
+        {{- if .Values.envFrom }}
         envFrom:
-          {{- toYaml . | nindent 10 }}
+        {{- toYaml .Values.envFrom | nindent 10 }}
         {{- end }}
         {{- if .Values.persistence.enabled }}
         volumeMounts:

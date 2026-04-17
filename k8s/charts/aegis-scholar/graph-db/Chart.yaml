@@ -1,11 +1,11 @@
 apiVersion: v2
-name: graph-db
-description: Graph database API service using Neo4j
-type: application
-version: 0.1.0
 appVersion: "1.0"
 dependencies:
-- name: neo4j
-  version: 5.29.0
+- condition: neo4j.enabled
+  name: neo4j
   repository: https://neo4j.github.io/helm-charts
-  condition: neo4j.enabled
+  version: 5.29.0
+description: Graph database API service using Neo4j
+name: graph-db
+type: application
+version: 0.1.0

@@ -29,3 +29,7 @@ dependencies:
   version: 4.2.8
   repository: https://zilliztech.github.io/milvus-helm
   condition: milvus.enabled
+- name: docker-registry
+  version: 0.1.0
+  repository: file://./docker-registry
+  condition: docker-registry.enabled

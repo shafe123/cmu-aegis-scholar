@@ -10,6 +10,7 @@ The application consists of:
 - **graph-db**: Graph database API service using Neo4j
 - **milvus**: Standalone Milvus vector database
 - **neo4j**: Neo4j graph database
+- **docker-registry**: Local container registry (dev environment only)
 
 ## Prerequisites
 
@@ -72,13 +73,17 @@ cd charts/aegis-scholar
 helm dependency build
 ```
 
+> **Note:** The development environment (`values-dev.yaml`) includes a Docker Registry for local image management. To use it, first deploy just the registry (see [Using the Built-in Docker Registry](#using-the-built-in-docker-registry)), then build and push your images, then deploy the full application.
+
 ### 5. Deploy to Development
 ```bash
 # Install the chart
+# For local development, see "Local Development with Docker Desktop" section below
+# For cloud deployment, set imageRegistry to your container registry:
 helm install aegis-scholar . \
   -f values-dev.yaml \
   -n aegis-dev \
-  --set global.imageRegistry=<your-registry>
+  --set global.imageRegistry=myregistry.azurecr.io
 
 # Check status
 kubectl get pods -n aegis-dev
@@ -205,6 +210,8 @@ helm install aegis-scholar . `
 kubectl get pods -n aegis-dev --watch
 # Press Ctrl+C when all pods are Running
 ```
+
+> **Alternative:** Use the built-in Docker Registry for a more production-like workflow. See the [Using the Built-in Docker Registry](#using-the-built-in-docker-registry) section below.
 
 ### Step 6: Verify Deployment
 
@@ -375,6 +382,148 @@ kubectl delete namespace aegis-dev
 # Docker Desktop → Settings → Kubernetes → Reset Kubernetes Cluster
 ```
 
+## Using the Built-in Docker Registry
+
+The development environment includes a Docker Registry that runs inside your Kubernetes cluster. This simplifies the workflow by allowing you to push images once and reuse them across deployments.
+
+### Step 1: Deploy Only the Registry
+
+First, deploy just the registry component:
+
+```powershell
+cd k8s/charts/aegis-scholar
+
+# Deploy only the docker-registry (disable other services)
+helm install aegis-scholar . `
+  -f values-dev.yaml `
+  -n aegis-dev `
+  --set aegis-scholar-api.enabled=false `
+  --set vector-db.enabled=false `
+  --set graph-db.enabled=false `
+  --set milvus.enabled=false
+
+# Wait for registry to be ready
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=docker-registry -n aegis-dev --timeout=2m
+
+# Verify registry is running
+kubectl get pods -n aegis-dev | Select-String docker-registry
+```
+
+The registry is:
+- Accessible at `localhost:5000` (LoadBalancer)
+- Configured with persistent storage (10GB by default)
+- Only enabled in the dev environment
+
+### Step 2: Configure Docker for Insecure Registry
+
+Since this is a local HTTP registry (not HTTPS), configure Docker Desktop:
+
+```powershell
+# Open Docker Desktop → Settings → Docker Engine
+# Add to the JSON configuration:
+{
+  "insecure-registries": ["localhost:5000"]
+}
+
+# Click "Apply & Restart"
+```
+
+### Step 3: Build and Push Images to Registry
+
+```powershell
+# Build your images
+docker build -t localhost:5000/aegis-scholar-api:latest ./services/aegis-scholar-api
+docker build -t localhost:5000/vector-db:latest ./services/vector-db
+docker build -t localhost:5000/graph-db:latest ./services/graph-db
+
+# Push to the cluster registry
+docker push localhost:5000/aegis-scholar-api:latest
+docker push localhost:5000/vector-db:latest
+docker push localhost:5000/graph-db:latest
+```
+
+### Step 4: Deploy Application Services Using Registry Images
+
+```powershell
+# Now upgrade to enable all services with registry images
+helm upgrade aegis-scholar . `
+  -f values-dev.yaml `
+  -n aegis-dev `
+  --set aegis-scholar-api.enabled=true `
+  --set vector-db.enabled=true `
+  --set graph-db.enabled=true `
+  --set milvus.enabled=true `
+  --set global.imageRegistry="localhost:5000" `
+  --set aegis-scholar-api.image.repository=aegis-scholar-api `
+  --set aegis-scholar-api.image.tag=latest `
+  --set vector-db.image.repository=vector-db `
+  --set vector-db.image.tag=latest `
+  --set graph-db.image.repository=graph-db `
+  --set graph-db.image.tag=latest
+
+# Watch deployment
+kubectl get pods -n aegis-dev --watch
+```
+
+### Step 5: Update After Code Changes
+
+```powershell
+# Rebuild and push
+docker build -t localhost:5000/aegis-scholar-api:latest ./services/aegis-scholar-api
+docker push localhost:5000/aegis-scholar-api:latest
+
+# Restart to pull new image
+kubectl rollout restart deployment aegis-scholar-aegis-scholar-api -n aegis-dev
+```
+
+### Registry Management
+
+**List images in registry:**
+```powershell
+# Get catalog
+curl http://localhost:5000/v2/_catalog
+
+# Get tags for a specific image
+curl http://localhost:5000/v2/aegis-scholar-api/tags/list
+```
+
+**Access registry UI (optional):**
+```powershell
+# Deploy a registry UI
+kubectl run registry-ui --image=joxit/docker-registry-ui:latest `
+  -n aegis-dev `
+  --env="REGISTRY_URL=http://aegis-scholar-docker-registry:5000" `
+  --port=80
+
+kubectl port-forward -n aegis-dev pod/registry-ui 8080:80
+# Open http://localhost:8080 in browser
+```
+
+**Clear registry storage:**
+```powershell
+# Delete and recreate the PVC
+kubectl delete pvc aegis-scholar-docker-registry -n aegis-dev
+kubectl rollout restart deployment aegis-scholar-docker-registry -n aegis-dev
+```
+
+### Comparison: Direct Images vs Registry
+
+**Direct local images (`:local` tag):**
+- ✅ No push step required
+- ✅ Faster for quick iterations
+- ❌ Manual rebuild before each deploy
+- ❌ Doesn't simulate production workflow
+
+**Cluster registry (`localhost:5000`):**
+- ✅ Simulates production registry workflow
+- ✅ Images persist across pod restarts
+- ✅ Easier rollouts (just restart deployment)
+- ✅ Can version images with tags
+- ❌ Requires push step
+- ❌ Slightly more setup
+
+Choose based on your workflow preference. For rapid development, use local images. For testing deployment workflows, use the registry.
+
 ## Environment-Specific Deployments
 
 ### Development
@@ -543,7 +692,8 @@ k8s/
 │       ├── values-prod.yaml       # Production overrides
 │       ├── aegis-scholar-api/     # API service chart
 │       ├── vector-db/             # Vector DB service chart
-│       └── graph-db/              # Graph DB service chart
+│       ├── graph-db/              # Graph DB service chart
+│       └── docker-registry/       # Local registry chart (dev only)
 ├── namespaces.yaml                # Namespace definitions
 ├── secrets.example.yaml           # Secret templates
 ├── traefik-ingress.yaml           # Ingress configuration
@@ -557,3 +707,4 @@ k8s/
 - [Traefik Documentation](https://doc.traefik.io/traefik/)
 - [Milvus Documentation](https://milvus.io/docs/)
 - [Neo4j Documentation](https://neo4j.com/docs/)
+- [Docker Registry Documentation](https://docs.docker.com/registry/)
