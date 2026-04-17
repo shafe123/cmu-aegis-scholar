@@ -178,42 +178,42 @@ async def get_author_network(author_id: str):
         nodes, edges, node_ids = [], [], set()
 
         for record in result:
-            a, w, co, o = record["author"], record["work"], record["coAuthor"], record["org"]
+            author, work, coauthor, org = record["author"], record["work"], record["coAuthor"], record["org"]
 
             # Add Author
-            if a and a["id"] not in node_ids:
+            if author and author["id"] not in node_ids:
                 nodes.append(
-                    {"id": a["id"], "label": a["name"], "group": "author", "color": "#ff6b6b"}
+                    {"id": author["id"], "label": a["name"], "group": "author", "color": "#ff6b6b"}
                 )
-                node_ids.add(a["id"])
+                node_ids.add(author["id"])
 
             # Add Work
-            if w and w["id"] not in node_ids:
+            if work and work["id"] not in node_ids:
                 nodes.append(
                     {
-                        "id": w["id"],
-                        "label": w["title"][:30] + "...",
+                        "id": work["id"],
+                        "label": work["title"][:30] + "...",
                         "group": "work",
                         "color": "#4ecdc4",
                     }
                 )
-                node_ids.add(w["id"])
-                edges.append({"from": a["id"], "to": w["id"], "label": "AUTHORED"})
+                node_ids.add(work["id"])
+                edges.append({"from": author["id"], "to": work["id"], "label": "AUTHORED"})
 
             # Add Co-Author
-            if co and co["id"] not in node_ids:
+            if coauthor and coauthor["id"] not in node_ids:
                 nodes.append(
-                    {"id": co["id"], "label": co["name"], "group": "author", "color": "#ffadad"}
+                    {"id": coauthor["id"], "label": coauthor["name"], "group": "author", "color": "#ffadad"}
                 )
-                node_ids.add(co["id"])
-                edges.append({"from": co["id"], "to": w["id"], "label": "AUTHORED"})
+                node_ids.add(coauthor["id"])
+                edges.append({"from": coauthor["id"], "to": work["id"], "label": "AUTHORED"})
 
             # Add Organization (New)
-            if o and o["id"] not in node_ids:
+            if org and org["id"] not in node_ids:
                 nodes.append(
-                    {"id": o["id"], "label": o["name"], "group": "organization", "color": "#f9ca24"}
+                    {"id": org["id"], "label": org["name"], "group": "organization", "color": "#f9ca24"}
                 )
-                node_ids.add(o["id"])
-                edges.append({"from": a["id"], "to": o["id"], "label": "AFFILIATED_WITH"})
+                node_ids.add(org["id"])
+                edges.append({"from": author["id"], "to": org["id"], "label": "AFFILIATED_WITH"})
 
         return {"nodes": nodes, "edges": edges}

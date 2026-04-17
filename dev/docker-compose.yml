@@ -227,7 +227,3 @@ volumes:
   model-cache:
   neo4j-data:
   neo4j-logs:
-
-secrets:
-  neo4j_password:
-    file: ./neo4j_password.txt
