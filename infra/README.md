@@ -47,10 +47,12 @@ Deploy to any Kubernetes cluster (local, cloud, or on-premises).
    ```
 
 3. **Set Secrets via Environment Variables**
-   ```bash
-   export TF_VAR_neo4j_password="your-secure-password"
-   export TF_VAR_registry_username="your-username"
-   export TF_VAR_registry_password="your-password"
+   Use the same terminal session that you will run Terraform from.
+
+   ```powershell
+   $env:TF_VAR_neo4j_password="your-secure-password"
+   $env:TF_VAR_registry_username="your-username"
+   $env:TF_VAR_registry_password="your-password"
    ```
 
 4. **Apply by stage (recommended for local development)**
@@ -65,7 +67,34 @@ Deploy to any Kubernetes cluster (local, cloud, or on-premises).
    terraform apply -var="deployment_phase=data"
    ```
 
-   Load your DTIC files into the PVC, then deploy the rest.
+   **Load DTIC files into the PVC**:
+   ```powershell
+   $helperPodYaml = @(
+     'apiVersion: v1'
+     'kind: Pod'
+     'metadata:'
+     '  name: data-loader-helper'
+     '  namespace: aegis-dev'
+     'spec:'
+     '  containers:'
+     '  - name: helper'
+     '    image: busybox'
+     '    command: ["sh", "-c", "sleep 3600"]'
+     '    volumeMounts:'
+     '    - name: dtic-data'
+     '      mountPath: /data'
+     '  volumes:'
+     '  - name: dtic-data'
+     '    persistentVolumeClaim:'
+     '      claimName: dtic-data'
+   ) -join "`n"
+
+   $helperPodYaml | kubectl apply -f -
+   kubectl wait --for=condition=ready pod/data-loader-helper -n aegis-dev --timeout=2m
+   kubectl cp ../data/dtic_compressed data-loader-helper:/data/ -n aegis-dev -c helper
+   kubectl exec -n aegis-dev data-loader-helper -- ls -lh /data/dtic_compressed/
+   kubectl delete pod data-loader-helper -n aegis-dev
+   ```
 
    **App phase** — installs the full application stack and loader jobs:
    ```bash
@@ -140,6 +169,18 @@ terraform apply -var="image_tag=v1.2.3"
 Helm chart changes are automatically detected and applied.
 
 ## Destroying Resources
+
+### Recommended staged teardown
+
+For local development, tear down in reverse order first:
+
+```bash
+terraform apply -var="deployment_phase=data"
+terraform apply -var="deployment_phase=bootstrap"
+terraform destroy
+```
+
+This removes the application layer before the shared infrastructure and reduces the chance of stuck service cleanup during destroy.
 
 ### Destroy Kubernetes Resources
 ```bash

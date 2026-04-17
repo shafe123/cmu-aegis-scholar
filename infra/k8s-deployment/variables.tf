@@ -62,6 +62,18 @@ variable "traefik_namespace" {
   default     = "traefik-system"
 }
 
+variable "traefik_chart_version" {
+  type        = string
+  description = "Pinned Traefik chart version"
+  default     = "39.0.7"
+}
+
+variable "traefik_image_tag" {
+  type        = string
+  description = "Pinned Traefik container image tag"
+  default     = "v3.6.12"
+}
+
 variable "traefik_web_port" {
   type        = number
   description = "Port for Traefik's web entrypoint"

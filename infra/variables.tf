@@ -101,6 +101,18 @@ variable "traefik_namespace" {
   default     = "traefik-system"
 }
 
+variable "traefik_chart_version" {
+  type        = string
+  description = "Pinned Traefik chart version for reproducible local deploys"
+  default     = "39.0.7"
+}
+
+variable "traefik_image_tag" {
+  type        = string
+  description = "Pinned Traefik image tag for local deploys"
+  default     = "v3.6.12"
+}
+
 variable "traefik_web_port" {
   type        = number
   description = "Port exposed by Traefik's web entrypoint"
