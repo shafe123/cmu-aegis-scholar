@@ -6,8 +6,14 @@ from neo4j import GraphDatabase
 
 from app.config import settings
 from app.schemas import (
-    AuthorNode, AuthorOrgRel, AuthorWorkRel, 
-    OrgNode, WorkNode, TopicNode, WorkTopicRel)
+    AuthorNode,
+    AuthorOrgRel,
+    AuthorWorkRel,
+    OrgNode,
+    TopicNode,
+    WorkNode,
+    WorkTopicRel,
+)
 
 # --- 1. Setup Logging ---
 logging.basicConfig(level=logging.INFO)
