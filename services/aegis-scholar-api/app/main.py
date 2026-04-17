@@ -404,7 +404,7 @@ async def get_author_by_id(author_id: str):
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://graph-db:8003/authors/{author_id}", timeout=10.0)
+            response = await client.get(f"{settings.graph_db_url}/authors/{author_id}", timeout=10.0)
 
         if response.status_code == 404:
             raise HTTPException(status_code=404, detail="Author not found")
@@ -454,7 +454,7 @@ async def get_author_network_viz(author_id: str):
     logger.info("GET /viz/author-network/%s", author_id)
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://graph-db:8003/viz/author-network/{author_id}", timeout=10.0)
+            response = await client.get(f"{settings.graph_db_url}/viz/author-network/{author_id}", timeout=10.0)
 
         response.raise_for_status()
         return response.json()

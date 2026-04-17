@@ -1,0 +1,50 @@
+{{- $graphDb := index .Values "graph-db" -}}
+{{- if $graphDb.loader.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-graph-db-loader
+  labels:
+    app.kubernetes.io/name: graph-db
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: loader
+spec:
+  ttlSecondsAfterFinished: {{ $graphDb.loader.ttlSecondsAfterFinished | default 86400 }}
+  backoffLimit: {{ $graphDb.loader.backoffLimit | default 3 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: graph-db
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: loader
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: graph-loader
+        {{- $registry := .Values.global.imageRegistry | default $graphDb.loader.image.registry | default "" }}
+        {{- $repository := $graphDb.loader.image.repository }}
+        {{- $tag := $graphDb.loader.image.tag }}
+        {{- if $registry }}
+        image: {{ printf "%s/%s:%s" $registry $repository $tag }}
+        {{- else }}
+        image: {{ printf "%s:%s" $repository $tag }}
+        {{- end }}
+        imagePullPolicy: {{ $graphDb.loader.image.pullPolicy }}
+        env:
+        - name: GRAPH_API_URL
+          value: "http://{{ .Release.Name }}-graph-db:{{ $graphDb.service.port | default 8003 }}"
+        - name: DATA_DIR
+          value: {{ $graphDb.loader.dataDir | default "/data/dtic_compressed" | quote }}
+        volumeMounts:
+        - name: dtic-data
+          mountPath: /data
+          readOnly: true
+        {{- if $graphDb.loader.resources }}
+        resources:
+          {{- toYaml $graphDb.loader.resources | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: dtic-data
+        persistentVolumeClaim:
+          claimName: dtic-data
+{{- end }}

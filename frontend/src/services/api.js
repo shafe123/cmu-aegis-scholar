@@ -1,5 +1,12 @@
-// Main API URL
-const MAIN_API_URL = "http://localhost:8000";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api").replace(
+  /\/$/,
+  "",
+);
+
+export const buildApiUrl = (path) => {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+};
 
 export const searchAuthors = async (query, activeTab = "Authors") => {
   if (activeTab !== "Authors" && activeTab !== "Year") {
@@ -7,9 +14,8 @@ export const searchAuthors = async (query, activeTab = "Authors") => {
   }
 
   try {
-    // Send a standard GET request to the Main API with search query
     const response = await fetch(
-      `${MAIN_API_URL}/search/authors?q=${encodeURIComponent(query)}`,
+      buildApiUrl(`/search/authors?q=${encodeURIComponent(query)}`),
     );
 
     if (!response.ok) {
@@ -21,7 +27,6 @@ export const searchAuthors = async (query, activeTab = "Authors") => {
 
     const rawResults = data.results || [];
 
-    // Map the clean data returned by Main API's Pydantic schema
     const formattedResults = rawResults.map((author) => ({
       id: author.id || "unknown_id",
       name: author.name || "Unknown Author",

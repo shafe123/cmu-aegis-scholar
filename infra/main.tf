@@ -1,67 +1,47 @@
 terraform {
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~>3.0"
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.23"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.11"
     }
   }
-  backend "azurerm" {
-    resource_group_name  = "aegis_scholar_essential"
-    storage_account_name = "aegisscholarterraform"
-    container_name       = "tfstate"
-    key                  = "terraform.tfstate"
+}
+
+provider "kubernetes" {
+  config_path = pathexpand(var.kubeconfig_path)
+}
+
+provider "helm" {
+  kubernetes {
+    config_path = pathexpand(var.kubeconfig_path)
   }
-
 }
 
-provider "azurerm" {
-  features {}
-}
+module "k8s_deployment" {
+  source = "./k8s-deployment"
 
-resource "azurerm_resource_provider_registration" "app" {
-  name = "Microsoft.App"
-}
+  environment                      = var.environment
+  deployment_phase                 = var.deployment_phase
+  kubernetes_namespace             = var.kubernetes_namespace
+  create_namespace                 = var.create_namespace
+  helm_release_name                = var.helm_release_name
+  helm_chart_path                  = var.helm_chart_path
+  values_file                      = var.values_file
+  image_registry                   = var.image_registry
+  image_tag                        = var.image_tag
+  install_traefik                  = var.install_traefik
+  traefik_namespace                = var.traefik_namespace
+  traefik_chart_version            = var.traefik_chart_version
+  traefik_image_tag                = var.traefik_image_tag
+  traefik_web_port                 = var.traefik_web_port
+  create_registry_config_daemonset = var.create_registry_config_daemonset
 
-resource "azurerm_resource_group" "aegis_scholar_essential" {
-  name     = "aegis_scholar_essential"
-  location = var.location
-
-  lifecycle {
-    prevent_destroy = true
-  }
-  tags = { "env" : "required" }
-}
-
-resource "random_string" "acr_suffix" {
-  length  = 12
-  lower   = true
-  numeric = true
-  special = false
-  upper   = false
-}
-
-resource "azurerm_container_registry" "aegis_scholar_acr" {
-  name                = "${var.acr_base_name}${random_string.acr_suffix.result}"
-  location            = azurerm_resource_group.aegis_scholar_essential.location
-  resource_group_name = azurerm_resource_group.aegis_scholar_essential.name
-  sku                 = "Basic"
-
-  lifecycle {
-    prevent_destroy = true
-  }
-  tags = { "env" : "required" }
-}
-
-module "example_service" {
-  source      = "./example-service"
-  environment = var.environment
-  acr_base    = azurerm_container_registry.aegis_scholar_acr.name
-  acr_id      = azurerm_container_registry.aegis_scholar_acr.id
-}
-
-module "vector_db" {
-  source      = "./vector-db"
-  environment = var.environment
-  acr_base    = azurerm_container_registry.aegis_scholar_acr.name
-  acr_id      = azurerm_container_registry.aegis_scholar_acr.id
+  neo4j_password    = var.neo4j_password
+  registry_username = var.registry_username
+  registry_password = var.registry_password
+  registry_email    = var.registry_email
 }

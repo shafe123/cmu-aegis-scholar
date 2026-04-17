@@ -1,0 +1,50 @@
+{{- $vectorDb := index .Values "vector-db" -}}
+{{- if $vectorDb.loader.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-vector-db-loader
+  labels:
+    app.kubernetes.io/name: vector-db
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: loader
+spec:
+  ttlSecondsAfterFinished: {{ $vectorDb.loader.ttlSecondsAfterFinished | default 86400 }}
+  backoffLimit: {{ $vectorDb.loader.backoffLimit | default 3 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vector-db
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: loader
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: vector-loader
+        {{- $registry := .Values.global.imageRegistry | default $vectorDb.loader.image.registry | default "" }}
+        {{- $repository := $vectorDb.loader.image.repository }}
+        {{- $tag := $vectorDb.loader.image.tag }}
+        {{- if $registry }}
+        image: {{ printf "%s/%s:%s" $registry $repository $tag }}
+        {{- else }}
+        image: {{ printf "%s:%s" $repository $tag }}
+        {{- end }}
+        imagePullPolicy: {{ $vectorDb.loader.image.pullPolicy }}
+        env:
+        - name: VECTOR_DB_URL
+          value: "http://{{ .Release.Name }}-vector-db:{{ $vectorDb.service.port | default 8002 }}"
+        - name: DATA_DIR
+          value: {{ $vectorDb.loader.dataDir | default "/data/dtic_compressed" | quote }}
+        volumeMounts:
+        - name: dtic-data
+          mountPath: /data
+          readOnly: true
+        {{- if $vectorDb.loader.resources }}
+        resources:
+          {{- toYaml $vectorDb.loader.resources | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: dtic-data
+        persistentVolumeClaim:
+          claimName: dtic-data
+{{- end }}

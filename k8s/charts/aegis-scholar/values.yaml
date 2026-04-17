@@ -1,0 +1,89 @@
+# Global settings for all subcharts
+global:
+  # Container registry settings
+  imageRegistry: "" # Override with your registry (e.g., myregistry.azurecr.io)
+  imagePullSecrets: []
+  storageClass: "" # Override with your storage class
+
+  # Namespace to deploy to (can be overridden at install time)
+  namespace: default
+
+# Shared data volume for DTIC compressed data
+dticData:
+  enabled: true
+  size: 20Gi
+  storageClass: "" # Use default storage class
+  accessMode: ReadOnlyMany
+
+# Enable/disable components
+aegis-scholar-api:
+  enabled: true
+
+frontend:
+  enabled: true
+
+vector-db:
+  enabled: true
+
+graph-db:
+  enabled: true
+
+milvus:
+  enabled: true
+  # Milvus standalone configuration
+  cluster:
+    enabled: false
+  standalone:
+    enabled: true
+  etcd:
+    replicaCount: 1
+  minio:
+    mode: standalone
+  pulsar:
+    enabled: false
+
+# Docker Registry for local development
+docker-registry:
+  enabled: false # Enable in dev environment
+  service:
+    type: LoadBalancer
+    port: 5000
+  persistence:
+    enabled: true
+    size: 10Gi
+  ingress:
+    enabled: false
+
+# Traefik ingress configuration
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+  stripPrefixes:
+  - /api
+  - /vector
+  - /graph
+  hosts:
+  - host: aegis-scholar.local
+    paths:
+    - path: /api
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /vector
+      pathType: Prefix
+      service: vector-db
+      port: 8002
+    - path: /graph
+      pathType: Prefix
+      service: graph-db
+      port: 8003
+    - path: /
+      pathType: Prefix
+      service: frontend
+      port: 80
+  tls: []
+  #  - secretName: aegis-scholar-tls
+  #    hosts:
+  #      - aegis-scholar.local

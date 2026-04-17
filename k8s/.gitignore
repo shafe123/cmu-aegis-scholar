@@ -1,0 +1,28 @@
+# Kubernetes secrets (DO NOT COMMIT)
+secrets.yaml
+*-secret.yaml
+*-secrets.yaml
+
+# Helm charts
+charts/*/charts/
+charts/*/Chart.lock
+charts/*/*.tgz
+
+# Terraform files
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Local kubeconfig files
+*.kubeconfig
+kubeconfig
+
+# Environment-specific overrides
+values-local.yaml
+*-local.yaml
+
+# Temporary files
+*.tmp
+*.bak
+.DS_Store

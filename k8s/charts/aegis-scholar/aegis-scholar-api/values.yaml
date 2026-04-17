@@ -1,0 +1,104 @@
+# Default values for aegis-scholar-api
+
+replicaCount: 2
+
+image:
+  repository: aegis-scholar-api
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {} # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8000
+  containerPort: 8000
+
+ingress:
+  enabled: false
+  className: traefik
+  annotations: {}
+  hosts:
+  - host: aegis-scholar.local
+    paths:
+    - path: /api
+      pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Environment variables
+# Override service URLs in environment-specific values for Kubernetes.
+env:
+- name: PYTHONUNBUFFERED
+  value: "1"
+- name: LOG_LEVEL
+  value: "info"
+- name: VECTOR_DB_URL
+  value: "http://vector-db:8002"
+- name: GRAPH_DB_URL
+  value: "http://graph-db:8003"
+
+# Additional environment variables from secrets or configmaps
+envFrom: []
+  # - secretRef:
+  #     name: api-secrets
+  # - configMapRef:
+  #     name: api-config
+
+# Health check configuration
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3

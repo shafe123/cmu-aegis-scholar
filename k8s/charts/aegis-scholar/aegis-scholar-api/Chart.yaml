@@ -1,0 +1,6 @@
+apiVersion: v2
+name: aegis-scholar-api
+description: REST API for AEGIS Scholar research discovery system
+type: application
+version: 0.1.0
+appVersion: "1.0"
