@@ -13,6 +13,8 @@ ENV PATH="/root/.local/bin:$PATH"
 RUN poetry self add poetry-plugin-export
 
 COPY pyproject.toml poetry.lock* ./
+
+RUN poetry lock
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --only main
 
 # Runtime stage
@@ -21,6 +23,8 @@ FROM python:3.12-slim
 WORKDIR /app
 
 COPY --from=builder /app/requirements.txt .
+
+RUN pip install --upgrade "pip>=25.3"
 
 # Use BuildKit cache mount for pip downloads
 RUN --mount=type=cache,target=/root/.cache/pip \

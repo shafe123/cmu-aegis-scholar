@@ -269,7 +269,7 @@ data/
 # Secrets and Env
 *.txt
 *.env
-.env.*
+.env
 secrets/
 
 #Node modules

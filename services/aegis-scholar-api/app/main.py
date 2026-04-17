@@ -24,7 +24,6 @@ import logging
 import math
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query
@@ -101,35 +100,39 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 
-def _map_vector_results(vector_results: list) -> list:
-    """Maps raw vector DB distances into a hybrid relevance + authority score."""
-    mapped_results = []
+def _distance_to_relevance(distance: float) -> float:
+    """
+    Convert an L2 distance into a 0-1 relevance score.
+    relevance = 1 / (1 + distance)
+    """
+    return round(1.0 / (1.0 + distance), 4)
 
+
+def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
+    """
+    Transform raw vector DB dicts into AuthorSearchResult Pydantic models.
+    Uses a hybrid score: 70% semantic relevance + 30% citation authority.
+    """
+    results: list[AuthorSearchResult] = []
     for res in vector_results:
-        distance = res.get("distance", 1.0)
-        citation_count = res.get("citation_count", 0)
-
-        # Base Semantic Relevance (0 to 1)
-        relevance_score = 1 / (1 + distance)
-
-        # Authority Score (0 to 1) using Log Scale
-        authority_score = min(math.log10(citation_count + 1) / 4.0, 1.0)
-
-        # The Hybrid Formula: 70% Relevance, 30% Authority
-        hybrid_score = (0.7 * relevance_score) + (0.3 * authority_score)
-
-        mapped_results.append(
-            {
-                "id": res.get("author_id"),
-                "name": res.get("author_name", "Unknown"),
-                "citation_count": citation_count,
-                "works_count": res.get("num_abstracts", 0),
-                "relevance_score": hybrid_score,
-            }
-        )
-
-    # Sort from highest hybrid score to lowest
-    return sorted(mapped_results, key=lambda x: x["relevance_score"], reverse=True)
+        try:
+            distance = res.get("distance", 1.0)
+            citation_count = res.get("citation_count", 0) or 0
+            relevance_score = _distance_to_relevance(distance)
+            authority_score = min(math.log10(citation_count + 1) / 4.0, 1.0)
+            hybrid_score = round((0.7 * relevance_score) + (0.3 * authority_score), 4)
+            results.append(
+                AuthorSearchResult(
+                    id=res["author_id"],
+                    name=res.get("author_name", "Unknown"),
+                    citation_count=citation_count,
+                    works_count=res.get("num_abstracts", 0),
+                    relevance_score=hybrid_score,
+                )
+            )
+        except Exception as e:
+            logger.warning(f"Skipping malformed vector result: {e}  raw={res}")
+    return sorted(results, key=lambda r: r.relevance_score or 0, reverse=True)
 
 
 # ---------------------------------------------------------------------------
@@ -141,7 +144,7 @@ _SORTABLE_AUTHOR_FIELDS = {"relevance_score", "citation_count", "works_count"}
 
 def _sort_author_results(
     results: list[AuthorSearchResult],
-    sort_by: Optional[str],
+    sort_by: str | None,
     order: str,
 ) -> list[AuthorSearchResult]:
     """Optionally re-sort author results."""
@@ -245,7 +248,7 @@ async def search_authors(
         ge=0,
         description="Number of results to skip",
     ),
-    sort_by: Optional[str] = Query(
+    sort_by: str | None = Query(
         None,
         description=(
             "Field to sort by. Supported: 'relevance_score', "
@@ -253,7 +256,7 @@ async def search_authors(
             "Default: relevance_score (most relevant first)."
         ),
     ),
-    order: Optional[str] = Query(
+    order: str | None = Query(
         "desc",
         pattern="^(asc|desc)$",
         description="Sort order: 'asc' or 'desc'",
@@ -316,8 +319,8 @@ async def search(
         description="Maximum number of results to return",
     ),
     offset: int = Query(settings.default_offset, ge=0, description="Number of results to skip"),
-    sort_by: Optional[str] = Query(None, description="Field to sort by"),
-    order: Optional[str] = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
+    sort_by: str | None = Query(None, description="Field to sort by"),
+    order: str | None = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
 ):
     """Convenience alias — delegates to /search/authors."""
     return await search_authors(q=q, limit=limit, offset=offset, sort_by=sort_by, order=order)
@@ -333,8 +336,8 @@ async def search_orgs(
     q: str = Query(..., description="Search query string"),
     limit: int = Query(settings.default_limit, ge=1, le=settings.max_limit),
     offset: int = Query(settings.default_offset, ge=0),
-    org_type: Optional[str] = Query(None, description="Filter by organization type"),
-    country: Optional[str] = Query(None, description="Filter by country code"),
+    org_type: str | None = Query(None, description="Filter by organization type"),
+    country: str | None = Query(None, description="Filter by country code"),
 ):
     """Search for organizations."""
     # pylint: disable=unused-argument
@@ -350,8 +353,8 @@ async def search_topics(
     q: str = Query(..., description="Search query string"),
     limit: int = Query(settings.default_limit, ge=1, le=settings.max_limit),
     offset: int = Query(settings.default_offset, ge=0),
-    field: Optional[str] = Query(None, description="Filter by research field"),
-    domain: Optional[str] = Query(None, description="Filter by domain"),
+    field: str | None = Query(None, description="Filter by research field"),
+    domain: str | None = Query(None, description="Filter by domain"),
 ):
     """Search for research topics and subject areas."""
     # pylint: disable=unused-argument
@@ -367,9 +370,9 @@ async def search_works(
     q: str = Query(..., description="Search query string"),
     limit: int = Query(settings.default_limit, ge=1, le=settings.max_limit),
     offset: int = Query(settings.default_offset, ge=0),
-    year_from: Optional[int] = Query(None, description="Filter by publication year (from)"),
-    year_to: Optional[int] = Query(None, description="Filter by publication year (to)"),
-    min_citations: Optional[int] = Query(None, ge=0, description="Minimum citation count"),
+    year_from: int | None = Query(None, description="Filter by publication year (from)"),
+    year_to: int | None = Query(None, description="Filter by publication year (to)"),
+    min_citations: int | None = Query(None, ge=0, description="Minimum citation count"),
 ):
     """Search for research works, papers, and publications."""
     # pylint: disable=unused-argument,too-many-arguments,too-many-positional-arguments

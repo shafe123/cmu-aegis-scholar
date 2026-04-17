@@ -1,23 +1,24 @@
 [tool.poetry]
 name = "vector-loader"
-version = "0.1.0"
+version = "1.0.0"
 description = "One-time vector loader for importing DTIC data into vector database"
-authors = ["you <you@example.com>"]
+authors = ["Aegis Scholar Team"]
 
 [tool.poetry.dependencies]
-python = "^3.12"
-orjson = "^3.9"
-httpx = "^0.24"
-pydantic = "^2.0"
-pydantic-settings = "^2.0"
+python = ">=3.12"
+orjson = ">=3.9"
+httpx = ">=0.24"
+h11 = ">=0.16.0"  # CVE-2025-43859 (HTTP request smuggling, critical 9.1; transitive via httpx)
+pydantic = ">=2.0"
+pydantic-settings = ">=2.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.0"
-pytest-asyncio = "^0.21"
-pytest-cov = "^4.1"
-pytest-mock = "^3.12"
-ruff = "^0.15.8"
-pylint = "^4.0.5"
+pytest = ">=7.0"
+pytest-asyncio = ">=0.21"
+pytest-cov = ">=4.1"
+pytest-mock = ">=3.12"
+ruff = ">=0.15.8"
+pylint = ">=4.0.5"
 
 [[tool.poetry.packages]]
 include = "app"

@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 # --- 2. Database Driver Initialization ---
 driver = GraphDatabase.driver(
-    settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password)
+    settings.neo4j_uri,
+    auth=(settings.neo4j_user, settings.neo4j_password or ""),
 )
 
 

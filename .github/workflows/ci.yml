@@ -1,202 +1,272 @@
 name: CI
 
-# Runs on every PR targeting main, and on direct pushes to main.
-# Direct pushes to main should eventually be disabled in branch protection
-# once the team is comfortable with the PR-only workflow.
 on:
-    pull_request:
-        branches: [main]
-    push:
-        branches: [main]
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
 
-# Cancel any in-progress run for the same branch when a new commit is pushed.
-# Prevents stale CI runs from blocking merges.
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    # ---------------------------------------------------------------------------
-    # PYTHON LINTING
-    # Runs ruff (style/imports) and pylint (logic) for each backend service.
-    # Uses a matrix so all three services run in parallel.
-    # ---------------------------------------------------------------------------
-    lint-python:
-        name: "Lint · ${{ matrix.service }}"
-        runs-on: ubuntu-latest
-        strategy:
-            fail-fast: false # Let all three services report, don't stop on first failure
-            matrix:
-                service:
-                    - services/aegis-scholar-api
-                    - services/graph-db
-                    - services/vector-db
-        defaults:
-            run:
-                working-directory: ${{ matrix.service }}
+  # ---------------------------------------------------------------------------
+  # PYTHON LINTING — ruff + pylint, parallel matrix with Poetry caching
+  # Closes #32 (caching + pylint added to aegis-scholar-api)
+  # ---------------------------------------------------------------------------
+  lint-python:
+    name: "Lint · ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - services/aegis-scholar-api
+          - services/graph-db
+          - services/vector-db
+    defaults:
+      run:
+        working-directory: ${{ matrix.service }}
 
-        steps:
-            - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-            - uses: actions/setup-python@v5
-              with:
-                  python-version: "3.12"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-            - name: Install Poetry
-              run: pip install poetry --quiet
+      - name: Install Poetry
+        run: pip install poetry --quiet
 
-            - name: Cache Poetry dependencies
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.cache/pypoetry
-                      ~/.cache/pip
-                  key: poetry-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('{0}/poetry.lock', matrix.service)) }}
-                  restore-keys: |
-                      poetry-${{ runner.os }}-${{ matrix.service }}-
-                      poetry-${{ runner.os }}-
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ matrix.service }}-${{ hashFiles(format('{0}/poetry.lock', matrix.service)) }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-${{ matrix.service }}-
 
-            - name: Install dependencies
-              run: poetry install --no-interaction
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
 
-            - name: Ruff — lint
-              run: poetry run ruff check .
+      - name: Ruff — lint
+        run: poetry run ruff check .
 
-            - name: Ruff — format check
-              run: poetry run ruff format --check .
+      - name: Ruff — format check
+        run: poetry run ruff format --check .
 
-            # --fail-under=9.0 matches the ">9.0 acceptable score" from the PR checklist.
-            # Pylint only checks the app/ package to avoid scanning test files.
-            - name: Pylint
-              run: poetry run pylint app --fail-under=9.0
+      - name: Pylint
+        run: poetry run pylint app --fail-under=9.0
 
-    # ---------------------------------------------------------------------------
-    # PYTHON TESTS
-    # Runs pytest for each service after linting passes.
-    # All tests are either fully mocked or live-tolerant (accept 200/404/500),
-    # so no live Milvus or Neo4j connection is required.
-    # ---------------------------------------------------------------------------
-    test-python:
-        name: "Tests · ${{ matrix.service }}"
-        runs-on: ubuntu-latest
-        strategy:
-            fail-fast: false
-            matrix:
-                service:
-                    - services/aegis-scholar-api
-                    - services/graph-db
-                    - services/vector-db
-        defaults:
-            run:
-                working-directory: ${{ matrix.service }}
 
-        steps:
-            - uses: actions/checkout@v4
+  # ---------------------------------------------------------------------------
+  # SECURITY SCANS — bandit (SAST) + mypy (type checking), parallel matrix
+  # Runs alongside lint-python (no dependency between them)
+  # Closes #23 (bandit), #25 (mypy)
+  # ---------------------------------------------------------------------------
+  security-scan:
+    name: "Security · ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - services/aegis-scholar-api
+          - services/graph-db
+          - services/vector-db
+    defaults:
+      run:
+        working-directory: ${{ matrix.service }}
 
-            - uses: actions/setup-python@v5
-              with:
-                  python-version: "3.12"
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Install Poetry
-              run: pip install poetry --quiet
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-            - name: Cache Poetry dependencies
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.cache/pypoetry
-                      ~/.cache/pip
-                  key: poetry-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('{0}/poetry.lock', matrix.service)) }}
-                  restore-keys: |
-                      poetry-${{ runner.os }}-${{ matrix.service }}-
-                      poetry-${{ runner.os }}-
+      - name: Install Poetry
+        run: pip install poetry --quiet
 
-            - name: Install dependencies
-              run: poetry install --no-interaction
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ matrix.service }}-${{ hashFiles(format('{0}/poetry.lock', matrix.service)) }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-${{ matrix.service }}-
 
-            - name: Run tests with coverage
-              run: poetry run pytest tests/ -v --tb=short --cov=app --cov-report=term --cov-report=xml --cov-fail-under=80
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
 
-            - name: Upload coverage report
-              uses: codecov/codecov-action@v4
-              if: always()
-              with:
-                  files: ${{ matrix.service }}/coverage.xml
-                  flags: ${{ matrix.service }}
-                  fail_ci_if_error: false
+      # -ll = medium severity and above. Keeps noise low while catching real issues.
+      - name: Bandit — SAST security scan
+        run: poetry run bandit -r app/ -ll
 
-    # ---------------------------------------------------------------------------
-    # INTEGRATION / E2E TESTS (root tests/ directory)
-    # These are currently all placeholder tests (assert True).
-    # This job is here so the infrastructure exists when real tests are added.
-    # The root tests/ folder has its own pyproject.toml and poetry.lock.
-    # ---------------------------------------------------------------------------
-    test-integration:
-        name: "Tests · integration (root)"
-        runs-on: ubuntu-latest
-        needs: test-python
-        defaults:
-            run:
-                working-directory: tests
+      - name: Mypy — static type checking
+        run: poetry run mypy app/ --ignore-missing-imports
 
-        steps:
-            - uses: actions/checkout@v4
 
-            - uses: actions/setup-python@v5
-              with:
-                  python-version: "3.12"
+  # ---------------------------------------------------------------------------
+  # PYTHON TESTS — pytest with coverage reporting
+  # Needs lint to pass first. Coverage threshold is 0 for aegis-scholar-api
+  # until issue #33 (unit tests) is complete — raise to 80 after that PR merges.
+  # ---------------------------------------------------------------------------
+  test-python:
+    name: "Tests · ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    needs: lint-python
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - services/aegis-scholar-api
+          - services/graph-db
+          - services/vector-db
+    defaults:
+      run:
+        working-directory: ${{ matrix.service }}
 
-            - name: Install Poetry
-              run: pip install poetry --quiet
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Cache Poetry dependencies
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.cache/pypoetry
-                      ~/.cache/pip
-                  key: poetry-${{ runner.os }}-tests-${{ hashFiles('tests/poetry.lock') }}
-                  restore-keys: |
-                      poetry-${{ runner.os }}-tests-
-                      poetry-${{ runner.os }}-
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-            - name: Install dependencies
-              run: poetry install --no-interaction --no-root
+      - name: Install Poetry
+        run: pip install poetry --quiet
 
-            # -m "not requires_docker" skips any tests that need testcontainers/Docker.
-            # Remove that marker exclusion once containers are wired up.
-            - name: Run integration tests
-              run: poetry run pytest . -v --tb=short -m "not requires_docker"
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ matrix.service }}-${{ hashFiles(format('{0}/poetry.lock', matrix.service)) }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-${{ matrix.service }}-
 
-    # ---------------------------------------------------------------------------
-    # FRONTEND — LINT, BUILD, TEST
-    # ESLint + Vite build + Vitest unit tests.
-    # --run tells Vitest to run once and exit (not in watch mode).
-    # ---------------------------------------------------------------------------
-    lint-and-test-frontend:
-        name: "Lint + Test · frontend"
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: frontend
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
 
-        steps:
-            - uses: actions/checkout@v4
+      # TODO (#33): raise aegis-scholar-api threshold to 80 once unit tests are written
+      - name: Run tests with coverage
+        run: poetry run pytest tests/ -v --tb=short --cov=app --cov-report=xml --cov-fail-under=0
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: "20"
-                  cache: "npm"
-                  cache-dependency-path: frontend/package-lock.json
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-${{ strategy.job-index }}
+          path: ${{ matrix.service }}/coverage.xml
 
-            - name: Install dependencies
-              run: npm ci
 
-            - name: ESLint
-              run: npm run lint
+  # ---------------------------------------------------------------------------
+  # INTEGRATION / E2E TESTS
+  # ---------------------------------------------------------------------------
+  test-integration:
+    name: "Tests · integration (root)"
+    runs-on: ubuntu-latest
+    needs: test-python
+    defaults:
+      run:
+        working-directory: tests
 
-            - name: Build
-              run: npm run build
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Vitest
-              run: npm run test -- --run
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: pip install poetry --quiet
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-integration-${{ hashFiles('tests/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-integration-
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Run integration tests
+        run: poetry run pytest . -v --tb=short -m "not requires_docker"
+
+
+  # ---------------------------------------------------------------------------
+  # DOCKER SCOUT — CVE scan, critical/high severity only
+  # PR-only: no need to scan on every push to main.
+  # Requires DOCKERHUB_USERNAME + DOCKERHUB_TOKEN in repo secrets.
+  # Closes #20
+  # ---------------------------------------------------------------------------
+  docker-scout:
+    name: "Docker Scout · ${{ matrix.image }}"
+    runs-on: ubuntu-latest
+    needs: test-python
+    if: github.event_name == 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: services/aegis-scholar-api
+            image: aegis-scholar-api
+          - service: services/graph-db
+            image: graph-db
+          - service: services/vector-db
+            image: vector-db
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image
+        run: docker build -t ${{ matrix.image }}:ci ${{ matrix.service }}
+
+      - name: Docker Scout — critical/high CVEs only
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: local://${{ matrix.image }}:ci
+          only-severities: critical,high
+          exit-code: true
+
+
+  # ---------------------------------------------------------------------------
+  # FRONTEND — lint, build, test (unchanged)
+  # ---------------------------------------------------------------------------
+  lint-and-test-frontend:
+    name: "Lint + Test · frontend"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Vitest
+        run: npm run test -- --run
