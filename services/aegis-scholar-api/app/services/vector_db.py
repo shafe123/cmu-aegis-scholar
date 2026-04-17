@@ -8,7 +8,7 @@ author embeddings by text query.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 
@@ -17,7 +17,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 # Module-level async client — initialized at startup, closed at shutdown
-_client: Optional[httpx.AsyncClient] = None
+_client: httpx.AsyncClient | None = None
 
 
 async def init_client():
@@ -55,10 +55,10 @@ async def search_by_text(
     query_text: str,
     limit: int = 10,
     offset: int = 0,
-    collection_name: Optional[str] = None,
-    output_fields: Optional[List[str]] = None,
-    filter_expr: Optional[str] = None,
-) -> Dict[str, Any]:
+    collection_name: str | None = None,
+    output_fields: list[str] | None = None,
+    filter_expr: str | None = None,
+) -> dict[str, Any]:
     """
     Search for authors by natural-language query.
 
@@ -90,7 +90,7 @@ async def search_by_text(
     """
     client = _get_client()
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "query_text": query_text,
         "limit": limit,
         "offset": offset,
@@ -108,7 +108,7 @@ async def search_by_text(
     return response.json()
 
 
-async def health() -> Dict[str, Any]:
+async def health() -> dict[str, Any]:
     """Check whether the vector DB service is reachable and healthy."""
     client = _get_client()
     response = await client.get("/health")

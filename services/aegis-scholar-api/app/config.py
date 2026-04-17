@@ -1,19 +1,18 @@
 """Configuration settings."""
 
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Application settings."""
 
-    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # API Configuration
     api_title: str = "Aegis Scholar API"
     api_version: str = "1.0.0"
     api_description: str = "Primary interface for searching research authors, organizations, topics, and works"
-    api_host: str = "0.0.0.0"
+    api_host: str = "0.0.0.0"  # nosec B104 — intentional: container must bind all interfaces
     api_port: int = 8000
 
     # Vector DB Service Configuration

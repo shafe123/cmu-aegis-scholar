@@ -27,7 +27,7 @@ ruff = ">=0.15.8"
 pylint = ">=4.0.5"
 bandit = ">=1.9.4"
 mypy = ">=1.19.1"
-
+pylint-pydantic = ">=0.3.0"
 
 [[tool.poetry.packages]]
 include = "app"
@@ -69,3 +69,11 @@ max-nested-blocks = 6  # Allow up to 6 nested blocks (default is 5)
 [tool.pylint.basic]
 # Allow single-char variable names for common cases (e.g., 'e' for exceptions)
 good-names = ["i", "j", "k", "e", "ex", "id", "_"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[tool.pylint.MASTER]
+load-plugins = "pylint_pydantic"

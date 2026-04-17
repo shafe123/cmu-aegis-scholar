@@ -1,9 +1,12 @@
 """Pydantic models for API request and response validation."""
+from __future__ import annotations
 
 from datetime import date, datetime
-from typing import List, Literal, Optional
+from typing import Generic, Literal, TypeVar
 
 from pydantic import BaseModel, Field
+
+T = TypeVar("T")
 
 
 class Source(BaseModel):
@@ -18,10 +21,10 @@ class Organization(BaseModel):
 
     id: str = Field(pattern=r"^org_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
     name: str
-    country: Optional[str] = None
-    type: Optional[Literal["institution", "funder", "publisher", "other"]] = None
-    sources: Optional[List[Source]] = None
-    last_updated: Optional[datetime] = None
+    country: str | None = None
+    type: Literal["institution", "funder", "publisher", "other"] | None = None
+    sources: list[Source] | None = None
+    last_updated: datetime | None = None
 
 
 class Author(BaseModel):
@@ -29,12 +32,12 @@ class Author(BaseModel):
 
     id: str = Field(pattern=r"^author_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
     name: str
-    org_ids: Optional[List[str]] = None
-    h_index: Optional[int] = Field(default=None, ge=0)
-    citation_count: Optional[int] = Field(default=None, ge=0)
-    works_count: Optional[int] = Field(default=None, ge=0)
-    sources: Optional[List[Source]] = None
-    last_updated: Optional[datetime] = None
+    org_ids: list[str] | None = None
+    h_index: int | None = Field(default=None, ge=0)
+    citation_count: int | None = Field(default=None, ge=0)
+    works_count: int | None = Field(default=None, ge=0)
+    sources: list[Source] | None = None
+    last_updated: datetime | None = None
 
 
 class Topic(BaseModel):
@@ -42,18 +45,18 @@ class Topic(BaseModel):
 
     id: str = Field(pattern=r"^topic_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
     name: str
-    field: Optional[str] = None
-    subfield: Optional[str] = None
-    domain: Optional[str] = None
-    sources: Optional[List[Source]] = None
-    last_updated: Optional[datetime] = None
+    field: str | None = None
+    subfield: str | None = None
+    domain: str | None = None
+    sources: list[Source] | None = None
+    last_updated: datetime | None = None
 
 
 class WorkAuthor(BaseModel):
     """Author information within a work."""
 
     author_id: str
-    org_id: Optional[str] = None
+    org_id: str | None = None
 
 
 class WorkOrg(BaseModel):
@@ -67,7 +70,7 @@ class WorkTopic(BaseModel):
     """Topic information within a work."""
 
     topic_id: str
-    score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    score: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
 class Work(BaseModel):
@@ -75,17 +78,17 @@ class Work(BaseModel):
 
     id: str = Field(pattern=r"^work_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
     title: str
-    abstract: Optional[str] = None
-    publication_date: Optional[date] = None
-    citation_count: Optional[int] = Field(default=None, ge=0)
-    authors: Optional[List[WorkAuthor]] = None
-    orgs: Optional[List[WorkOrg]] = None
-    topics: Optional[List[WorkTopic]] = None
-    sources: Optional[List[Source]] = None
-    venue: Optional[str] = None
-    doi: Optional[str] = None
-    url: Optional[str] = None
-    last_updated: Optional[datetime] = None
+    abstract: str | None = None
+    publication_date: date | None = None
+    citation_count: int | None = Field(default=None, ge=0)
+    authors: list[WorkAuthor] | None = None
+    orgs: list[WorkOrg] | None = None
+    topics: list[WorkTopic] | None = None
+    sources: list[Source] | None = None
+    venue: str | None = None
+    doi: str | None = None
+    url: str | None = None
+    last_updated: datetime | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -98,7 +101,7 @@ class Work(BaseModel):
 class AuthorSearchResult(Author):
     """An Author result enriched with a search relevance score."""
 
-    relevance_score: Optional[float] = Field(
+    relevance_score: float | None = Field(
         default=None,
         ge=0.0,
         description=("Semantic similarity score derived from vector distance. Higher is more relevant. Range 0-1."),
@@ -110,35 +113,27 @@ class AuthorSearchResult(Author):
 # ---------------------------------------------------------------------------
 
 
-class SearchResponse(BaseModel):
+class SearchResponse(BaseModel, Generic[T]):
     """Generic search response with results and metadata."""
 
     query: str
     total: int
     limit: int
     offset: int
-    results: List[dict]
+    results: list[T]
 
 
-class AuthorSearchResponse(SearchResponse):
+class AuthorSearchResponse(SearchResponse[AuthorSearchResult]):
     """Search response for authors."""
 
-    results: List[AuthorSearchResult]
 
-
-class OrgSearchResponse(SearchResponse):
+class OrgSearchResponse(SearchResponse[Organization]):
     """Search response for organizations."""
 
-    results: List[Organization]
 
-
-class TopicSearchResponse(SearchResponse):
+class TopicSearchResponse(SearchResponse[Topic]):
     """Search response for topics."""
 
-    results: List[Topic]
 
-
-class WorkSearchResponse(SearchResponse):
+class WorkSearchResponse(SearchResponse[Work]):
     """Search response for works."""
-
-    results: List[Work]
