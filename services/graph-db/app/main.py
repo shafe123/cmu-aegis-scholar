@@ -1,5 +1,3 @@
-"""FastAPI application for Neo4j graph database operations."""
-
 import logging
 from contextlib import asynccontextmanager
 
@@ -7,7 +5,15 @@ from fastapi import FastAPI, HTTPException
 from neo4j import GraphDatabase
 
 from app.config import settings
-from app.schemas import AuthorNode, AuthorOrgRel, AuthorWorkRel, OrgNode, WorkNode
+from app.schemas import (
+    AuthorNode,
+    AuthorOrgRel,
+    AuthorWorkRel,
+    OrgNode,
+    TopicNode,
+    WorkNode,
+    WorkTopicRel,
+)
 
 # --- 1. Setup Logging ---
 logging.basicConfig(level=logging.INFO)
@@ -80,6 +86,19 @@ async def get_stats():
 # --- 6. Ingestion Endpoints ---
 
 
+@app.post("/topics", tags=["Ingestion"])
+async def upsert_topic(topic: TopicNode) -> dict[str, str]:
+    """Upserts a Topic node into the graph."""
+    query = """
+    MERGE (t:Topic {id: $id})
+    SET t.name = $name, t.field = $field, t.domain = $domain
+    RETURN t.id
+    """
+    with driver.session() as session:
+        session.run(query, **topic.model_dump())
+    return {"status": "success", "id": topic.id}
+
+
 @app.post("/authors", tags=["Ingestion"])
 async def upsert_author(author: AuthorNode):
     """Upserts an Author node into the graph."""
@@ -145,6 +164,19 @@ async def link_author_org(rel: AuthorOrgRel):
     return {"status": "linked"}
 
 
+@app.post("/relationships/covers", tags=["Relationships"])
+async def link_work_topic(rel: WorkTopicRel) -> dict[str, str]:
+    """Links a Work to a Topic (Covers)."""
+    query = """
+    MATCH (w:Work {id: $work_id})
+    MATCH (t:Topic {id: $topic_id})
+    MERGE (w)-[:COVERS_TOPIC {score: $score}]->(t)
+    """
+    with driver.session() as session:
+        session.run(query, **rel.model_dump())
+    return {"status": "linked"}
+
+
 # --- 7. Search & Analysis Endpoints ---
 
 
@@ -179,10 +211,12 @@ async def get_author_network(author_id: str):
         nodes, edges, node_ids = [], [], set()
 
         for record in result:
-            author = record["author"]
-            work = record["work"]
-            coauthor = record["coAuthor"]
-            org = record["org"]
+            author, work, coauthor, org = (
+                record["author"],
+                record["work"],
+                record["coAuthor"],
+                record["org"],
+            )
 
             # Add Author
             if author and author["id"] not in node_ids:
