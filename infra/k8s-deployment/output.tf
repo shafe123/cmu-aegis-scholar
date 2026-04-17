@@ -1,6 +1,6 @@
 output "namespace" {
   description = "Kubernetes namespace where AEGIS Scholar is deployed"
-  value       = kubernetes_namespace.aegis_scholar.metadata[0].name
+  value       = local.namespace
 }
 
 output "helm_release_name" {
@@ -16,4 +16,9 @@ output "helm_release_status" {
 output "helm_release_version" {
   description = "Version of the Helm release"
   value       = helm_release.aegis_scholar.version
+}
+
+output "traefik_enabled" {
+  description = "Whether Traefik is managed by this module"
+  value       = var.install_traefik
 }
