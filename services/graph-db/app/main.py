@@ -85,6 +85,7 @@ async def get_stats():
 
 # --- 6. Ingestion Endpoints ---
 
+
 @app.post("/topics", tags=["Ingestion"])
 async def upsert_topic(topic: TopicNode) -> dict[str, str]:
     """Upserts a Topic node into the graph."""
@@ -96,6 +97,7 @@ async def upsert_topic(topic: TopicNode) -> dict[str, str]:
     with driver.session() as session:
         session.run(query, **topic.model_dump())
     return {"status": "success", "id": topic.id}
+
 
 @app.post("/authors", tags=["Ingestion"])
 async def upsert_author(author: AuthorNode):
@@ -161,6 +163,7 @@ async def link_author_org(rel: AuthorOrgRel):
         session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
+
 @app.post("/relationships/covers", tags=["Relationships"])
 async def link_work_topic(rel: WorkTopicRel) -> dict[str, str]:
     """Links a Work to a Topic (Covers)."""
@@ -208,12 +211,22 @@ async def get_author_network(author_id: str):
         nodes, edges, node_ids = [], [], set()
 
         for record in result:
-            author, work, coauthor, org = record["author"], record["work"], record["coAuthor"], record["org"]
+            author, work, coauthor, org = (
+                record["author"],
+                record["work"],
+                record["coAuthor"],
+                record["org"],
+            )
 
             # Add Author
             if author and author["id"] not in node_ids:
                 nodes.append(
-                    {"id": author["id"], "label": author["name"], "group": "author", "color": "#ff6b6b"}
+                    {
+                        "id": author["id"],
+                        "label": author["name"],
+                        "group": "author",
+                        "color": "#ff6b6b",
+                    }
                 )
                 node_ids.add(author["id"])
 
@@ -233,7 +246,12 @@ async def get_author_network(author_id: str):
             # Add Co-Author
             if coauthor and coauthor["id"] not in node_ids:
                 nodes.append(
-                    {"id": coauthor["id"], "label": coauthor["name"], "group": "author", "color": "#ffadad"}
+                    {
+                        "id": coauthor["id"],
+                        "label": coauthor["name"],
+                        "group": "author",
+                        "color": "#ffadad",
+                    }
                 )
                 node_ids.add(coauthor["id"])
                 edges.append({"from": coauthor["id"], "to": work["id"], "label": "AUTHORED"})
@@ -241,7 +259,12 @@ async def get_author_network(author_id: str):
             # Add Organization (New)
             if org and org["id"] not in node_ids:
                 nodes.append(
-                    {"id": org["id"], "label": org["name"], "group": "organization", "color": "#f9ca24"}
+                    {
+                        "id": org["id"],
+                        "label": org["name"],
+                        "group": "organization",
+                        "color": "#f9ca24",
+                    }
                 )
                 node_ids.add(org["id"])
                 edges.append({"from": author["id"], "to": org["id"], "label": "AFFILIATED_WITH"})
