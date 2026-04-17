@@ -1,31 +1,38 @@
-# Example Terraform Variables for Kubernetes Deployment
+# Example Terraform Variables for the current local Kubernetes deployment
 # Copy this file to terraform.tfvars and customize for your environment
 
-# Environment
 environment = "dev"
 
 # Kubernetes Configuration
 kubeconfig_path      = "~/.kube/config"
 kubernetes_namespace = "aegis-dev"
+create_namespace     = true
 
-# Helm Configuration
+# Helm / Chart Configuration
 helm_release_name = "aegis-scholar"
 helm_chart_path   = "../k8s/charts/aegis-scholar"
+values_file       = "../k8s/charts/aegis-scholar/values-dev.yaml"
+
+# Match the current local ingress setup
+install_traefik                  = true
+traefik_namespace                = "traefik-system"
+traefik_web_port                 = 80
+create_registry_config_daemonset = true
 
 # Container Registry
-image_registry = "ghcr.io/shafe123/cmu-aegis-scholar"  # Change to your registry
+# Leave empty for the current built-in cluster registry flow defined in values-dev.yaml.
+# Set this only when you want Terraform to override the chart to use another registry.
+image_registry = ""
 image_tag      = "latest"
 
 # Secrets (IMPORTANT: Do not commit actual secrets to version control)
-# Better approach: Use environment variables or secret management systems
-# Example: export TF_VAR_neo4j_password="your-password"
-neo4j_password = ""  # Set via environment variable TF_VAR_neo4j_password
+neo4j_password = "" # Prefer TF_VAR_neo4j_password
 
-# Registry Credentials (if using private registry)
-registry_username = ""  # Set via environment variable TF_VAR_registry_username
-registry_password = ""  # Set via environment variable TF_VAR_registry_password
+# Registry Credentials (only needed for a private external registry)
+registry_username = ""
+registry_password = ""
 registry_email    = ""
 
-# Azure Configuration (if using Azure resources)
+# Legacy Azure variables kept for future cloud work
 location      = "eastus"
 acr_base_name = "aegisscholarbase"

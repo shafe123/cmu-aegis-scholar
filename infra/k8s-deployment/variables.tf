@@ -9,6 +9,12 @@ variable "kubernetes_namespace" {
   default     = ""
 }
 
+variable "create_namespace" {
+  type        = bool
+  description = "Create the namespace before installing Helm releases"
+  default     = true
+}
+
 variable "helm_release_name" {
   type        = string
   description = "Name of the Helm release"
@@ -18,6 +24,12 @@ variable "helm_release_name" {
 variable "helm_chart_path" {
   type        = string
   description = "Path to the Helm chart"
+}
+
+variable "values_file" {
+  type        = string
+  description = "Optional path to a specific Helm values file"
+  default     = ""
 }
 
 variable "image_registry" {
@@ -32,10 +44,35 @@ variable "image_tag" {
   default     = "latest"
 }
 
+variable "install_traefik" {
+  type        = bool
+  description = "Install Traefik ingress controller"
+  default     = true
+}
+
+variable "traefik_namespace" {
+  type        = string
+  description = "Namespace for the Traefik ingress controller"
+  default     = "traefik-system"
+}
+
+variable "traefik_web_port" {
+  type        = number
+  description = "Port for Traefik's web entrypoint"
+  default     = 80
+}
+
+variable "create_registry_config_daemonset" {
+  type        = bool
+  description = "Install the registry helper DaemonSet for the local Docker Desktop registry flow"
+  default     = false
+}
+
 variable "neo4j_password" {
   type        = string
   description = "Neo4j database password"
   sensitive   = true
+  default     = ""
 }
 
 variable "registry_username" {

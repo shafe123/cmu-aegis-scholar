@@ -1,27 +1,3 @@
-variable "location" {
-  type        = string
-  description = "The azure region to deploy to"
-  default     = "eastus"
-}
-
-variable "resource_group_terraform" {
-  type        = string
-  description = "The resource group that stores the terraform state files"
-  default     = "aegis_scholar_essential"
-}
-
-variable "storage_account_terraform" {
-  type        = string
-  description = "The storage account name that stores the terraform state files"
-  default     = "aegisscholarterraform"
-}
-
-variable "acr_base_name" {
-  type        = string
-  description = "The name of the ACR for base images"
-  default     = "aegisscholarbase"
-}
-
 variable "environment" {
   type        = string
   description = "Deployment environment name"
@@ -33,7 +9,6 @@ variable "environment" {
   }
 }
 
-# Kubernetes Configuration Variables
 variable "kubeconfig_path" {
   type        = string
   description = "Path to kubeconfig file for Kubernetes cluster access"
@@ -42,8 +17,14 @@ variable "kubeconfig_path" {
 
 variable "kubernetes_namespace" {
   type        = string
-  description = "Kubernetes namespace for AEGIS Scholar deployment"
-  default     = "" # Will default to aegis-{environment}
+  description = "Kubernetes namespace for Aegis Scholar deployment"
+  default     = ""
+}
+
+variable "create_namespace" {
+  type        = bool
+  description = "Create the Kubernetes namespace if it does not already exist"
+  default     = true
 }
 
 variable "kubernetes_host" {
@@ -67,17 +48,22 @@ variable "kubernetes_ca_cert" {
   sensitive   = true
 }
 
-# Helm Configuration Variables
 variable "helm_release_name" {
   type        = string
-  description = "Name of the Helm release for AEGIS Scholar"
+  description = "Name of the Helm release for Aegis Scholar"
   default     = "aegis-scholar"
 }
 
 variable "helm_chart_path" {
   type        = string
-  description = "Path to the AEGIS Scholar Helm chart"
+  description = "Path to the Aegis Scholar Helm chart"
   default     = "../k8s/charts/aegis-scholar"
+}
+
+variable "values_file" {
+  type        = string
+  description = "Optional explicit path to a Helm values file. If empty, the environment-specific values file is used."
+  default     = ""
 }
 
 variable "image_registry" {
@@ -92,7 +78,30 @@ variable "image_tag" {
   default     = "latest"
 }
 
-# Secrets (use with caution - prefer environment variables or secret management systems)
+variable "install_traefik" {
+  type        = bool
+  description = "Install Traefik ingress controller via Helm"
+  default     = true
+}
+
+variable "traefik_namespace" {
+  type        = string
+  description = "Namespace for the Traefik ingress controller"
+  default     = "traefik-system"
+}
+
+variable "traefik_web_port" {
+  type        = number
+  description = "Port exposed by Traefik's web entrypoint"
+  default     = 80
+}
+
+variable "create_registry_config_daemonset" {
+  type        = bool
+  description = "Install the registry-config DaemonSet used by the local Docker Desktop registry flow"
+  default     = false
+}
+
 variable "neo4j_password" {
   type        = string
   description = "Neo4j database password"
