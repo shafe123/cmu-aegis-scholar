@@ -31,6 +31,9 @@ WORKDIR /app
 # Copy requirements from builder
 COPY --from=builder /app/requirements.txt .
 
+# Upgrade pip first to fix CVE-2025-8869 (symlink following in tar extraction, fixed in 25.3)
+RUN pip install --upgrade "pip>=25.3"
+
 # Install all dependencies with cache mount
 # FastEmbed uses ONNX Runtime (much smaller than PyTorch)
 RUN --mount=type=cache,target=/root/.cache/pip \

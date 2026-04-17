@@ -119,8 +119,8 @@ def get_model_dimension(model_name: str) -> int:
         return AVAILABLE_MODELS[model_name]["dimension"]
 
     # Need to load the model to determine dimension
-    model = get_or_load_model(model_name)
-    return model.get_sentence_embedding_dimension()
+    get_or_load_model(model_name)
+    return model_dimensions[model_name]
 
 
 # Milvus connection management

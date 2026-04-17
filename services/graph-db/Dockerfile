@@ -12,6 +12,8 @@ ENV PATH="/root/.local/bin:$PATH"
 RUN poetry self add poetry-plugin-export
 
 COPY pyproject.toml poetry.lock* ./
+
+RUN poetry lock
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --only main
 
 # Runtime stage
@@ -19,10 +21,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY --from=builder /app/requirements.txt .
+
+RUN pip install --upgrade "pip>=25.3"
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt
