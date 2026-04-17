@@ -32,6 +32,18 @@ milvus:
   pulsar:
     enabled: false
 
+# Docker Registry for local development
+docker-registry:
+  enabled: false # Enable in dev environment
+  service:
+    type: LoadBalancer
+    port: 5000
+  persistence:
+    enabled: true
+    size: 10Gi
+  ingress:
+    enabled: false
+
 # Traefik ingress configuration
 ingress:
   enabled: true

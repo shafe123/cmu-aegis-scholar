@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: registry-config
+  namespace: aegis-dev
+spec:
+  selector:
+    matchLabels:
+      name: registry-config
+  template:
+    metadata:
+      labels:
+        name: registry-config
+    spec:
+      hostPID: true
+      hostNetwork: true
+      initContainers:
+      - name: configure-containerd
+        image: alpine:latest
+        command:
+        - sh
+        - -c
+        - |
+          set -ex
+          # Create containerd registry config directory (without port to match image reference)
+          mkdir -p /host/etc/containerd/certs.d/aegis-scholar-docker-registry.aegis-dev.svc.cluster.local
+
+          # Write containerd hosts config pointing to localhost (registry uses hostNetwork)
+          cat > /host/etc/containerd/certs.d/aegis-scholar-docker-registry.aegis-dev.svc.cluster.local/hosts.toml <<EOF
+          server = "http://localhost:5000"
+          
+          [host."http://localhost:5000"]
+            capabilities = ["pull", "resolve"]
+            skip_verify = true
+          EOF
+
+          # Restart containerd to pick up new config
+          nsenter --target 1 --mount --uts --ipc --net --pid -- systemctl restart containerd || true
+
+          echo "Registry configuration applied successfully"
+          cat /host/etc/containerd/certs.d/aegis-scholar-docker-registry.aegis-dev.svc.cluster.local/hosts.toml
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-root
+          mountPath: /host
+      containers:
+      - name: sleep
+        image: alpine:latest
+        command: [ "sleep", "infinity" ]
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /

@@ -2,15 +2,35 @@
 # Override with: helm install aegis-scholar ./charts/aegis-scholar -f values-dev.yaml -n aegis-dev
 
 global:
-  imageRegistry: "" # Use local images or set your dev registry
+  imageRegistry: "" # Don't set global registry - it affects Milvus too
   namespace: aegis-dev
+
+# Enable local Docker registry for development
+docker-registry:
+  enabled: true
+  persistence:
+    size: 10Gi
 
 # API service configuration
 aegis-scholar-api:
   enabled: true
   replicaCount: 1
   image:
-    tag: "dev"
+    registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+    repository: "aegis-scholar-api"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  ingress:
+    enabled: true
+    className: traefik
+    hosts:
+    - host: aegis-dev.local
+      paths:
+      - path: /
+        pathType: Prefix
   resources:
     limits:
       cpu: 500m
@@ -20,16 +40,19 @@ aegis-scholar-api:
       memory: 128Mi
   env:
   - name: LOG_LEVEL
-    value: "debug"
+    value: "DEBUG"
   - name: ENVIRONMENT
-    value: "development"
+    value: "dev"
 
 # Vector DB configuration
 vector-db:
   enabled: true
   replicaCount: 1
   image:
-    tag: "dev"
+    registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+    repository: "vector-db"
+    tag: "latest"
+    pullPolicy: IfNotPresent
   resources:
     limits:
       cpu: 1000m
@@ -48,7 +71,10 @@ graph-db:
   enabled: true
   replicaCount: 1
   image:
-    tag: "dev"
+    registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+    repository: "graph-db"
+    tag: "latest"
+    pullPolicy: IfNotPresent
   resources:
     limits:
       cpu: 500m

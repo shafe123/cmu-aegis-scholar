@@ -52,22 +52,22 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- range .Values.envFromValues }}
-        - name: {{ .name }}
-          value: {{ tpl .value $ | quote }}
+          - name: {{ .name }}
+            value: {{ tpl .value $ | quote }}
         {{- end }}
-        - name: NEO4J_USER
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.neo4jConnection.secretName }}
-              key: {{ .Values.neo4jConnection.usernameKey }}
-        - name: NEO4J_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.neo4jConnection.secretName }}
-              key: {{ .Values.neo4jConnection.passwordKey }}
-        {{- with .Values.envFrom }}
+          - name: NEO4J_USER
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.neo4jConnection.secretName }}
+                key: {{ .Values.neo4jConnection.usernameKey }}
+          - name: NEO4J_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.neo4jConnection.secretName }}
+                key: {{ .Values.neo4jConnection.passwordKey }}
+        {{- if .Values.envFrom }}
         envFrom:
-          {{- toYaml . | nindent 10 }}
+        {{- toYaml .Values.envFrom | nindent 10 }}
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
