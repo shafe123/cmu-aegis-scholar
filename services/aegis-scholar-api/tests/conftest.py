@@ -1,52 +1,47 @@
-"""Test configuration and shared fixtures."""
+"""Test configuration and shared fixtures for aegis-scholar-api."""
 
-from unittest.mock import AsyncMock
-
+from unittest.mock import AsyncMock, patch
 import pytest
+from httpx import AsyncClient, ASGITransport
 
 
 @pytest.fixture
-def mock_vector_db_client():
-    """Mock vector database client for testing."""
-    client = AsyncMock()
-    client.search.return_value = {"results": [], "total": 0}
-    return client
-
-
-@pytest.fixture
-def mock_graph_db_client():
-    """Mock graph database client for testing."""
-    client = AsyncMock()
-    return client
-
-
-@pytest.fixture
-def sample_search_query():
-    """Sample search query for testing."""
-    return {"query": "machine learning", "filters": {"year_min": 2020, "year_max": 2026}, "limit": 10}
-
-
-@pytest.fixture
-def sample_author_result():
-    """Sample author search result."""
+def mock_vector_db_search():
+    """Standard successful vector DB search response."""
     return {
-        "id": "A123456",
-        "display_name": "John Doe",
-        "affiliation": "Carnegie Mellon University",
-        "works_count": 42,
-        "cited_by_count": 1234,
-        "relevance_score": 0.95,
+        "results": [
+            {
+                "author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab",
+                "author_name": "Dr. Jane Smith",
+                "num_abstracts": 42,
+                "citation_count": 1500,
+                "distance": 0.25,
+            },
+            {
+                "author_id": "author_2b3c4d5e-2345-6789-bcde-2345678901bc",
+                "author_name": "Dr. John Doe",
+                "num_abstracts": 18,
+                "citation_count": 300,
+                "distance": 0.55,
+            },
+        ],
+        "pagination": {"returned": 2},
     }
 
 
 @pytest.fixture
-def sample_work_result():
-    """Sample work search result."""
-    return {
-        "id": "W987654",
-        "title": "Advances in Machine Learning Systems",
-        "authors": ["John Doe", "Jane Smith"],
-        "year": 2025,
-        "cited_by_count": 56,
-        "relevance_score": 0.89,
-    }
+def mock_vector_db_empty():
+    """Empty vector DB search response."""
+    return {"results": [], "pagination": {"returned": 0}}
+
+
+@pytest.fixture
+async def async_client():
+    """Async HTTP client for testing FastAPI app with mocked lifespan."""
+    with patch("app.services.vector_db.init_client", new_callable=AsyncMock), \
+         patch("app.services.vector_db.close_client", new_callable=AsyncMock):
+        from app.main import app
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            yield client
