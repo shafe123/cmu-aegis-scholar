@@ -60,6 +60,7 @@ affinity: {}
 # Neo4j configuration
 neo4j:
   enabled: true
+  nameOverride: "neo4j"
   acceptLicenseAgreement: "yes"
   neo4j:
     name: aegis-neo4j
@@ -85,7 +86,7 @@ neo4j:
 
 # Connection to Neo4j
 neo4jConnection:
-  host: "aegis-scholar-neo4j" # Will match the neo4j service name
+  host: "aegis-scholar-neo4j-lb-neo4j" # Will match the neo4j service name
   port: "7687"
   scheme: "bolt"
   database: "neo4j"
