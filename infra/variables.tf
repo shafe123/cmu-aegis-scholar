@@ -9,6 +9,17 @@ variable "environment" {
   }
 }
 
+variable "deployment_phase" {
+  type        = string
+  description = "Deployment phase: bootstrap for ingress/registry, data for PVC setup, app for the full application, or all for one-shot deployment"
+  default     = "all"
+
+  validation {
+    condition     = contains(["bootstrap", "data", "app", "all"], var.deployment_phase)
+    error_message = "deployment_phase must be bootstrap, data, app, or all"
+  }
+}
+
 variable "kubeconfig_path" {
   type        = string
   description = "Path to kubeconfig file for Kubernetes cluster access"

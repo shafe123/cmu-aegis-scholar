@@ -3,6 +3,13 @@
 
 environment = "dev"
 
+# Deployment phase
+# bootstrap = namespace + Traefik + registry pieces
+# data      = bootstrap + DTIC PVC
+# app       = bootstrap + data + full application
+# all       = one-shot deployment
+deployment_phase = "all"
+
 # Kubernetes Configuration
 kubeconfig_path      = "~/.kube/config"
 kubernetes_namespace = "aegis-dev"
