@@ -20,8 +20,7 @@ pytest-cov = ">=4.1"
 pytest-mock = ">=3.12"
 httpx = ">=0.24"
 ruff = ">=0.3.0"
-pylint = ">=3.0.0"
-pylint-pydantic = ">=0.3.0"
+pylint = ">=4.0.5"
 bandit = ">=1.9.0"
 mypy = ">=1.0.0"
 
@@ -56,26 +55,14 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
-# E: pycodestyle, F: Pyflakes, B: flake8-bugbear, I: isort, UP: pyupgrade
 select = ["E", "F", "B", "I", "UP"]
-ignore = ["E501"] # Ignore line-length errors (formatter will handle it)
+ignore = ["E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
 
-[tool.pylint."MESSAGES CONTROL"]
+[tool.pylint.format]
 max-line-length = 100
-disable = [
-    "C0114", # Missing module docstring
-    "C0115", # Missing class docstring
-    "C0116", # Missing function docstring
-    "R0903", # Too few public methods (common in Pydantic models)
-    "W0621", # Redefining name from outer scope (Pytest fixtures)
-    "C0415", # Import outside toplevel (Used to prevent early DB init)
-]
-
-[tool.pylint.MASTER]
-load-plugins = "pylint_pydantic" # Helps Pylint understand Pydantic v2 fields
 
 [tool.mypy]
 python_version = "3.12"
