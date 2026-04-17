@@ -5,11 +5,10 @@ All downstream services (vector DB, graph DB) are mocked.
 No live network connections are required.
 """
 
-from unittest.mock import AsyncMock, patch, MagicMock
-import pytest
-import httpx
-from httpx import AsyncClient, ASGITransport
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
+import pytest
 
 # ---------------------------------------------------------------------------
 # Helpers — test in isolation without HTTP overhead
@@ -72,7 +71,7 @@ def test_map_vector_results_empty():
 
 def test_sort_author_results_by_citation_desc():
     """Results should be sortable by citation_count descending."""
-    from app.main import _sort_author_results, _map_vector_results
+    from app.main import _map_vector_results, _sort_author_results
     raw = [
         {"author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab", "author_name": "Low", "num_abstracts": 1,
          "citation_count": 10, "distance": 0.1},
@@ -86,7 +85,7 @@ def test_sort_author_results_by_citation_desc():
 
 def test_sort_author_results_by_citation_asc():
     """Results should be sortable by citation_count ascending."""
-    from app.main import _sort_author_results, _map_vector_results
+    from app.main import _map_vector_results, _sort_author_results
     raw = [
         {"author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab", "author_name": "Low", "num_abstracts": 1,
          "citation_count": 10, "distance": 0.1},
@@ -100,7 +99,7 @@ def test_sort_author_results_by_citation_asc():
 
 def test_sort_author_results_invalid_field_returns_original():
     """Invalid sort field should return results unchanged."""
-    from app.main import _sort_author_results, _map_vector_results
+    from app.main import _map_vector_results, _sort_author_results
     raw = [
         {"author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab", "author_name": "First", "num_abstracts": 1,
          "citation_count": 10, "distance": 0.1},
@@ -112,7 +111,7 @@ def test_sort_author_results_invalid_field_returns_original():
 
 def test_sort_author_results_no_sort_field():
     """None sort field should return results unchanged."""
-    from app.main import _sort_author_results, _map_vector_results
+    from app.main import _map_vector_results, _sort_author_results
     raw = [
         {"author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab", "author_name": "First", "num_abstracts": 1,
          "citation_count": 10, "distance": 0.1},

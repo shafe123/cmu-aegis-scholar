@@ -1,8 +1,9 @@
 """Test configuration and shared fixtures for aegis-scholar-api."""
 
 from unittest.mock import AsyncMock, patch
+
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture
