@@ -524,31 +524,31 @@ def test_get_or_load_model_raises_runtime_error_on_load_failure():
 
 
 # ---------------------------------------------------------------------------
-# get_model_dimension – fallthrough to get_sentence_embedding_dimension
+# get_model_dimension – error cases
 # ---------------------------------------------------------------------------
 
 
-def test_get_model_dimension_uses_get_sentence_embedding_dimension():
-    """When dimension is None in config, load the model and call get_sentence_embedding_dimension."""
+def test_get_model_dimension_raises_for_unavailable_model():
+    """get_model_dimension raises ValueError for models not in AVAILABLE_MODELS."""
+    with pytest.raises(ValueError, match="not available"):
+        get_model_dimension("non-existent-model")
+
+
+def test_get_model_dimension_raises_when_dimension_is_none():
+    """get_model_dimension raises ValueError when dimension is None in config."""
     model_name = "sentence-transformers/all-MiniLM-L6-v2"
 
     # Temporarily set dimension to None in AVAILABLE_MODELS and clear caches
     original_dim = AVAILABLE_MODELS[model_name]["dimension"]
     AVAILABLE_MODELS[model_name]["dimension"] = None
     main_module.model_dimensions.pop(model_name, None)
-    main_module.embedding_models.pop(model_name, None)
 
     try:
-        mock_model = MagicMock()
-        mock_model.get_sentence_embedding_dimension.return_value = 384
-        with patch("app.main.TextEmbedding", return_value=mock_model):
-            dim = get_model_dimension(model_name)
-        assert dim == 384
-        mock_model.get_sentence_embedding_dimension.assert_called_once()
+        with pytest.raises(ValueError, match="not available"):
+            get_model_dimension(model_name)
     finally:
         AVAILABLE_MODELS[model_name]["dimension"] = original_dim
         main_module.model_dimensions.pop(model_name, None)
-        main_module.embedding_models.pop(model_name, None)
 
 
 # ---------------------------------------------------------------------------
