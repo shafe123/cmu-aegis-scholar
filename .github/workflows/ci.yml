@@ -34,7 +34,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install Poetry
         run: pip install poetry --quiet
@@ -84,7 +84,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install Poetry
         run: pip install poetry --quiet
@@ -116,7 +116,6 @@ jobs:
   test-python:
     name: "Tests · ${{ matrix.service }}"
     runs-on: ubuntu-latest
-    needs: lint-python
     strategy:
       fail-fast: false
       matrix:
@@ -133,7 +132,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install Poetry
         run: pip install poetry --quiet
@@ -151,7 +150,7 @@ jobs:
 
       # TODO (#33): raise aegis-scholar-api threshold to 80 once unit tests are written
       - name: Run tests with coverage
-        run: poetry run pytest tests/ -v --tb=short --cov=app --cov-report=xml --cov-fail-under=0
+        run: poetry run pytest tests/ -v --tb=short --cov=app --cov-report=xml --cov-fail-under=80
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -177,7 +176,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install Poetry
         run: pip install poetry --quiet

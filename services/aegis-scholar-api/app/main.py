@@ -130,8 +130,8 @@ def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
                     relevance_score=hybrid_score,
                 )
             )
-        except Exception as e:
-            logger.warning(f"Skipping malformed vector result: {e}  raw={res}")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.warning("Skipping malformed vector result: %s  raw=%s", e, res)
     return sorted(results, key=lambda r: r.relevance_score or 0, reverse=True)
 
 

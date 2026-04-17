@@ -17,22 +17,22 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 # Module-level async client — initialized at startup, closed at shutdown
-_client: httpx.AsyncClient | None = None
+_client: httpx.AsyncClient | None = None  # pylint: disable=invalid-name
 
 
 async def init_client():
     """Create the async HTTP client. Call once at app startup."""
-    global _client
+    global _client # pylint: disable=global-statement
     _client = httpx.AsyncClient(
         base_url=settings.vector_db_url,
         timeout=httpx.Timeout(settings.vector_db_timeout),
     )
-    logger.info(f"Vector DB client initialized (base_url={settings.vector_db_url})")
+    logger.info("Vector DB client initialized (base_url=%s)", settings.vector_db_url)
 
 
 async def close_client():
     """Close the async HTTP client. Call once at app shutdown."""
-    global _client
+    global _client # pylint: disable=global-statement
     if _client and not _client.is_closed:
         await _client.aclose()
         _client = None
@@ -51,7 +51,7 @@ def _get_client() -> httpx.AsyncClient:
 # ---------------------------------------------------------------------------
 
 
-async def search_by_text(
+async def search_by_text(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     query_text: str,
     limit: int = 10,
     offset: int = 0,
@@ -102,7 +102,7 @@ async def search_by_text(
     if filter_expr:
         payload["filter_expr"] = filter_expr
 
-    logger.debug(f"POST /search/text  payload={payload}")
+    logger.debug("POST /search/text  payload=%s", payload)
     response = await client.post("/search/text", json=payload)
     response.raise_for_status()
     return response.json()
