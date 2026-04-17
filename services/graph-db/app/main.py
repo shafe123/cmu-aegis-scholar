@@ -183,7 +183,7 @@ async def get_author_network(author_id: str):
             # Add Author
             if author and author["id"] not in node_ids:
                 nodes.append(
-                    {"id": author["id"], "label": a["name"], "group": "author", "color": "#ff6b6b"}
+                    {"id": author["id"], "label": author["name"], "group": "author", "color": "#ff6b6b"}
                 )
                 node_ids.add(author["id"])
 
