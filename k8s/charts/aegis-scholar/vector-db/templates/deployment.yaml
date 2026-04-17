@@ -64,8 +64,8 @@ spec:
         - name: model-cache
           mountPath: {{ .Values.persistence.mountPath }}
         {{- end }}
-      {{- if .Values.persistence.enabled }}
       volumes:
+      {{- if .Values.persistence.enabled }}
       - name: model-cache
         persistentVolumeClaim:
           claimName: {{ include "vector-db.fullname" . }}-cache

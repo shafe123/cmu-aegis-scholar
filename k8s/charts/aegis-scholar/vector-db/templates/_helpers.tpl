@@ -72,3 +72,17 @@ Image name
 {{- printf "%s:%s" $repository $tag }}
 {{- end }}
 {{- end }}
+
+{{/*
+Loader job image name
+*/}}
+{{- define "vector-db.loaderImage" -}}
+{{- $registry := .Values.global.imageRegistry | default .Values.loader.image.registry -}}
+{{- $repository := .Values.loader.image.repository -}}
+{{- $tag := .Values.loader.image.tag -}}
+{{- if $registry }}
+{{- printf "%s/%s:%s" $registry $repository $tag }}
+{{- else }}
+{{- printf "%s:%s" $repository $tag }}
+{{- end }}
+{{- end }}

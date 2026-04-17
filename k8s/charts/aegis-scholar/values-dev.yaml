@@ -5,6 +5,13 @@ global:
   imageRegistry: "" # Don't set global registry - it affects Milvus too
   namespace: aegis-dev
 
+# Shared data volume for DTIC compressed data
+dticData:
+  enabled: true
+  size: 20Gi
+  storageClass: ""
+  accessMode: ReadWriteOnce
+
 # Enable local Docker registry for development
 docker-registry:
   enabled: true
@@ -65,6 +72,13 @@ vector-db:
     size: 5Gi
   milvus:
     host: "aegis-scholar-milvus"
+  loader:
+    enabled: true
+    image:
+      registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+      repository: "vector-loader"
+      tag: "latest"
+      pullPolicy: IfNotPresent
 
 # Graph DB configuration
 graph-db:
@@ -89,6 +103,13 @@ graph-db:
         defaultStorageClass:
           requests:
             storage: 5Gi
+  loader:
+    enabled: true
+    image:
+      registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+      repository: "graph-loader"
+      tag: "latest"
+      pullPolicy: IfNotPresent
 
 # Milvus configuration (standalone for dev)
 milvus:
