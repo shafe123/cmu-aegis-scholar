@@ -355,34 +355,9 @@ kubectl exec -n aegis-dev deployment/aegis-scholar-vector-db -- `
 
 ### Step 11: Access Services
 
-#### Via Port Forward
-
-```powershell
-# API Service
-kubectl port-forward -n aegis-dev svc/aegis-scholar-aegis-scholar-api 8000:8000
-
-# Vector DB Service
-kubectl port-forward -n aegis-dev svc/aegis-scholar-vector-db 8002:8002
-
-# Graph DB Service
-kubectl port-forward -n aegis-dev svc/aegis-scholar-graph-db 8003:8003
-```
-
-Then access via browser or curl:
-```powershell
-curl http://localhost:8000/health
-curl http://localhost:8002/health
-curl http://localhost:8003/health
-```
-
-#### Via Traefik Ingress (if installed)
-
 ```powershell
 # Port forward to Traefik
 kubectl port-forward -n traefik-system svc/traefik 8080:80
-
-# Add to hosts file (run PowerShell as Administrator)
-Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "127.0.0.1 aegis.local"
 
 # Access via ingress
 curl http://localhost:8080/api/health
