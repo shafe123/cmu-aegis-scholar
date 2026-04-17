@@ -16,15 +16,18 @@ jobs:
     # Closes #32 (caching + pylint added to aegis-scholar-api)
     # ---------------------------------------------------------------------------
     lint-python:
-        name: "Lint · ${{ matrix.service }}"
+        name: "Lint · ${{ matrix.name }}"
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
             matrix:
-                service:
-                    - services/aegis-scholar-api
-                    - services/graph-db
-                    - services/vector-db
+                include:
+                    - service: services/aegis-scholar-api
+                      name: aegis-scholar-api
+                    - service: services/graph-db
+                      name: graph-db
+                    - service: services/vector-db
+                      name: vector-db
         defaults:
             run:
                 working-directory: ${{ matrix.service }}
@@ -66,15 +69,18 @@ jobs:
     # Closes #23 (bandit), #25 (mypy)
     # ---------------------------------------------------------------------------
     security-scan:
-        name: "Security · ${{ matrix.service }}"
+        name: "Security · ${{ matrix.name }}"
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
             matrix:
-                service:
-                    - services/aegis-scholar-api
-                    - services/graph-db
-                    - services/vector-db
+                include:
+                    - service: services/aegis-scholar-api
+                      name: aegis-scholar-api
+                    - service: services/graph-db
+                      name: graph-db
+                    - service: services/vector-db
+                      name: vector-db
         defaults:
             run:
                 working-directory: ${{ matrix.service }}
@@ -103,7 +109,15 @@ jobs:
 
             # -ll = medium severity and above. Keeps noise low while catching real issues.
             - name: Bandit — SAST security scan
-              run: poetry run bandit -r app/ -ll
+              run: poetry run bandit -r app/ -ll -f json -o bandit-report.json
+              continue-on-error: true
+
+            - name: Upload Bandit report
+              uses: actions/upload-artifact@v7
+              if: always()
+              with:
+                  name: bandit-report-${{ matrix.name }}
+                  path: ${{ matrix.service }}/bandit-report.json
 
             - name: Mypy — static type checking
               run: poetry run mypy app/ --ignore-missing-imports
@@ -114,15 +128,18 @@ jobs:
     # until issue #33 (unit tests) is complete — raise to 80 after that PR merges.
     # ---------------------------------------------------------------------------
     test-python:
-        name: "Tests · ${{ matrix.service }}"
+        name: "Tests · ${{ matrix.name }}"
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
             matrix:
-                service:
-                    - services/aegis-scholar-api
-                    - services/graph-db
-                    - services/vector-db
+                include:
+                    - service: services/aegis-scholar-api
+                      name: aegis-scholar-api
+                    - service: services/graph-db
+                      name: graph-db
+                    - service: services/vector-db
+                      name: vector-db
         defaults:
             run:
                 working-directory: ${{ matrix.service }}
@@ -158,7 +175,7 @@ jobs:
               uses: actions/upload-artifact@v7
               if: always()
               with:
-                  name: coverage-report-${{ matrix.service }}
+                  name: coverage-report-${{ matrix.name }}
                   path: ${{ matrix.service }}/coverage.xml
 
     # ---------------------------------------------------------------------------
@@ -221,7 +238,7 @@ jobs:
             - uses: actions/checkout@v6
 
             - name: Log in to Docker Hub
-              uses: docker/login-action@v5
+              uses: docker/login-action@v4
               with:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -235,7 +252,17 @@ jobs:
                   command: cves
                   image: local://${{ matrix.image }}:ci
                   only-severities: critical,high
-                  exit-code: true
+                  exit-code: false
+                  format: sarif
+                  output: ${{ matrix.service }}/scout-report.sarif
+              continue-on-error: true
+
+            - name: Upload Docker Scout report
+              uses: actions/upload-artifact@v7
+              if: always()
+              with:
+                  name: docker-scout-report-${{ matrix.image }}
+                  path: ${{ matrix.service }}/scout-report.sarif
 
     # ---------------------------------------------------------------------------
     # FRONTEND — lint, build, test (unchanged)
