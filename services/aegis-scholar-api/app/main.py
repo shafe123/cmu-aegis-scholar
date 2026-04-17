@@ -100,35 +100,39 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 
-def _map_vector_results(vector_results: list) -> list:
-    """Maps raw vector DB distances into a hybrid relevance + authority score."""
-    mapped_results = []
+def _distance_to_relevance(distance: float) -> float:
+    """
+    Convert an L2 distance into a 0-1 relevance score.
+    relevance = 1 / (1 + distance)
+    """
+    return round(1.0 / (1.0 + distance), 4)
 
+
+def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
+    """
+    Transform raw vector DB dicts into AuthorSearchResult Pydantic models.
+    Uses a hybrid score: 70% semantic relevance + 30% citation authority.
+    """
+    results: list[AuthorSearchResult] = []
     for res in vector_results:
-        distance = res.get("distance", 1.0)
-        citation_count = res.get("citation_count", 0)
-
-        # Base Semantic Relevance (0 to 1)
-        relevance_score = 1 / (1 + distance)
-
-        # Authority Score (0 to 1) using Log Scale
-        authority_score = min(math.log10(citation_count + 1) / 4.0, 1.0)
-
-        # The Hybrid Formula: 70% Relevance, 30% Authority
-        hybrid_score = (0.7 * relevance_score) + (0.3 * authority_score)
-
-        mapped_results.append(
-            {
-                "id": res.get("author_id"),
-                "name": res.get("author_name", "Unknown"),
-                "citation_count": citation_count,
-                "works_count": res.get("num_abstracts", 0),
-                "relevance_score": hybrid_score,
-            }
-        )
-
-    # Sort from highest hybrid score to lowest
-    return sorted(mapped_results, key=lambda x: x["relevance_score"], reverse=True)
+        try:
+            distance = res.get("distance", 1.0)
+            citation_count = res.get("citation_count", 0) or 0
+            relevance_score = _distance_to_relevance(distance)
+            authority_score = min(math.log10(citation_count + 1) / 4.0, 1.0)
+            hybrid_score = round((0.7 * relevance_score) + (0.3 * authority_score), 4)
+            results.append(
+                AuthorSearchResult(
+                    id=res["author_id"],
+                    name=res.get("author_name", "Unknown"),
+                    citation_count=citation_count,
+                    works_count=res.get("num_abstracts", 0),
+                    relevance_score=hybrid_score,
+                )
+            )
+        except Exception as e:
+            logger.warning(f"Skipping malformed vector result: {e}  raw={res}")
+    return sorted(results, key=lambda r: r.relevance_score or 0, reverse=True)
 
 
 # ---------------------------------------------------------------------------

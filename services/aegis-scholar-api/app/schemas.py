@@ -1,12 +1,8 @@
 """Pydantic models for API request and response validation."""
-from __future__ import annotations
-
 from datetime import date, datetime
-from typing import Generic, Literal, TypeVar
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
-
-T = TypeVar("T")
 
 
 class Source(BaseModel):
@@ -113,27 +109,30 @@ class AuthorSearchResult(Author):
 # ---------------------------------------------------------------------------
 
 
-class SearchResponse(BaseModel, Generic[T]):
+class SearchResponse(BaseModel):
     """Generic search response with results and metadata."""
-
     query: str
     total: int
     limit: int
     offset: int
-    results: list[T]
+    results: list[Any]
 
 
-class AuthorSearchResponse(SearchResponse[AuthorSearchResult]):
+class AuthorSearchResponse(SearchResponse):
     """Search response for authors."""
+    results: list[AuthorSearchResult]  # type: ignore[assignment]
 
 
-class OrgSearchResponse(SearchResponse[Organization]):
+class OrgSearchResponse(SearchResponse):
     """Search response for organizations."""
+    results: list[Organization]  # type: ignore[assignment]
 
 
-class TopicSearchResponse(SearchResponse[Topic]):
+class TopicSearchResponse(SearchResponse):
     """Search response for topics."""
+    results: list[Topic]  # type: ignore[assignment]
 
 
-class WorkSearchResponse(SearchResponse[Work]):
+class WorkSearchResponse(SearchResponse):
     """Search response for works."""
+    results: list[Work]  # type: ignore[assignment]
