@@ -116,7 +116,6 @@ async def link_author_work(rel: AuthorWorkRel):
     """
     with driver.session() as session:
         session.run(query, **rel.model_dump())
-        session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
 
