@@ -5,6 +5,7 @@ on:
         branches: [ main ]
     push:
         branches: [ main ]
+    workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -215,14 +216,16 @@ jobs:
 
     # ---------------------------------------------------------------------------
     # DOCKER SCOUT — CVE scan, critical/high severity only
-    # PR-only: no need to scan on every push to main.
+    # Runs on PRs and manual triggers. No need to scan on every push to main.
     # Requires DOCKERHUB_USERNAME + DOCKERHUB_TOKEN in repo secrets.
     # Closes #20
     # ---------------------------------------------------------------------------
     docker-scout:
         name: "Docker Scout · ${{ matrix.image }}"
         runs-on: ubuntu-latest
-        if: github.event_name == 'pull_request'
+        if: |
+            github.event_name == 'pull_request' ||
+            github.event_name == 'workflow_dispatch'
         strategy:
             fail-fast: false
             matrix:
