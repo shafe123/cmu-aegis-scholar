@@ -1,3 +1,5 @@
+"""Configuration settings for the Graph DB API service."""
+
 import os
 
 from pydantic import Field

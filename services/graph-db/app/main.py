@@ -1,3 +1,5 @@
+"""FastAPI application for Neo4j graph database operations."""
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -114,7 +116,6 @@ async def link_author_work(rel: AuthorWorkRel):
     """
     with driver.session() as session:
         session.run(query, **rel.model_dump())
-        session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
 
@@ -178,12 +179,16 @@ async def get_author_network(author_id: str):
         nodes, edges, node_ids = [], [], set()
 
         for record in result:
-            author, work, coauthor, org = record["author"], record["work"], record["coAuthor"], record["org"]
+            author = record["author"]
+            work = record["work"]
+            coauthor = record["coAuthor"]
+            org = record["org"]
 
             # Add Author
             if author and author["id"] not in node_ids:
                 nodes.append(
-                    {"id": author["id"], "label": author["name"], "group": "author", "color": "#ff6b6b"}
+                    {"id": author["id"], "label": author["name"],
+                     "group": "author", "color": "#ff6b6b"}
                 )
                 node_ids.add(author["id"])
 
@@ -203,7 +208,8 @@ async def get_author_network(author_id: str):
             # Add Co-Author
             if coauthor and coauthor["id"] not in node_ids:
                 nodes.append(
-                    {"id": coauthor["id"], "label": coauthor["name"], "group": "author", "color": "#ffadad"}
+                    {"id": coauthor["id"], "label": coauthor["name"],
+                     "group": "author", "color": "#ffadad"}
                 )
                 node_ids.add(coauthor["id"])
                 edges.append({"from": coauthor["id"], "to": work["id"], "label": "AUTHORED"})
@@ -211,7 +217,8 @@ async def get_author_network(author_id: str):
             # Add Organization (New)
             if org and org["id"] not in node_ids:
                 nodes.append(
-                    {"id": org["id"], "label": org["name"], "group": "organization", "color": "#f9ca24"}
+                    {"id": org["id"], "label": org["name"],
+                     "group": "organization", "color": "#f9ca24"}
                 )
                 node_ids.add(org["id"])
                 edges.append({"from": author["id"], "to": org["id"], "label": "AFFILIATED_WITH"})
