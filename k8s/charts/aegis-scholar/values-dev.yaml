@@ -97,7 +97,7 @@ graph-db:
       cpu: 100m
       memory: 128Mi
   neo4jConnection:
-    host: "aegis-neo4j-lb-neo4j"
+    host: "aegis-scholar-neo4j-lb-neo4j"
     port: "7687"
     scheme: "bolt"
     database: "neo4j"

@@ -11,11 +11,13 @@ The application consists of:
 - **milvus**: Standalone Milvus vector database
 - **neo4j**: Neo4j graph database
 - **docker-registry**: Local container registry (dev environment only)
+- **graph-loader**: Kubernetes Job that loads DTIC data into Neo4j
+- **vector-loader**: Kubernetes Job that loads embeddings into Milvus
 
 ## Prerequisites
 
 1. **Kubernetes Cluster**: Any Kubernetes cluster (v1.24+)
-   - Local: minikube, kind, k3s, Docker Desktop
+   - Local: Docker Desktop (recommended for development), minikube, kind, k3s
    - Cloud: AKS, EKS, GKE
    - On-premises: kubeadm, k3s
 
@@ -29,384 +31,76 @@ The application consists of:
    helm version
    ```
 
-4. **Traefik Ingress Controller** (recommended):
+4. **Docker**: For building and pushing images
    ```bash
-   helm repo add traefik https://traefik.github.io/charts
-   helm install traefik traefik/traefik -n traefik-system --create-namespace
+   docker version
    ```
 
-## Quick Start
-
-### 1. Create Namespace
-```bash
-kubectl apply -f namespaces.yaml
-```
-
-### 2. Create Secrets
-```bash
-# Copy the example file
-cp secrets.example.yaml secrets.yaml
-
-# Edit with your actual credentials
-# IMPORTANT: Do not commit secrets.yaml to version control!
-nano secrets.yaml
-
-# Apply secrets
-kubectl apply -f secrets.yaml -n aegis-dev
-```
-
-### 3. Add Helm Repositories
-```bash
-# Milvus Helm chart
-helm repo add milvus https://zilliztech.github.io/milvus-helm
-
-# Neo4j Helm chart
-helm repo add neo4j https://neo4j.github.io/helm-charts
-
-# Update repositories
-helm repo update
-```
-
-### 4. Build Dependencies
-```bash
-cd charts/aegis-scholar
-helm dependency build
-```
-
-> **Note:** The development environment (`values-dev.yaml`) includes a Docker Registry for local image management. The registry requires a DaemonSet configuration to work correctly on Docker Desktop. See [Using the Built-in Docker Registry](#using-the-built-in-docker-registry) for complete setup instructions.
-
-### 5. Deploy to Development
-```bash
-# Install the chart
-# For local development, see "Local Development with Docker Desktop" section below
-# For cloud deployment, set imageRegistry to your container registry:
-helm install aegis-scholar . \
-  -f values-dev.yaml \
-  -n aegis-dev \
-  --set global.imageRegistry=myregistry.azurecr.io
-
-# Check status
-kubectl get pods -n aegis-dev
-```
-
-### 6. Access the Services
-```bash
-# Port forward (local development)
-kubectl port-forward -n aegis-dev svc/aegis-scholar-aegis-scholar-api 8000:8000
-kubectl port-forward -n aegis-dev svc/aegis-scholar-vector-db 8002:8002
-kubectl port-forward -n aegis-dev svc/aegis-scholar-graph-db 8003:8003
-
-# Via Ingress (if configured)
-curl http://aegis-dev.local/api/health
-```
-
-## Local Development with Docker Desktop
-
-### Prerequisites for Local Development
-
-1. **Install Docker Desktop** and enable Kubernetes:
-   - Open Docker Desktop → Settings → Kubernetes
-   - Check "Enable Kubernetes"
-   - Click "Apply & Restart"
-   - Wait 2-3 minutes for Kubernetes to start
-
-2. **Verify Kubernetes is running:**
-   ```powershell
-   kubectl cluster-info
-   # Should show: Kubernetes control plane is running at https://kubernetes.docker.internal:6443
-   ```
-
-3. **System Requirements:**
+5. **System Requirements** (for local development):
    - 8GB+ RAM available for containers
    - 10GB+ disk space for images and volumes
 
-### Step 1: Build Local Images
+6. **DTIC Data**: Compressed DTIC data files
+   - Expected location: `data/dtic_compressed/` in your workspace
+   - Expected files: `dtic_authors_*.jsonl.gz`, `dtic_orgs_*.jsonl.gz`, `dtic_topics_*.jsonl.gz`, `dtic_works_*.jsonl.gz`
+   - Total size: ~70MB (compressed)
 
-Build all service images with the `:local` tag:
+## Local Development Deployment (Docker Desktop)
 
+This guide walks through deploying AEGIS Scholar on Docker Desktop using the built-in registry. This simulates a production-like workflow while remaining fully local.
+
+### Step 1: Enable Kubernetes in Docker Desktop
+
+1. Open Docker Desktop → Settings → Kubernetes
+2. Check "Enable Kubernetes"
+3. Click "Apply & Restart"
+4. Wait 2-3 minutes for Kubernetes to start
+
+**Verify Kubernetes is running:**
 ```powershell
-# Navigate to repository root
-cd C:\Users\Ethan Shafer\Homework\CMU\cmu-aegis-scholar
-
-# Build API service
-docker build -t aegis-scholar-api:local ./services/aegis-scholar-api
-
-# Build Vector DB service
-docker build -t vector-db:local ./services/vector-db
-
-# Build Graph DB service
-docker build -t graph-db:local ./services/graph-db
-
-# Verify images were created
-docker images | Select-String "aegis-scholar|vector-db|graph-db"
+kubectl cluster-info
+# Should show: Kubernetes control plane is running at https://kubernetes.docker.internal:6443
 ```
 
-> **Note:** Docker Desktop automatically makes locally built images available to the Kubernetes cluster.
+---
 
-### Step 2: Install Traefik Ingress Controller
+### Step 2: Prepare DTIC Data Volume
 
-```powershell
-# Add Traefik Helm repository
-helm repo add traefik https://traefik.github.io/charts
-helm repo update
+**⚠️ Important:** Load your DTIC data BEFORE deploying the application. The loader jobs will read from this data during deployment.
 
-# Install Traefik
-helm install traefik traefik/traefik `
-  -n traefik-system `
-  --create-namespace `
-  --set ports.web.port=80
+#### 2.1 Create Namespace
 
-# Verify installation
-kubectl get pods -n traefik-system
-```
-
-### Step 3: Create Namespace and Secrets
+#### 2.1 Create Namespace
 
 ```powershell
 # Create namespace
 kubectl apply -f namespaces.yaml
-
-# Copy and edit secrets
-cp secrets.example.yaml secrets.yaml
-notepad secrets.yaml  # Edit with your credentials
-
-# Apply secrets
-kubectl apply -f secrets.yaml -n aegis-dev
 ```
 
-### Step 4: Prepare Helm Dependencies
+#### 2.2 Create PVC for DTIC Data
 
 ```powershell
-cd k8s/charts/aegis-scholar
+@'
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dtic-data
+  namespace: aegis-dev
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+'@ | kubectl apply -f -
 
-# Add required repositories
-helm repo add milvus https://zilliztech.github.io/milvus-helm
-helm repo add neo4j https://neo4j.github.io/helm-charts
-helm repo update
-
-# Build dependencies (downloads Milvus and Neo4j charts)
-helm dependency build
+# Verify PVC was created
+kubectl get pvc -n aegis-dev
 ```
 
-### Step 5: Deploy with Local Images
+#### 2.3 Deploy Helper Pod
 
 ```powershell
-# Deploy using local images (no registry)
-helm install aegis-scholar . `
-  -f values-dev.yaml `
-  -n aegis-dev `
-  --set global.imageRegistry="" `
-  --set aegis-scholar-api.image.repository=aegis-scholar-api `
-  --set aegis-scholar-api.image.tag=local `
-  --set aegis-scholar-api.image.pullPolicy=IfNotPresent `
-  --set vector-db.image.repository=vector-db `
-  --set vector-db.image.tag=local `
-  --set vector-db.image.pullPolicy=IfNotPresent `
-  --set graph-db.image.repository=graph-db `
-  --set graph-db.image.tag=local `
-  --set graph-db.image.pullPolicy=IfNotPresent
-
-# Watch deployment progress
-kubectl get pods -n aegis-dev --watch
-# Press Ctrl+C when all pods are Running
-```
-
-> **Alternative:** Use the built-in Docker Registry for a more production-like workflow. See the [Using the Built-in Docker Registry](#using-the-built-in-docker-registry) section below.
-
-### Step 6: Verify Deployment
-
-```powershell
-# Check pod status
-kubectl get pods -n aegis-dev
-
-# Check services
-kubectl get svc -n aegis-dev
-
-# View API logs
-kubectl logs -n aegis-dev -l app.kubernetes.io/name=aegis-scholar-api --tail=50
-```
-
-Expected pods:
-- `aegis-scholar-aegis-scholar-api-xxx` (2 replicas)
-- `aegis-scholar-vector-db-xxx`
-- `aegis-scholar-graph-db-xxx`
-- `aegis-scholar-milvus-xxx` + etcd, seaweedfs
-- `aegis-scholar-neo4j-xxx`
-
-> **Note:** Milvus may take 5-10 minutes to fully start due to initialization.
-
-### Step 7: Access Services Locally
-
-**Option A: Port Forwarding (Recommended)**
-
-```powershell
-# API Service
-kubectl port-forward -n aegis-dev svc/aegis-scholar-aegis-scholar-api 8000:8000
-
-# Vector DB (in another terminal)
-kubectl port-forward -n aegis-dev svc/aegis-scholar-vector-db 8002:8002
-
-# Graph DB (in another terminal)
-kubectl port-forward -n aegis-dev svc/aegis-scholar-graph-db 8003:8003
-
-# Neo4j Browser (optional, in another terminal)
-kubectl port-forward -n aegis-dev svc/aegis-scholar-neo4j 7474:7474
-```
-
-Access endpoints:
-- API: http://localhost:8000/health
-- Vector DB: http://localhost:8002/health
-- Graph DB: http://localhost:8003/health
-- Neo4j Browser: http://localhost:7474
-
-**Option B: Via Ingress**
-
-```powershell
-# Port forward to Traefik
-kubectl port-forward -n traefik-system svc/traefik 8080:80
-
-# Add to hosts file (run PowerShell as Administrator)
-Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "127.0.0.1 aegis.local"
-```
-
-Access via ingress:
-- http://aegis.local:8080/api/health
-- http://aegis.local:8080/vector/health
-- http://aegis.local:8080/graph/health
-
-### Testing and Validation
-
-**Quick health check from inside the cluster:**
-
-```powershell
-kubectl run -it --rm debug --image=curlimages/curl -n aegis-dev --restart=Never -- sh -c '
-  echo "Testing API..."
-  curl -s http://aegis-scholar-aegis-scholar-api:8000/health
-  echo -e "\n\nTesting Vector DB..."
-  curl -s http://aegis-scholar-vector-db:8002/health
-  echo -e "\n\nTesting Graph DB..."
-  curl -s http://aegis-scholar-graph-db:8003/health
-'
-```
-
-**Test Milvus connectivity:**
-
-```powershell
-$POD = kubectl get pod -n aegis-dev -l app.kubernetes.io/name=vector-db -o jsonpath='{.items[0].metadata.name}'
-kubectl exec -it -n aegis-dev $POD -- python -c "from pymilvus import connections; connections.connect('default', host='aegis-scholar-milvus', port='19530'); print('Milvus connected!')"
-```
-
-**Test Neo4j connectivity:**
-
-```powershell
-$POD = kubectl get pod -n aegis-dev -l app.kubernetes.io/name=graph-db -o jsonpath='{.items[0].metadata.name}'
-kubectl exec -it -n aegis-dev $POD -- python -c "from neo4j import GraphDatabase; driver = GraphDatabase.driver('bolt://aegis-scholar-neo4j:7687', auth=('neo4j', 'your-password')); driver.verify_connectivity(); print('Neo4j connected!')"
-```
-
-### Updating After Code Changes
-
-```powershell
-# 1. Rebuild the changed service image
-docker build -t aegis-scholar-api:local ./services/aegis-scholar-api
-
-# 2. Restart the deployment to pick up the new image
-kubectl rollout restart deployment aegis-scholar-aegis-scholar-api -n aegis-dev
-
-# 3. Watch the rollout
-kubectl rollout status deployment aegis-scholar-aegis-scholar-api -n aegis-dev
-
-# View logs of new pods
-kubectl logs -n aegis-dev -l app.kubernetes.io/name=aegis-scholar-api -f
-```
-
-### Local Troubleshooting
-
-**ImagePullBackOff with local images:**
-```powershell
-# Verify image exists locally
-docker images | Select-String "aegis-scholar-api:local"
-
-# Check pod description for pull policy
-kubectl describe pod <pod-name> -n aegis-dev | Select-String "pull"
-
-# Ensure pullPolicy is set to IfNotPresent in your Helm values
-```
-
-**Docker Desktop resource constraints:**
-```powershell
-# Check Docker Desktop settings
-# Settings → Resources → increase Memory to 8GB+
-
-# Check node resources
-kubectl describe node docker-desktop
-
-# View resource usage
-kubectl top nodes
-kubectl top pods -n aegis-dev
-```
-
-**Milvus startup issues:**
-```powershell
-# Milvus requires significant resources and time
-kubectl get pods -n aegis-dev | Select-String milvus
-
-# Check Milvus logs
-kubectl logs -n aegis-dev -l app.kubernetes.io/name=milvus --tail=100
-
-# Verify etcd and storage pods are running
-kubectl get pods -n aegis-dev
-```
-
-**Neo4j authentication issues:**
-```powershell
-# Verify secret is correct
-kubectl get secret neo4j-auth -n aegis-dev -o jsonpath='{.data.NEO4J_AUTH_PASSWORD}' | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
-
-# Check Neo4j logs
-kubectl logs -n aegis-dev -l app.kubernetes.io/name=neo4j --tail=50
-```
-
-### Cleaning Up Local Environment
-
-```powershell
-# Uninstall Helm release
-helm uninstall aegis-scholar -n aegis-dev
-
-# Delete persistent volumes (this deletes all data!)
-kubectl delete pvc -n aegis-dev --all
-
-# Delete namespace
-kubectl delete namespace aegis-dev
-
-# Optional: Reset Kubernetes cluster completely
-# Docker Desktop → Settings → Kubernetes → Reset Kubernetes Cluster
-```
-
-## Loading DTIC Data
-
-The deployment includes automatic data loader jobs that run on install/upgrade via Helm hooks. However, these jobs require the DTIC compressed data files to be available in a PersistentVolumeClaim (PVC) named `dtic-data`.
-
-### Understanding the Data Loading Process
-
-When you install or upgrade the Helm chart:
-1. A PVC named `dtic-data` is created automatically
-2. Two Kubernetes Jobs are triggered via Helm hooks:
-   - `aegis-scholar-graph-db-loader`: Loads authors, organizations, topics, and works into Neo4j
-   - `aegis-scholar-vector-db-loader`: Loads work embeddings into Milvus
-3. Both jobs read from `/data/dtic_compressed` in the PVC
-4. If no data files are found, the jobs complete successfully but don't load anything
-5. Jobs are automatically deleted before each upgrade (via `before-hook-creation` policy)
-
-### One-Time Setup: Populate the PVC with Data
-
-**Prerequisites:**
-- DTIC data files available in your workspace at `data/dtic_compressed/`
-- Expected files: `dtic_authors_*.jsonl.gz`, `dtic_orgs_*.jsonl.gz`, `dtic_topics_*.jsonl.gz`, `dtic_works_*.jsonl.gz`
-
-**Step 1: Deploy a helper pod to access the PVC**
-
-```powershell
-# Create a simple pod that mounts the dtic-data PVC
 @'
 apiVersion: v1
 kind: Pod
@@ -431,7 +125,7 @@ spec:
 kubectl wait --for=condition=ready pod/data-loader-helper -n aegis-dev --timeout=2m
 ```
 
-**Step 2: Copy your DTIC data into the PVC**
+#### 2.4 Copy DTIC Data to PVC
 
 ```powershell
 # Copy the entire dtic_compressed directory into the PVC
@@ -444,128 +138,87 @@ kubectl exec -n aegis-dev data-loader-helper -- ls -lh /data/dtic_compressed/
 You should see output like:
 ```
 -rw-r--r-- 1 root root  12M Apr 17 18:30 dtic_authors_001.jsonl.gz
--rw-r--r-- 1 root root 123M Apr 17 18:30 dtic_works_001.jsonl.gz
-...
+-rw-r--r-- 1 root root   5M Apr 17 18:30 dtic_orgs_001.jsonl.gz
+-rw-r--r-- 1 root root  23M Apr 17 18:30 dtic_topics_001.jsonl.gz
+-rw-r--r-- 1 root root  30M Apr 17 18:30 dtic_works_001.jsonl.gz
 ```
 
-**Step 3: Clean up the helper pod**
+#### 2.5 Clean Up Helper Pod
 
 ```powershell
 kubectl delete pod data-loader-helper -n aegis-dev
 ```
 
-**Step 4: Trigger the loader jobs**
+✅ **Data is ready!** Loader jobs will automatically use this data during deployment.
 
-The loader jobs run automatically on `helm upgrade`:
+---
+
+### Step 3: Create Secrets
+
+```powershell
+# Copy and edit secrets
+cp secrets.example.yaml secrets.yaml
+notepad secrets.yaml  # Edit with your credentials
+
+# Apply secrets
+kubectl apply -f secrets.yaml -n aegis-dev
+```
+
+**⚠️ Important:** Do not commit `secrets.yaml` to version control!
+
+---
+
+### Step 4: Install Traefik Ingress Controller (Optional)
+
+```powershell
+# Add Traefik Helm repository
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+
+# Install Traefik
+helm install traefik traefik/traefik `
+  -n traefik-system `
+  --create-namespace `
+  --set ports.web.port=80
+
+# Verify installation
+kubectl get pods -n traefik-system
+```
+
+---
+
+### Step 5: Prepare Helm Dependencies
 
 ```powershell
 cd k8s/charts/aegis-scholar
 
-# Trigger a Helm upgrade to re-run the loader jobs
-helm upgrade aegis-scholar . -f values-dev.yaml -n aegis-dev
+# Add required repositories
+helm repo add milvus https://zilliztech.github.io/milvus-helm
+helm repo add neo4j https://neo4j.github.io/helm-charts
+helm repo update
 
-# Watch the loader jobs
-kubectl get jobs -n aegis-dev -w
-```
-
-You should see:
-```
-NAME                             COMPLETIONS   DURATION   AGE
-aegis-scholar-graph-db-loader    1/1           45s        1m
-aegis-scholar-vector-db-loader   1/1           2m30s      2m
-```
-
-**Step 5: Verify data was loaded**
-
-```powershell
-# Check graph-db loader logs
-kubectl logs -n aegis-dev -l app.kubernetes.io/component=loader,app.kubernetes.io/name=graph-db --tail=50
-
-# Check vector-db loader logs
-kubectl logs -n aegis-dev -l app.kubernetes.io/component=loader,app.kubernetes.io/name=vector-db --tail=50
-
-# Query Neo4j to verify data
-kubectl exec -n aegis-dev deployment/aegis-scholar-graph-db -- \
-  python -c "from neo4j import GraphDatabase; d = GraphDatabase.driver('bolt://aegis-scholar-neo4j:7687', auth=('neo4j', 'your-password')); print(d.execute_query('MATCH (n) RETURN count(n) as count'))"
-
-# Query Milvus via Vector DB API
-kubectl exec -n aegis-dev deployment/aegis-scholar-vector-db -- \
-  curl -s http://localhost:8002/collections/aegis_vectors
-```
-
-### Updating Data
-
-If you need to update the DTIC data files:
-
-1. Delete existing data from PVC (optional - will be overwritten):
-   ```powershell
-   kubectl run --rm -it data-cleanup --image=busybox -n aegis-dev --restart=Never -- sh -c 'rm -rf /data/dtic_compressed/*' --overrides='{"spec":{"volumes":[{"name":"dtic-data","persistentVolumeClaim":{"claimName":"dtic-data"}}],"containers":[{"name":"data-cleanup","image":"busybox","command":["sh","-c","rm -rf /data/dtic_compressed/*"],"volumeMounts":[{"name":"dtic-data","mountPath":"/data"}]}]}}'
-   ```
-
-2. Follow Steps 1-4 above to copy new data and trigger reload
-
-### Troubleshooting Data Loading
-
-**Jobs complete but no data loaded:**
-```powershell
-# Check if PVC has data
-kubectl run --rm -it check-pvc --image=busybox -n aegis-dev --restart=Never -- ls -lh /data/dtic_compressed --overrides='{"spec":{"volumes":[{"name":"dtic-data","persistentVolumeClaim":{"claimName":"dtic-data"}}],"containers":[{"name":"check-pvc","image":"busybox","command":["ls","-lh","/data/dtic_compressed"],"volumeMounts":[{"name":"dtic-data","mountPath":"/data"}]}]}}'
-
-# If empty, repeat the kubectl cp step
-```
-
-**kubectl cp fails with "no such file or directory":**
-```powershell
-# Ensure you're in the repository root
-cd C:\Users\<YourUsername>\Homework\CMU\cmu-aegis-scholar
-
-# Verify data directory exists locally
-Test-Path data/dtic_compressed
-Get-ChildItem data/dtic_compressed -File | Select-Object -First 5
-```
-
-**Jobs fail with errors:**
-```powershell
-# View job pod logs
-kubectl get pods -n aegis-dev -l app.kubernetes.io/component=loader
-
-# Check specific job logs
-kubectl logs -n aegis-dev aegis-scholar-graph-db-loader-xxxxx
-kubectl logs -n aegis-dev aegis-scholar-vector-db-loader-xxxxx
-```
-
-**Need to re-run loader jobs manually:**
-```powershell
-# Delete old jobs
-kubectl delete job aegis-scholar-graph-db-loader aegis-scholar-vector-db-loader -n aegis-dev
-
-# Run helm upgrade to trigger hooks again
-helm upgrade aegis-scholar . -f values-dev.yaml -n aegis-dev
-```
-
-## Using the Built-in Docker Registry
-
-The development environment includes a Docker Registry that runs inside your Kubernetes cluster. This simplifies the workflow by allowing you to push images once and reuse them across deployments.
-
-> **Docker Desktop Note:** This setup uses a specialized configuration to work around Docker Desktop's built-in registry-mirror, which intercepts image pulls and causes conflicts with in-cluster registries.
-
-### Step 1: Deploy the Registry and Containerd Configuration
-
-The registry requires both the registry pod and a DaemonSet that configures containerd to bypass Docker Desktop's registry-mirror:
-
-```powershell
-cd k8s/charts/aegis-scholar
-
-# Build Helm dependencies
+# Build dependencies (downloads Milvus and Neo4j charts)
 helm dependency build
+```
 
-# Deploy the registry and services (registry is enabled by default in values-dev.yaml)
+---
+
+### Step 6: Deploy Built-in Registry
+
+Deploy the chart with the built-in registry enabled:
+
+```powershell
+# Deploy just the registry first
 helm install aegis-scholar . `
   -f values-dev.yaml `
-  -n aegis-dev
+  -n aegis-dev `
+  --set aegis-scholar-api.enabled=false `
+  --set vector-db.enabled=false `
+  --set graph-db.enabled=false `
+  --set milvus.enabled=false
 
 # Apply the registry configuration DaemonSet
-kubectl apply -f ..\registry-config-daemonset.yaml
+kubectl apply -f ..\..\registry-config-daemonset.yaml
 
 # Wait for registry to be ready
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=docker-registry -n aegis-dev --timeout=2m
@@ -576,31 +229,28 @@ kubectl get pods -n aegis-dev | Select-String docker-registry
 
 **What's happening:**
 - The registry runs with `hostNetwork: true` to bind to the node's `localhost:5000`
-- The DaemonSet creates a containerd configuration at `/etc/containerd/certs.d/aegis-scholar-docker-registry.aegis-dev.svc.cluster.local/hosts.toml`
-- This configuration tells containerd to pull from `localhost:5000` when pods request images from the FQDN `aegis-scholar-docker-registry.aegis-dev.svc.cluster.local`
-- This bypasses Docker Desktop's registry-mirror which would otherwise intercept the image pulls
+- The DaemonSet creates a containerd configuration that allows pods to pull images from `aegis-scholar-docker-registry.aegis-dev.svc.cluster.local:5000`
+- This bypasses Docker Desktop's registry-mirror which would otherwise intercept image pulls
 
-The registry is:
-- Accessible inside cluster at `aegis-scholar-docker-registry.aegis-dev.svc.cluster.local:5000`
-- Accessible from Windows host via port-forward
-- Configured with persistent storage (10GB by default)
-- Only enabled in the dev environment
+---
 
-### Step 2: Set Up Port Forwarding to Access Registry from Host
+### Step 7: Build and Push Images
 
-Since the registry uses cluster DNS, you need port-forward to push images from your Windows host:
+#### 7.1 Start Port Forward (keep running in a separate terminal)
+
+**Open a new PowerShell window** and run:
 
 ```powershell
-# Port forward in a separate terminal window (keep this running)
+# Port forward to the registry - KEEP THIS RUNNING
 kubectl port-forward -n aegis-dev svc/aegis-scholar-docker-registry 5000:5000
 ```
 
-> **Important:** Keep this port-forward running while building and pushing images.
+#### 7.2 Build and Push Service Images
 
-### Step 3: Build and Push Images to Registry
+In your main terminal:
 
 ```powershell
-# Build your images with localhost:5000 tag (for pushing via port-forward)
+# Build images with localhost:5000 tag (for pushing via port-forward)
 docker build -t localhost:5000/aegis-scholar-api:latest ./services/aegis-scholar-api
 docker build -t localhost:5000/vector-db:latest ./services/vector-db
 docker build -t localhost:5000/graph-db:latest ./services/graph-db
@@ -615,33 +265,142 @@ curl http://localhost:5000/v2/_catalog
 # Should return: {"repositories":["aegis-scholar-api","graph-db","vector-db"]}
 ```
 
-> **Note:** Images are pushed using `localhost:5000` (via port-forward), but Kubernetes pods pull them using the FQDN `aegis-scholar-docker-registry.aegis-dev.svc.cluster.local`. The containerd configuration maps between these.
-
-### Step 4: Verify Pods Can Pull Images
-
-The images are automatically pulled by the deployments. Check pod status:
+#### 7.3 Build and Push Loader Images
 
 ```powershell
-# Check all pods
-kubectl get pods -n aegis-dev
+# Build loader images
+docker build -t localhost:5000/graph-loader:latest ./jobs/graph-loader
+docker build -t localhost:5000/vector-loader:latest ./jobs/vector-loader
 
-# If pods are in ImagePullBackOff, check the describe output
-kubectl describe pod <pod-name> -n aegis-dev
+# Push to registry
+docker push localhost:5000/graph-loader:latest
+docker push localhost:5000/vector-loader:latest
 
-# Verify successful pulls - should see "Successfully pulled image" events
-kubectl get events -n aegis-dev --sort-by='.lastTimestamp' | Select-String "Successfully pulled"
+# Verify all images
+curl http://localhost:5000/v2/_catalog
+# Should return: {"repositories":["aegis-scholar-api","graph-db","graph-loader","vector-db","vector-loader"]}
 ```
 
-Expected pod states:
-- `aegis-scholar-aegis-scholar-api-xxx`: Running (or CrashLoopBackOff if app config issue)
-- `aegis-scholar-vector-db-xxx`: Running
-- `aegis-scholar-graph-db-xxx`: Running
-- `aegis-scholar-docker-registry-xxx`: Running
+---
 
-### Step 5: Update After Code Changes
+### Step 8: Deploy Complete Application
+
+Now deploy all services. The loader jobs will automatically run and load data from the PVC:
 
 ```powershell
-# Rebuild and push (ensure port-forward is still running)
+# Upgrade to enable all services
+helm upgrade aegis-scholar . -f values-dev.yaml -n aegis-dev
+
+# Watch deployment progress
+kubectl get pods -n aegis-dev --watch
+# Press Ctrl+C when all pods are Running
+```
+
+**Expected pods:**
+- `aegis-scholar-0` (Neo4j StatefulSet)
+- `aegis-scholar-aegis-scholar-api-xxx` (2 replicas)
+- `aegis-scholar-vector-db-xxx`
+- `aegis-scholar-graph-db-xxx`
+- `aegis-scholar-milvus-standalone-xxx` + supporting services (etcd, minio)
+- `aegis-scholar-docker-registry-xxx`
+- `aegis-scholar-graph-db-loader-xxx` (Job - will complete and terminate)
+- `aegis-scholar-vector-db-loader-xxx` (Job - will complete and terminate)
+
+> **Note:** Neo4j and Milvus may take 5-10 minutes to fully start due to initialization.
+
+---
+
+### Step 9: Monitor Data Loading
+
+The loader jobs run automatically during deployment:
+
+```powershell
+# Watch loader job status
+kubectl get jobs -n aegis-dev -w
+
+# Check graph-db loader logs
+kubectl logs -n aegis-dev -l app.kubernetes.io/component=loader,app.kubernetes.io/name=graph-db -f
+
+# Check vector-db loader logs
+kubectl logs -n aegis-dev -l app.kubernetes.io/component=loader,app.kubernetes.io/name=vector-db -f
+```
+
+**Loader jobs will show:**
+- **graph-db-loader**: Loading authors, organizations, topics, works into Neo4j
+- **vector-db-loader**: Generating and loading embeddings into Milvus
+
+Jobs should complete with status `1/1` (may take 5-15 minutes depending on data size).
+
+---
+
+### Step 10: Verify Deployment
+
+```powershell
+# Check all pods are running
+kubectl get pods -n aegis-dev
+
+# Check services
+kubectl get svc -n aegis-dev
+
+# Verify data was loaded - check Neo4j node count
+kubectl exec -n aegis-dev deployment/aegis-scholar-graph-db -- `
+  curl -s http://localhost:8003/stats
+
+# Verify vector data - check Milvus collection
+kubectl exec -n aegis-dev deployment/aegis-scholar-vector-db -- `
+  curl -s http://localhost:8002/collections/aegis_vectors
+```
+
+---
+
+### Step 11: Access Services
+
+#### Via Port Forward
+
+```powershell
+# API Service
+kubectl port-forward -n aegis-dev svc/aegis-scholar-aegis-scholar-api 8000:8000
+
+# Vector DB Service
+kubectl port-forward -n aegis-dev svc/aegis-scholar-vector-db 8002:8002
+
+# Graph DB Service
+kubectl port-forward -n aegis-dev svc/aegis-scholar-graph-db 8003:8003
+```
+
+Then access via browser or curl:
+```powershell
+curl http://localhost:8000/health
+curl http://localhost:8002/health
+curl http://localhost:8003/health
+```
+
+#### Via Traefik Ingress (if installed)
+
+```powershell
+# Port forward to Traefik
+kubectl port-forward -n traefik-system svc/traefik 8080:80
+
+# Add to hosts file (run PowerShell as Administrator)
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "127.0.0.1 aegis.local"
+
+# Access via ingress
+curl http://localhost:8080/api/health
+curl http://localhost:8080/vector/health
+curl http://localhost:8080/graph/health
+```
+
+---
+
+## Updating After Code Changes
+
+When you modify code, rebuild and push images, then restart deployments:
+
+```powershell
+# Ensure port-forward to registry is running
+kubectl port-forward -n aegis-dev svc/aegis-scholar-docker-registry 5000:5000
+
+# Rebuild and push (example: API service)
 docker build -t localhost:5000/aegis-scholar-api:latest ./services/aegis-scholar-api
 docker push localhost:5000/aegis-scholar-api:latest
 
@@ -655,186 +414,22 @@ kubectl rollout status deployment aegis-scholar-aegis-scholar-api -n aegis-dev
 kubectl logs -n aegis-dev -l app.kubernetes.io/name=aegis-scholar-api -f
 ```
 
-### Registry Management
-
-**List images in registry:**
-```powershell
-# Ensure port-forward is running, then:
-curl http://localhost:5000/v2/_catalog
-
-# Get tags for a specific image
-curl http://localhost:5000/v2/aegis-scholar-api/tags/list
-```
-
-**Test registry from inside cluster:**
-```powershell
-kubectl run curl-test --image=curlimages/curl:latest --rm -it --restart=Never -n aegis-dev -- \
-  curl http://aegis-scholar-docker-registry.aegis-dev.svc.cluster.local:5000/v2/_catalog
-```
-
-**View registry logs:**
-```powershell
-kubectl logs -n aegis-dev -l app.kubernetes.io/name=docker-registry -f
-```
-
-**Clear registry storage:**
-```powershell
-# Delete and recreate the PVC (warning: deletes all images!)
-helm uninstall aegis-scholar -n aegis-dev
-kubectl delete pvc aegis-scholar-docker-registry -n aegis-dev
-
-# Reinstall
-helm install aegis-scholar . -f values-dev.yaml -n aegis-dev
-kubectl apply -f ..\registry-config-daemonset.yaml
-```
-
-### Troubleshooting Registry Issues
-
-**ImagePullBackOff with "registry-mirror" error:**
-```powershell
-# Verify the DaemonSet is running
-kubectl get daemonset registry-config -n aegis-dev
-
-# Check DaemonSet logs
-kubectl logs -n aegis-dev -l name=registry-config -c configure-containerd
-
-# Should see: "Registry configuration applied successfully"
-# If not, reapply the DaemonSet
-kubectl delete daemonset registry-config -n aegis-dev
-kubectl apply -f ..\registry-config-daemonset.yaml
-```
-
-**Can't push images from Windows host:**
-```powershell
-# Verify port-forward is running
-# You should see: Forwarding from 127.0.0.1:5000 -> 5000
-
-# Test registry connectivity
-curl http://localhost:5000/v2/_catalog
-
-# If connection refused, restart port-forward:
-kubectl port-forward -n aegis-dev svc/aegis-scholar-docker-registry 5000:5000
-```
-
-**Pods can't pull images (DNS resolution error):**
-```powershell
-# Verify registry pod is running with hostNetwork
-kubectl get pod -n aegis-dev -l app.kubernetes.io/name=docker-registry -o yaml | Select-String hostNetwork
-# Should show: hostNetwork: true
-
-# Check if registry is listening on port 5000
-kubectl exec -n aegis-dev deployment/aegis-scholar-docker-registry -- netstat -tlnp | Select-String 5000
-```
-
-### How It Works: Docker Desktop Registry-Mirror Workaround
-
-**The Problem:**
-Docker Desktop includes a built-in registry-mirror service that intercepts image pulls containing a port number (e.g., `registry:5000`). This causes 500 errors when trying to use an in-cluster registry.
-
-**The Solution:**
-1. **Host Network**: Registry runs with `hostNetwork: true`, binding to node's `localhost:5000`
-2. **FQDN Without Port**: Image references use `aegis-scholar-docker-registry.aegis-dev.svc.cluster.local` (no port in the image name)
-3. **Containerd Config**: DaemonSet creates `/etc/containerd/certs.d/<FQDN>/hosts.toml` that maps the FQDN to `localhost:5000`
-4. **Default Port**: Registry uses standard port 5000, so containerd assumes port 5000 when not specified in image name
-
-This way:
-- Image names have no port → registry-mirror doesn't intercept
-- Containerd knows to use `localhost:5000` for that FQDN
-- Registry on `hostNetwork` is accessible at `localhost:5000` from the node
-
-### Comparison: Direct Images vs Registry
-
-**Direct local images (`:local` tag):**
-- ✅ No push step required
-- ✅ Faster for quick iterations
-- ✅ No port-forward needed
-- ❌ Manual rebuild before each deploy
-- ❌ Doesn't simulate production workflow
-
-**Cluster registry:**
-- ✅ Simulates production registry workflow
-- ✅ Images persist across pod restarts
-- ✅ Easier rollouts (just restart deployment)
-- ✅ Can version images with tags
-- ✅ Tests registry authentication/authorization
-- ❌ Requires push step
-- ❌ Requires port-forward to push
-- ❌ More complex setup
-
-Choose based on your workflow preference. For rapid development, use local images. For testing deployment workflows or CI/CD simulation, use the registry.
-
-## Data Loading Jobs
-
-The deployment includes automatic data loading via Kubernetes Jobs that run once during installation/upgrade:
-
-### Overview
-
-- **graph-loader**: Loads DTIC scholarly data into Neo4j (authors, organizations, topics, works)
-- **vector-loader**: Generates and loads embeddings into Milvus vector database
-
-Both jobs run automatically as Helm hooks during `helm install` or `helm upgrade`.
-
-### How It Works
-
-1. **Helm Hook Execution**: Jobs run with `post-install` and `post-upgrade` hooks
-2. **Service Wait**: Jobs wait for their respective services to be healthy
-3. **Idempotent Loading**: Jobs check if data already exists (`SKIP_IF_LOADED=true`)
-4. **Shared Data Volume**: Both jobs read from a shared `dtic-data` PersistentVolumeClaim containing compressed DTIC data
-5. **Clean Up**: Jobs are automatically deleted before re-running (via `before-hook-creation` policy)
-6. **TTL**: Completed jobs are cleaned up after 24 hours
-
-### Multi-Replica Safety
-
-Jobs run **once per deployment**, not per pod replica:
-- ✅ Safe to scale `vector-db` or `graph-db` to multiple replicas
-- ✅ Jobs won't duplicate work across pods
-- ✅ Idempotent design prevents duplicate data loading
-
-### Monitoring Job Status
+**For loader images:**
 
 ```powershell
-# Check job status
-kubectl get jobs -n aegis-dev
+# Rebuild and push
+docker build -t localhost:5000/graph-loader:latest ./jobs/graph-loader
+docker push localhost:5000/graph-loader:latest
 
-# View loader logs
-kubectl logs -n aegis-dev job/aegis-scholar-graph-db-loader
-kubectl logs -n aegis-dev job/aegis-scholar-vector-db-loader
+# Delete old jobs and trigger re-run via Helm upgrade
+kubectl delete jobs -n aegis-dev -l app.kubernetes.io/component=loader
+helm upgrade aegis-scholar . -f values-dev.yaml -n aegis-dev
 
-# Check if data is loaded
-kubectl exec -n aegis-dev -it deployment/aegis-scholar-graph-db -- curl http://localhost:8003/stats
-kubectl exec -n aegis-dev -it deployment/aegis-scholar-vector-db -- curl http://localhost:8002/collections
+# Jobs will automatically re-run
+kubectl get jobs -n aegis-dev -w
 ```
 
-### Manual Job Control
-
-```powershell
-# Disable loaders (in values file)
-helm upgrade aegis-scholar ./charts/aegis-scholar \
-  -f values-dev.yaml \
-  -n aegis-dev \
-  --set graph-db.loader.enabled=false \
-  --set vector-db.loader.enabled=false
-
-# Manually trigger data loading (delete and reinstall)
-kubectl delete job -n aegis-dev aegis-scholar-graph-db-loader
-kubectl delete job -n aegis-dev aegis-scholar-vector-db-loader
-helm upgrade aegis-scholar ./charts/aegis-scholar -f values-dev.yaml -n aegis-dev
-```
-
-### Preparing Data Volume
-
-The loaders expect a `dtic-data` PersistentVolumeClaim with compressed DTIC data:
-
-```powershell
-# The PVC is created automatically by the Helm chart
-# You need to populate it with data
-
-# Option 1: Copy data from local machine
-kubectl cp ./data/dtic_compressed aegis-dev/data-loader-pod:/data/dtic_compressed
-
-# Option 2: Use an init container or Job to download/prepare data
-# See data preparation documentation for details
-```
+---
 
 ## Environment-Specific Deployments
 
@@ -956,24 +551,6 @@ kubectl delete namespace aegis-dev
 ```
 
 ## Troubleshooting
-
-### Pods Crashing on Startup
-
-**API pod crashes with "ValueError: Unknown level":**
-```powershell
-# Check logs
-kubectl logs -n aegis-dev -l app.kubernetes.io/name=aegis-scholar-api --tail=20
-
-# If you see: ValueError: Unknown level: 'debug'
-# Python's logging requires uppercase log levels (DEBUG, INFO, WARNING, ERROR)
-# Fix in values-dev.yaml:
-# Change: value: "debug"
-# To: value: "DEBUG"
-
-# Apply the fix
-helm upgrade aegis-scholar . -f values-dev.yaml -n aegis-dev
-kubectl rollout restart deployment aegis-scholar-aegis-scholar-api -n aegis-dev
-```
 
 ### Pods Not Starting
 ```bash
