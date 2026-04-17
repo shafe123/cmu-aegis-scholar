@@ -1,8 +1,9 @@
 """Test configuration and shared fixtures for aegis-scholar-api."""
 
 from unittest.mock import AsyncMock, patch
+
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture
@@ -38,10 +39,11 @@ def mock_vector_db_empty():
 @pytest.fixture
 async def async_client():
     """Async HTTP client for testing FastAPI app with mocked lifespan."""
-    with patch("app.services.vector_db.init_client", new_callable=AsyncMock), \
-         patch("app.services.vector_db.close_client", new_callable=AsyncMock):
+    with (
+        patch("app.services.vector_db.init_client", new_callable=AsyncMock),
+        patch("app.services.vector_db.close_client", new_callable=AsyncMock),
+    ):
         from app.main import app
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             yield client
