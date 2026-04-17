@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { DataSet, Network } from "vis-network/standalone";
+import { buildApiUrl } from "../services/api";
 
 const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger }) => {
   const containerRef = useRef(null);
@@ -16,9 +17,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger }) => {
   const loadNetworkData = async (id) => {
     console.log("📡 Fetching network for ID:", id);
     try {
-      const response = await fetch(
-        `http://localhost:8000/viz/author-network/${id}`,
-      );
+      const response = await fetch(buildApiUrl(`/viz/author-network/${id}`));
       if (!response.ok) throw new Error("Graph API error");
 
       const data = await response.json();

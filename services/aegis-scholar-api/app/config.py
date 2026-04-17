@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     vector_db_url: str = "http://localhost:8002"
     vector_db_timeout: int = 30
 
+    # Graph DB Service Configuration
+    graph_db_url: str = "http://localhost:8003"
+
     # Database Configuration (to be implemented)
     database_url: str = ""
 

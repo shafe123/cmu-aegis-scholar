@@ -30,6 +30,29 @@ aegis-scholar-api:
     value: "info"
   - name: ENVIRONMENT
     value: "production"
+  - name: VECTOR_DB_URL
+    value: "http://aegis-scholar-vector-db:8002"
+  - name: GRAPH_DB_URL
+    value: "http://aegis-scholar-graph-db:8003"
+
+# Frontend configuration
+frontend:
+  enabled: true
+  replicaCount: 2
+  image:
+    tag: "latest"
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
 
 # Vector DB configuration
 vector-db:
@@ -112,8 +135,12 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     traefik.ingress.kubernetes.io/router.tls: "true"
+  stripPrefixes:
+  - /api
+  - /vector
+  - /graph
   hosts:
-  - host: api.aegis-scholar.com # Change to your production domain
+  - host: aegis-scholar.com # Change to your production domain
     paths:
     - path: /api
       pathType: Prefix
@@ -127,7 +154,11 @@ ingress:
       pathType: Prefix
       service: graph-db
       port: 8003
+    - path: /
+      pathType: Prefix
+      service: frontend
+      port: 80
   tls:
   - secretName: aegis-scholar-tls
     hosts:
-    - api.aegis-scholar.com
+    - aegis-scholar.com

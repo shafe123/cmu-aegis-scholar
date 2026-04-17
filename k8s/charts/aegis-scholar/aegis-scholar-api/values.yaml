@@ -66,11 +66,16 @@ tolerations: []
 affinity: {}
 
 # Environment variables
+# Override service URLs in environment-specific values for Kubernetes.
 env:
 - name: PYTHONUNBUFFERED
   value: "1"
 - name: LOG_LEVEL
   value: "info"
+- name: VECTOR_DB_URL
+  value: "http://vector-db:8002"
+- name: GRAPH_DB_URL
+  value: "http://graph-db:8003"
 
 # Additional environment variables from secrets or configmaps
 envFrom: []

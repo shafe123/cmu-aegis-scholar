@@ -31,12 +31,12 @@ aegis-scholar-api:
     type: ClusterIP
     port: 8000
   ingress:
-    enabled: true
+    enabled: false
     className: traefik
     hosts:
-    - host: aegis-dev.local
+    - host: localhost
       paths:
-      - path: /
+      - path: /api
         pathType: Prefix
   resources:
     limits:
@@ -50,6 +50,30 @@ aegis-scholar-api:
     value: "DEBUG"
   - name: ENVIRONMENT
     value: "dev"
+  - name: VECTOR_DB_URL
+    value: "http://aegis-scholar-vector-db:8002"
+  - name: GRAPH_DB_URL
+    value: "http://aegis-scholar-graph-db:8003"
+
+# Frontend configuration
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+    repository: "frontend"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
 
 # Vector DB configuration
 vector-db:
@@ -97,7 +121,7 @@ graph-db:
       cpu: 100m
       memory: 128Mi
   neo4jConnection:
-    host: "aegis-scholar-neo4j-lb-neo4j"
+    host: "aegis-scholar-neo4j"
     port: "7687"
     scheme: "bolt"
     database: "neo4j"
@@ -139,10 +163,42 @@ milvus:
 ingress:
   enabled: true
   className: traefik
+  stripPrefixes:
+  - /api
+  - /vector
+  - /graph
   hosts:
-  - host: aegis-dev.local
+  - host: localhost
     paths:
     - path: /api
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /search
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /health
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /viz
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /docs
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /redoc
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /openapi.json
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /favicon.ico
       pathType: Prefix
       service: aegis-scholar-api
       port: 8000
@@ -154,3 +210,7 @@ ingress:
       pathType: Prefix
       service: graph-db
       port: 8003
+    - path: /
+      pathType: Prefix
+      service: frontend
+      port: 80

@@ -19,6 +19,9 @@ dticData:
 aegis-scholar-api:
   enabled: true
 
+frontend:
+  enabled: true
+
 vector-db:
   enabled: true
 
@@ -57,6 +60,10 @@ ingress:
   className: traefik
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+  stripPrefixes:
+  - /api
+  - /vector
+  - /graph
   hosts:
   - host: aegis-scholar.local
     paths:
@@ -68,6 +75,14 @@ ingress:
       pathType: Prefix
       service: vector-db
       port: 8002
+    - path: /graph
+      pathType: Prefix
+      service: graph-db
+      port: 8003
+    - path: /
+      pathType: Prefix
+      service: frontend
+      port: 80
   tls: []
   #  - secretName: aegis-scholar-tls
   #    hosts:
