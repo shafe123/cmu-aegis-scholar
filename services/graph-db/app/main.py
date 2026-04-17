@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException
 from neo4j import GraphDatabase
 
 from app.config import settings
-from app.schemas import AuthorNode, AuthorWorkRel, WorkNode
+from app.schemas import AuthorNode, AuthorOrgRel, AuthorWorkRel, OrgNode, WorkNode
 
 # --- 1. Setup Logging ---
 logging.basicConfig(level=logging.INFO)
@@ -116,6 +116,7 @@ async def link_author_work(rel: AuthorWorkRel):
         session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
+
 @app.post("/orgs", tags=["Ingestion"])
 async def upsert_org(org: OrgNode):
     """Upserts an Organization node into the graph."""
@@ -127,6 +128,7 @@ async def upsert_org(org: OrgNode):
     with driver.session() as session:
         session.run(query, **org.model_dump())
     return {"status": "success", "id": org.id}
+
 
 @app.post("/relationships/affiliated", tags=["Relationships"])
 async def link_author_org(rel: AuthorOrgRel):
@@ -156,6 +158,7 @@ async def get_collaborators(author_id: str):
         result = session.run(query, id=author_id)
         return [dict(record) for record in result]
 
+
 # --- Adds the Organization to visualization workflow ---
 @app.get("/viz/author-network/{author_id}", tags=["Visualization"])
 async def get_author_network(author_id: str):
@@ -178,24 +181,37 @@ async def get_author_network(author_id: str):
 
             # Add Author
             if a and a["id"] not in node_ids:
-                nodes.append({"id": a["id"], "label": a["name"], "group": "author", "color": "#ff6b6b"})
+                nodes.append(
+                    {"id": a["id"], "label": a["name"], "group": "author", "color": "#ff6b6b"}
+                )
                 node_ids.add(a["id"])
 
             # Add Work
             if w and w["id"] not in node_ids:
-                nodes.append({"id": w["id"], "label": w["title"][:30] + "...", "group": "work", "color": "#4ecdc4"})
+                nodes.append(
+                    {
+                        "id": w["id"],
+                        "label": w["title"][:30] + "...",
+                        "group": "work",
+                        "color": "#4ecdc4",
+                    }
+                )
                 node_ids.add(w["id"])
                 edges.append({"from": a["id"], "to": w["id"], "label": "AUTHORED"})
 
             # Add Co-Author
             if co and co["id"] not in node_ids:
-                nodes.append({"id": co["id"], "label": co["name"], "group": "author", "color": "#ffadad"})
+                nodes.append(
+                    {"id": co["id"], "label": co["name"], "group": "author", "color": "#ffadad"}
+                )
                 node_ids.add(co["id"])
                 edges.append({"from": co["id"], "to": w["id"], "label": "AUTHORED"})
 
             # Add Organization (New)
             if o and o["id"] not in node_ids:
-                nodes.append({"id": o["id"], "label": o["name"], "group": "organization", "color": "#f9ca24"})
+                nodes.append(
+                    {"id": o["id"], "label": o["name"], "group": "organization", "color": "#f9ca24"}
+                )
                 node_ids.add(o["id"])
                 edges.append({"from": a["id"], "to": o["id"], "label": "AFFILIATED_WITH"})
 

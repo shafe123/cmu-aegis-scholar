@@ -256,7 +256,7 @@ async def lifespan(_app: FastAPI):
             embedding_field = next(
                 (f for f in schema_dict["fields"] if f["name"] == "embedding"), None
             )
-            if embedding_field:
+        if embedding_field:
                 _collection_schema_cache[collection_name] = {
                     "embedding_dim": embedding_field["params"]["dim"]
                 }
