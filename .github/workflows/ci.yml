@@ -185,7 +185,7 @@ jobs:
     test-integration:
         name: "Tests · integration (root)"
         runs-on: ubuntu-latest
-        needs: test-python
+        needs: [ test-python, lint-and-test-frontend ]
         defaults:
             run:
                 working-directory: tests
