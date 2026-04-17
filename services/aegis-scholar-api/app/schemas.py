@@ -123,22 +123,22 @@ class SearchResponse(BaseModel):
 class AuthorSearchResponse(SearchResponse):
     """Search response for authors."""
 
-    results: list[AuthorSearchResult]  # type: ignore[assignment]
+    results: list[AuthorSearchResult]
 
 
 class OrgSearchResponse(SearchResponse):
     """Search response for organizations."""
 
-    results: list[Organization]  # type: ignore[assignment]
+    results: list[Organization]
 
 
 class TopicSearchResponse(SearchResponse):
     """Search response for topics."""
 
-    results: list[Topic]  # type: ignore[assignment]
+    results: list[Topic]
 
 
 class WorkSearchResponse(SearchResponse):
     """Search response for works."""
 
-    results: list[Work]  # type: ignore[assignment]
+    results: list[Work]
