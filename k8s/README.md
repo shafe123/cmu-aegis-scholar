@@ -1,6 +1,6 @@
-# Kubernetes Deployment for AEGIS Scholar
+# Kubernetes Deployment for Aegis Scholar
 
-This directory contains Helm charts and Kubernetes manifests for deploying the AEGIS Scholar research discovery system to any Kubernetes cluster.
+This directory contains Helm charts and Kubernetes manifests for deploying the Aegis Scholar research discovery system to any Kubernetes cluster.
 
 ## Architecture
 
@@ -47,7 +47,7 @@ The application consists of:
 
 ## Local Development Deployment (Docker Desktop)
 
-This guide walks through deploying AEGIS Scholar on Docker Desktop using the built-in registry. This simulates a production-like workflow while remaining fully local.
+This guide walks through deploying Aegis Scholar on Docker Desktop using the built-in registry. This simulates a production-like workflow while remaining fully local.
 
 ### Step 1: Enable Kubernetes in Docker Desktop
 
