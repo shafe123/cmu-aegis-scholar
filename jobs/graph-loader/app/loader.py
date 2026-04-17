@@ -89,6 +89,10 @@ class GraphLoader:
                     if not line.strip():
                         continue
                     node_data = json.loads(line)
+                    # Ensure Org data has a defualt 'type' if missing to satisfy Schema
+                    if entity_type == "orgs":
+                        if not node_data.get("type"):
+                            node_data["type"] = "institution"
                     if self.api.upsert_node(entity_type, node_data):
                         count += 1
             logger.info("Processed %s", file_path.name)

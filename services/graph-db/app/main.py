@@ -1,3 +1,5 @@
+"""FastAPI application for Neo4j graph database operations."""
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -5,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from neo4j import GraphDatabase
 
 from app.config import settings
-from app.schemas import AuthorNode, AuthorWorkRel, WorkNode
+from app.schemas import AuthorNode, AuthorOrgRel, AuthorWorkRel, OrgNode, WorkNode
 
 # --- 1. Setup Logging ---
 logging.basicConfig(level=logging.INFO)
@@ -114,6 +116,31 @@ async def link_author_work(rel: AuthorWorkRel):
     """
     with driver.session() as session:
         session.run(query, **rel.model_dump())
+    return {"status": "linked"}
+
+
+@app.post("/orgs", tags=["Ingestion"])
+async def upsert_org(org: OrgNode):
+    """Upserts an Organization node into the graph."""
+    query = """
+    MERGE (o:Organization {id: $id})
+    SET o.name = $name, o.type = $type, o.country = $country
+    RETURN o.id
+    """
+    with driver.session() as session:
+        session.run(query, **org.model_dump())
+    return {"status": "success", "id": org.id}
+
+
+@app.post("/relationships/affiliated", tags=["Relationships"])
+async def link_author_org(rel: AuthorOrgRel):
+    """Links an Author to an Organization (Affiliation)."""
+    query = """
+    MATCH (a:Author {id: $author_id})
+    MATCH (o:Organization {id: $org_id})
+    MERGE (a)-[:AFFILIATED_WITH {role: $role}]->(o)
+    """
+    with driver.session() as session:
         session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
@@ -126,46 +153,47 @@ async def get_collaborators(author_id: str):
     """Finds researchers who have shared works with the given author."""
     query = """
     MATCH (a:Author {id: $id})-[:AUTHORED]->(w:Work)<-[:AUTHORED]-(collab:Author)
-    MATCH (a:Author {id: $id})-[:AUTHORED]->(w:Work)<-[:AUTHORED]-(collab:Author)
     WHERE a <> collab
     RETURN DISTINCT collab.name as name, collab.id as id
     """
     with driver.session() as session:
         result = session.run(query, id=author_id)
-        result = session.run(query, id=author_id)
         return [dict(record) for record in result]
 
 
+# --- Adds the Organization to visualization workflow ---
 @app.get("/viz/author-network/{author_id}", tags=["Visualization"])
 async def get_author_network(author_id: str):
     """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
     query = """
-    MATCH (n {id: $node_id})
-    OPTIONAL MATCH (n)-[r:AUTHORED]-(m)
-    OPTIONAL MATCH (m)-[r2:AUTHORED]-(co)
-    RETURN n, r, m, co
+    MATCH (author:Author {id: $node_id})
+    OPTIONAL MATCH (author)-[:AUTHORED]->(work:Work)
+    OPTIONAL MATCH (work)<-[:AUTHORED]-(coAuthor:Author)
+    OPTIONAL MATCH (author)-[:AFFILIATED_WITH]->(org:Organization)
+    RETURN author, work, coAuthor, org
     LIMIT 50
     """
 
     with driver.session() as session:
-        result = session.run(query, author_id=author_id)
+        result = session.run(query, node_id=author_id)
         nodes, edges, node_ids = [], [], set()
 
         for record in result:
-            author, work, co_author = record["a"], record["w"], record["co"]
+            author = record["author"]
+            work = record["work"]
+            coauthor = record["coAuthor"]
+            org = record["org"]
 
-            if author["id"] not in node_ids:
+            # Add Author
+            if author and author["id"] not in node_ids:
                 nodes.append(
-                    {
-                        "id": author["id"],
-                        "label": author["name"],
-                        "group": "author",
-                        "color": "#ff6b6b",
-                    }
+                    {"id": author["id"], "label": author["name"],
+                     "group": "author", "color": "#ff6b6b"}
                 )
                 node_ids.add(author["id"])
 
-            if work["id"] not in node_ids:
+            # Add Work
+            if work and work["id"] not in node_ids:
                 nodes.append(
                     {
                         "id": work["id"],
@@ -175,20 +203,24 @@ async def get_author_network(author_id: str):
                     }
                 )
                 node_ids.add(work["id"])
-            if author and work:
                 edges.append({"from": author["id"], "to": work["id"], "label": "AUTHORED"})
 
-            if co_author and co_author["id"] not in node_ids:
+            # Add Co-Author
+            if coauthor and coauthor["id"] not in node_ids:
                 nodes.append(
-                    {
-                        "id": co_author["id"],
-                        "label": co_author["name"],
-                        "group": "author",
-                        "color": "#ffadad",
-                    }
+                    {"id": coauthor["id"], "label": coauthor["name"],
+                     "group": "author", "color": "#ffadad"}
                 )
-                node_ids.add(co_author["id"])
-            if co_author and work:
-                edges.append({"from": co_author["id"], "to": work["id"], "label": "AUTHORED"})
+                node_ids.add(coauthor["id"])
+                edges.append({"from": coauthor["id"], "to": work["id"], "label": "AUTHORED"})
+
+            # Add Organization (New)
+            if org and org["id"] not in node_ids:
+                nodes.append(
+                    {"id": org["id"], "label": org["name"],
+                     "group": "organization", "color": "#f9ca24"}
+                )
+                node_ids.add(org["id"])
+                edges.append({"from": author["id"], "to": org["id"], "label": "AFFILIATED_WITH"})
 
         return {"nodes": nodes, "edges": edges}

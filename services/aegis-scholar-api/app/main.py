@@ -1,4 +1,3 @@
-# pylint: disable=logging-fstring-interpolation
 """
 Aegis Scholar API - Main FastAPI Application
 
@@ -130,8 +129,8 @@ def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
                     relevance_score=hybrid_score,
                 )
             )
-        except Exception as e:
-            logger.warning(f"Skipping malformed vector result: {e}  raw={res}")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.warning("Skipping malformed vector result: %s  raw=%s", e, res)
     return sorted(results, key=lambda r: r.relevance_score or 0, reverse=True)
 
 
@@ -263,7 +262,7 @@ async def search_authors(
     ),
 ):
     """Search for authors by name, affiliation, or research interests."""
-    logger.info(f"GET /search/authors  q={q!r}  limit={limit}  offset={offset}")
+    logger.info("GET /search/authors  q=%r  limit=%d  offset=%d", q, limit, offset)
 
     need_resort = sort_by and sort_by in _SORTABLE_AUTHOR_FIELDS and sort_by != "relevance_score"
     fetch_limit = settings.max_limit if need_resort else limit
@@ -283,7 +282,7 @@ async def search_authors(
             detail="Search service temporarily unavailable. Please try again later.",
         ) from exc
     except httpx.HTTPStatusError as e:
-        logger.error(f"Vector DB returned error: {e.response.status_code} {e.response.text}")
+        logger.error("Vector DB returned error: %s %s", e.response.status_code, e.response.text)
         raise HTTPException(
             status_code=502,
             detail="Upstream search service returned an error.",
@@ -341,7 +340,7 @@ async def search_orgs(
 ):
     """Search for organizations."""
     # pylint: disable=unused-argument
-    logger.info(f"GET /search/orgs  q={q!r}  (not yet implemented)")
+    logger.info("GET /search/orgs  q=%r  (not yet implemented)", q)
     raise HTTPException(
         status_code=501,
         detail="Organization search is not yet available.",
@@ -358,7 +357,7 @@ async def search_topics(
 ):
     """Search for research topics and subject areas."""
     # pylint: disable=unused-argument
-    logger.info(f"GET /search/topics  q={q!r}  (not yet implemented)")
+    logger.info("GET /search/topics  q=%r  (not yet implemented)", q)
     raise HTTPException(
         status_code=501,
         detail="Topic search is not yet available.",
@@ -376,7 +375,7 @@ async def search_works(
 ):
     """Search for research works, papers, and publications."""
     # pylint: disable=unused-argument,too-many-arguments,too-many-positional-arguments
-    logger.info(f"GET /search/works  q={q!r}  (not yet implemented)")
+    logger.info("GET /search/works  q=%r  (not yet implemented)", q)
     raise HTTPException(
         status_code=501,
         detail="Work search is not yet available.",
@@ -391,7 +390,7 @@ async def search_works(
 @app.get("/search/works/{work_id}", response_model=Work)
 async def get_work_by_id(work_id: str):
     """Get a specific work by ID."""
-    logger.info(f"GET /search/works/{work_id}  (not yet implemented)")
+    logger.info("GET /search/works/%s  (not yet implemented)", work_id)
     raise HTTPException(
         status_code=501,
         detail="Work detail lookup is not yet available.",
@@ -401,7 +400,7 @@ async def get_work_by_id(work_id: str):
 @app.get("/search/authors/{author_id}", response_model=Author)
 async def get_author_by_id(author_id: str):
     """Get a specific author by ID by querying the Graph DB."""
-    logger.info(f"GET /search/authors/{author_id}")
+    logger.info("GET /search/authors/%s", author_id)
 
     try:
         async with httpx.AsyncClient() as client:
@@ -425,14 +424,14 @@ async def get_author_by_id(author_id: str):
         }
 
     except httpx.RequestError as e:
-        logger.error(f"Error communicating with Graph DB: {e}")
+        logger.error("Error communicating with Graph DB: %s", e)
         raise HTTPException(status_code=503, detail="Graph DB service is currently unavailable.") from e
 
 
 @app.get("/search/orgs/{org_id}", response_model=Organization)
 async def get_org_by_id(org_id: str):
     """Get a specific organization by ID."""
-    logger.info(f"GET /search/orgs/{org_id}  (not yet implemented)")
+    logger.info("GET /search/orgs/%s  (not yet implemented)", org_id)
     raise HTTPException(
         status_code=501,
         detail="Organization detail lookup is not yet available.",
@@ -442,7 +441,7 @@ async def get_org_by_id(org_id: str):
 @app.get("/search/topics/{topic_id}", response_model=Topic)
 async def get_topic_by_id(topic_id: str):
     """Get a specific topic by ID."""
-    logger.info(f"GET /search/topics/{topic_id}  (not yet implemented)")
+    logger.info("GET /search/topics/%s  (not yet implemented)", topic_id)
     raise HTTPException(
         status_code=501,
         detail="Topic detail lookup is not yet available.",
@@ -452,7 +451,7 @@ async def get_topic_by_id(topic_id: str):
 @app.get("/viz/author-network/{author_id}")
 async def get_author_network_viz(author_id: str):
     """Proxy endpoint to fetch graph visualization data for an author."""
-    logger.info(f"GET /viz/author-network/{author_id}")
+    logger.info("GET /viz/author-network/%s", author_id)
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"http://graph-db:8003/viz/author-network/{author_id}", timeout=10.0)
@@ -461,7 +460,7 @@ async def get_author_network_viz(author_id: str):
         return response.json()
 
     except httpx.RequestError as e:
-        logger.error(f"Error communicating with Graph DB for viz: {e}")
+        logger.error("Error communicating with Graph DB for viz: %s", e)
         raise HTTPException(status_code=503, detail="Graph visualization service unavailable.") from e
 
 
