@@ -35,9 +35,6 @@ spec:
           value: "http://{{ .Release.Name }}-vector-db:{{ $vectorDb.service.port | default 8002 }}"
         - name: DATA_DIR
           value: {{ $vectorDb.loader.dataDir | default "/data/dtic_compressed" | quote }}
-        {{- with $vectorDb.loader.env }}
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
         volumeMounts:
         - name: dtic-data
           mountPath: /data

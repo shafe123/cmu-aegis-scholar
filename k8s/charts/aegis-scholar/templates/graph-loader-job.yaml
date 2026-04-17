@@ -35,9 +35,6 @@ spec:
           value: "http://{{ .Release.Name }}-graph-db:{{ $graphDb.service.port | default 8003 }}"
         - name: DATA_DIR
           value: {{ $graphDb.loader.dataDir | default "/data/dtic_compressed" | quote }}
-        {{- with $graphDb.loader.env }}
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
         volumeMounts:
         - name: dtic-data
           mountPath: /data
