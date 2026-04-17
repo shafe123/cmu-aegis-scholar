@@ -257,8 +257,14 @@ jobs:
                   only-severities: critical,high
                   exit-code: false
                   format: sarif
-                  output: ${{ matrix.service }}/scout-report.sarif
+                  output: scout-report.sarif
               continue-on-error: true
+
+            - name: Move report to service directory
+              if: always()
+              run: |
+                  mkdir -p ${{ matrix.service }}
+                  mv scout-report.sarif ${{ matrix.service }}/scout-report.sarif || true
 
             - name: Upload Docker Scout report
               uses: actions/upload-artifact@v7
