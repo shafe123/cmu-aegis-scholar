@@ -289,7 +289,7 @@ jobs:
                   only-severities: critical,high
                   exit-code: false
                   sarif-file: ${{ matrix.service }}/scout-report.json
-                  write-comment: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+                  write-comment: false
               continue-on-error: true
 
             - name: Upload Docker Scout report
