@@ -12,14 +12,17 @@ done
 # the initial sync has already completed.
 SYNC_FLAG="/data/.initial_sync_done"
 
-if [ ! -f "$SYNC_FLAG" ]; then
-    echo "--- First-time setup: Starting record sync ---"
-    python3 -c "from app.main import process_and_sync_file; process_and_sync_file()"
-    touch "$SYNC_FLAG"
-else
-    echo "--- Persistent data detected. Running incremental check ---"
-    python3 -c "from app.main import process_and_sync_file; process_and_sync_file()"
-fi
+run_sync() {
+    if [ ! -f "$SYNC_FLAG" ]; then
+        echo "--- First-time setup: Starting record sync in background ---"
+        python3 -c "from app.main import process_and_sync_file; process_and_sync_file()" && touch "$SYNC_FLAG"
+    else
+        echo "--- Persistent data detected. Running incremental check in background ---"
+        python3 -c "from app.main import process_and_sync_file; process_and_sync_file()"
+    fi
+}
+
+run_sync &
 
 echo "Starting FastAPI Gateway on 0.0.0.0:8000..."
 exec uvicorn app.main:app --host "0.0.0.0" --port "8000"
