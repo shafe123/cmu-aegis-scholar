@@ -10,19 +10,20 @@ Architecture
                                               │                                    │
                                               │◀──── ranked author results ────────┘
                                               │
+                                              │  (for each author, fetch most recent
+                                              │   work year from Graph DB)
+                                              │──GET /viz/author-network/{id}──▶  Graph DB (port 8003)
+                                              │◀──── work nodes with year ──────────┘
+                                              │
                                               ▼
-                                        Format into AuthorSearchResponse and return
-
-The vector DB stores one embedding per author (the average of all their
-paper-abstract embeddings).  When a user searches, the vector DB converts
-the query text into a 384-dim vector and finds the nearest authors in
-Milvus.  This API reformats those results into the Aegis Scholar schema.
+                                        Score with WolframAlpha formula and return
+                                        AuthorSearchResponse
 """
 
 import logging
 import math
 from contextlib import asynccontextmanager
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 import httpx
@@ -45,6 +46,7 @@ from app.schemas import (
     WorkSearchResponse,
 )
 from app.services import vector_db
+from app.services.graph_db import graph_client
 
 # Configure logging
 logging.basicConfig(level=settings.log_level)
@@ -112,11 +114,7 @@ def _distance_to_relevance(distance: float) -> float:
 
 
 def _extract_year(value) -> int | None:
-    """Extract a 4-digit year from common year/date representations."""
-    if isinstance(value, datetime):
-        return value.year
-    if isinstance(value, date):
-        return value.year
+    """Extract a 4-digit year from an integer or string value."""
     if isinstance(value, (int, float)):
         year = int(value)
         return year if MIN_VALID_YEAR <= year <= MAX_VALID_YEAR else None
@@ -125,33 +123,6 @@ def _extract_year(value) -> int | None:
             year = int(value[:4])
             return year if MIN_VALID_YEAR <= year <= MAX_VALID_YEAR else None
     return None
-
-
-def _extract_most_recent_work_year(raw_result: dict) -> int | None:
-    """Find most recent work year from supported raw result fields."""
-    candidate_years: list[int] = []
-
-    for key in ("most_recent_work_year", "latest_work_year", "last_work_year", "publication_year"):
-        year = _extract_year(raw_result.get(key))
-        if year is not None:
-            candidate_years.append(year)
-
-    for key in ("most_recent_work_date", "latest_work_date", "last_work_date", "publication_date"):
-        year = _extract_year(raw_result.get(key))
-        if year is not None:
-            candidate_years.append(year)
-
-    works = raw_result.get("works", [])
-    if isinstance(works, list):
-        for work in works:
-            if not isinstance(work, dict):
-                continue
-            for key in ("publication_year", "year", "publication_date", "date"):
-                year = _extract_year(work.get(key))
-                if year is not None:
-                    candidate_years.append(year)
-
-    return max(candidate_years) if candidate_years else None
 
 
 def _calculate_decades_since_most_recent_work(most_recent_work_year: int | None) -> float:
@@ -183,11 +154,15 @@ def _calculate_author_relevance(x: float, y: int, t: float) -> float:
     return round(((1.0 - x) + citations_term + recency_term) / 3.0, 4)
 
 
-def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
+async def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
     """
     Transform raw vector DB dicts into AuthorSearchResult Pydantic models.
     Uses the WolframAlpha relevance formula combining vector score (x),
     citation count (y), and decades since most recent work (t).
+
+    The most recent work year is fetched from the graph DB via
+    /viz/author-network/{author_id} for each author.  If the graph DB is
+    unavailable the recency term defaults to the neutral midpoint (t=2.0).
     """
     results: list[AuthorSearchResult] = []
     for res in vector_results:
@@ -195,12 +170,13 @@ def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
             distance = res.get("distance", 1.0)
             citation_count = res.get("citation_count", 0) or 0
             vector_score = _distance_to_relevance(distance)
-            most_recent_work_year = _extract_most_recent_work_year(res)
+            author_id = res["author_id"]
+            most_recent_work_year = await graph_client.get_most_recent_work_year(author_id)
             decades_since_recent_work = _calculate_decades_since_most_recent_work(most_recent_work_year)
             relevance_score = _calculate_author_relevance(vector_score, citation_count, decades_since_recent_work)
             results.append(
                 AuthorSearchResult(
-                    id=res["author_id"],
+                    id=author_id,
                     name=res.get("author_name", "Unknown"),
                     citation_count=citation_count,
                     works_count=res.get("num_abstracts", 0),
@@ -367,7 +343,7 @@ async def search_authors(
         ) from e
 
     # Map and optionally re-sort
-    authors = _map_vector_results(raw.get("results", []))
+    authors = await _map_vector_results(raw.get("results", []))
     authors = _sort_author_results(authors, sort_by, order or "desc")
 
     if need_resort:
