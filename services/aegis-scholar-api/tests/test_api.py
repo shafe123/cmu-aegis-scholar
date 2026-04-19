@@ -62,10 +62,33 @@ def test_map_vector_results_valid():
 
 def test_calculate_author_relevance_matches_wolfram_formula():
     """Formula should match the WolframAlpha equation exactly."""
+    import math
+
     from app.main import _calculate_author_relevance
 
     score = _calculate_author_relevance(x=0.8, y=100, t=2.0)
+    sigmoid_term = 1.0 / (1.0 + math.exp(-0.005 * (100 - 100)))
+    recency_term = (-math.tanh(2.0 - 2.0) + 1.0) / 2.0
+    assert score == round(((1.0 - 0.8) + sigmoid_term + recency_term) / 3.0, 4)
     assert score == 0.4
+
+
+@pytest.mark.parametrize(
+    ("x", "y", "t", "expected"),
+    [
+        (0.0, 0, 4.0, 0.4652),
+        (1.0, 10000, 0.0, 0.6607),
+        (0.5, 100, 2.0, 0.5),
+    ],
+)
+def test_calculate_author_relevance_range_examples(x, y, t, expected):
+    """Equation should behave correctly at representative input ranges.
+
+    Expected values are precomputed from the same WolframAlpha equation.
+    """
+    from app.main import _calculate_author_relevance
+
+    assert _calculate_author_relevance(x=x, y=y, t=t) == expected
 
 
 def test_map_vector_results_prefers_more_recent_work():

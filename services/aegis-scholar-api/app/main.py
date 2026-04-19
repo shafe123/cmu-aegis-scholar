@@ -50,6 +50,9 @@ from app.services import vector_db
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
 
+MIN_VALID_YEAR = 1000
+MAX_VALID_YEAR = 9999
+
 
 # ---------------------------------------------------------------------------
 # Application lifecycle
@@ -116,11 +119,11 @@ def _extract_year(value) -> int | None:
         return value.year
     if isinstance(value, (int, float)):
         year = int(value)
-        return year if 1000 <= year <= 9999 else None
+        return year if MIN_VALID_YEAR <= year <= MAX_VALID_YEAR else None
     if isinstance(value, str):
         if len(value) >= 4 and value[:4].isdigit():
             year = int(value[:4])
-            return year if 1000 <= year <= 9999 else None
+            return year if MIN_VALID_YEAR <= year <= MAX_VALID_YEAR else None
     return None
 
 
@@ -154,6 +157,8 @@ def _extract_most_recent_work_year(raw_result: dict) -> int | None:
 def _calculate_decades_since_most_recent_work(most_recent_work_year: int | None) -> float:
     """Return decades in the past from today, capped to WolframAlpha's t-range [0,4]."""
     if most_recent_work_year is None:
+        # Use midpoint (2.0) of the [0,4] range when recency data is unavailable
+        # to avoid either penalizing or favoring missing-recency authors.
         return 2.0
 
     years_since = max(0, date.today().year - most_recent_work_year)
@@ -163,7 +168,11 @@ def _calculate_decades_since_most_recent_work(most_recent_work_year: int | None)
 def _calculate_author_relevance(x: float, y: int, t: float) -> float:
     """
     WolframAlpha formula:
-    z(y, x, t) = 1/3*(1-x) + 1/3*(1/(1 + e^(-0.005*(y-100)))) + 1/3*((-tanh(t-2)+1)/2)
+    z(x, y, t) = 1/3*(1-x) + 1/3*(1/(1 + e^(-0.005*(y-100)))) + 1/3*((-tanh(t-2)+1)/2)
+
+    x: vector similarity score (0-1)
+    y: citation count (>=0)
+    t: decades since most recent work (0-4)
     """
     x = min(max(x, 0.0), 1.0)
     y = max(y, 0)
