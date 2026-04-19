@@ -22,6 +22,7 @@ Milvus.  This API reformats those results into the Aegis Scholar schema.
 import logging
 import math
 from contextlib import asynccontextmanager
+from datetime import date, datetime
 from pathlib import Path
 
 import httpx
@@ -107,26 +108,94 @@ def _distance_to_relevance(distance: float) -> float:
     return round(1.0 / (1.0 + distance), 4)
 
 
+def _extract_year(value) -> int | None:
+    """Extract a 4-digit year from common year/date representations."""
+    if isinstance(value, datetime):
+        return value.year
+    if isinstance(value, date):
+        return value.year
+    if isinstance(value, (int, float)):
+        year = int(value)
+        return year if 1000 <= year <= 9999 else None
+    if isinstance(value, str):
+        if len(value) >= 4 and value[:4].isdigit():
+            year = int(value[:4])
+            return year if 1000 <= year <= 9999 else None
+    return None
+
+
+def _extract_most_recent_work_year(raw_result: dict) -> int | None:
+    """Find most recent work year from supported raw result fields."""
+    candidate_years: list[int] = []
+
+    for key in ("most_recent_work_year", "latest_work_year", "last_work_year", "publication_year"):
+        year = _extract_year(raw_result.get(key))
+        if year is not None:
+            candidate_years.append(year)
+
+    for key in ("most_recent_work_date", "latest_work_date", "last_work_date", "publication_date"):
+        year = _extract_year(raw_result.get(key))
+        if year is not None:
+            candidate_years.append(year)
+
+    works = raw_result.get("works", [])
+    if isinstance(works, list):
+        for work in works:
+            if not isinstance(work, dict):
+                continue
+            for key in ("publication_year", "year", "publication_date", "date"):
+                year = _extract_year(work.get(key))
+                if year is not None:
+                    candidate_years.append(year)
+
+    return max(candidate_years) if candidate_years else None
+
+
+def _calculate_decades_since_most_recent_work(most_recent_work_year: int | None) -> float:
+    """Return decades in the past from today, capped to WolframAlpha's t-range [0,4]."""
+    if most_recent_work_year is None:
+        return 2.0
+
+    years_since = max(0, date.today().year - most_recent_work_year)
+    return min(years_since / 10.0, 4.0)
+
+
+def _calculate_author_relevance(x: float, y: int, t: float) -> float:
+    """
+    WolframAlpha formula:
+    z(y, x, t) = 1/3*(1-x) + 1/3*(1/(1 + e^(-0.005*(y-100)))) + 1/3*((-tanh(t-2)+1)/2)
+    """
+    x = min(max(x, 0.0), 1.0)
+    y = max(y, 0)
+    t = min(max(t, 0.0), 4.0)
+
+    citations_term = 1.0 / (1.0 + math.exp(-0.005 * (y - 100)))
+    recency_term = (-math.tanh(t - 2.0) + 1.0) / 2.0
+    return round(((1.0 - x) + citations_term + recency_term) / 3.0, 4)
+
+
 def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
     """
     Transform raw vector DB dicts into AuthorSearchResult Pydantic models.
-    Uses a hybrid score: 70% semantic relevance + 30% citation authority.
+    Uses the WolframAlpha relevance formula combining vector score (x),
+    citation count (y), and decades since most recent work (t).
     """
     results: list[AuthorSearchResult] = []
     for res in vector_results:
         try:
             distance = res.get("distance", 1.0)
             citation_count = res.get("citation_count", 0) or 0
-            relevance_score = _distance_to_relevance(distance)
-            authority_score = min(math.log10(citation_count + 1) / 4.0, 1.0)
-            hybrid_score = round((0.7 * relevance_score) + (0.3 * authority_score), 4)
+            vector_score = _distance_to_relevance(distance)
+            most_recent_work_year = _extract_most_recent_work_year(res)
+            decades_since_recent_work = _calculate_decades_since_most_recent_work(most_recent_work_year)
+            relevance_score = _calculate_author_relevance(vector_score, citation_count, decades_since_recent_work)
             results.append(
                 AuthorSearchResult(
                     id=res["author_id"],
                     name=res.get("author_name", "Unknown"),
                     citation_count=citation_count,
                     works_count=res.get("num_abstracts", 0),
-                    relevance_score=hybrid_score,
+                    relevance_score=relevance_score,
                 )
             )
         except Exception as e:  # pylint: disable=broad-exception-caught

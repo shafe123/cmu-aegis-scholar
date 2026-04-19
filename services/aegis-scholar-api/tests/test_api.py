@@ -60,6 +60,43 @@ def test_map_vector_results_valid():
     assert 0 < results[0].relevance_score <= 1.0
 
 
+def test_calculate_author_relevance_matches_wolfram_formula():
+    """Formula should match the WolframAlpha equation exactly."""
+    from app.main import _calculate_author_relevance
+
+    score = _calculate_author_relevance(x=0.8, y=100, t=2.0)
+    assert score == 0.4
+
+
+def test_map_vector_results_prefers_more_recent_work():
+    """Newer most recent work should improve relevance for equal x/y."""
+    from datetime import date
+
+    from app.main import _map_vector_results
+
+    current_year = date.today().year
+    raw = [
+        {
+            "author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab",
+            "author_name": "Recent",
+            "num_abstracts": 10,
+            "citation_count": 500,
+            "distance": 0.3,
+            "most_recent_work_year": current_year,
+        },
+        {
+            "author_id": "author_2b3c4d5e-2345-6789-bcde-2345678901bc",
+            "author_name": "Older",
+            "num_abstracts": 10,
+            "citation_count": 500,
+            "distance": 0.3,
+            "most_recent_work_year": current_year - 40,
+        },
+    ]
+    results = _map_vector_results(raw)
+    assert results[0].name == "Recent"
+
+
 def test_map_vector_results_malformed_skipped():
     """Malformed results missing required fields should be skipped."""
     from app.main import _map_vector_results
