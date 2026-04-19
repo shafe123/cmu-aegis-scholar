@@ -73,21 +73,21 @@ def test_get_collaborators_mapping(client, mock_neo4j_session):
 
 def test_viz_network_logic(client, mock_neo4j_session):
     """
-    Test the visualization logic. 
+    Test the visualization logic.
     FIXED: Keys now match the production RETURN statement (author, work, coAuthor, org).
     """
     mock_record = {
         "author": {"id": "auth_1", "name": "Primary"},
         "work": {"id": "work_1", "title": "Paper", "year": 2024, "citation_count": 0},
         "coAuthor": {"id": "auth_2", "name": "CoAuthor"},
-        "org": {"id": "org_1", "name": "CMU"}
+        "org": {"id": "org_1", "name": "CMU"},
     }
     mock_neo4j_session.run.return_value = [mock_record]
-    
+
     response = client.get("/viz/author-network/auth_1")
     assert response.status_code == 200
     data = response.json()
-    
+
     # Verify node extraction
     ids = [n["id"] for n in data["nodes"]]
     assert "auth_1" in ids
@@ -102,7 +102,9 @@ def test_viz_network_logic(client, mock_neo4j_session):
     # Check edges (connections)
     assert len(data["edges"]) >= 2  # Primary -> Work and CoAuthor -> Work
 
+
 # --- Additional Ingestion Tests to reach >90% Coverage ---
+
 
 def test_upsert_work_success(client, mock_neo4j_session):
     """Test successful work upsert."""
@@ -111,15 +113,15 @@ def test_upsert_work_success(client, mock_neo4j_session):
         "id": "work_123",
         "title": "Machine Learning for Defense",
         "name": "ML_Defense_2024",  # Added required field
-        "type": "journal-article",   # Added required field
+        "type": "journal-article",  # Added required field
         "year": 2024,
         "citation_count": 42,
         "sources": [],
         "abstract": "Test abstract content",
-        "publication_date": "2024-01-01"
+        "publication_date": "2024-01-01",
     }
     response = client.post("/works", json=work_data)
-    
+
     assert response.status_code == 200
     assert response.json()["id"] == "work_123"
 
@@ -130,7 +132,7 @@ def test_upsert_org_success(client, mock_neo4j_session):
         "id": "org_cmu",
         "name": "Carnegie Mellon University",
         "type": "institution",
-        "country": "US"
+        "country": "US",
     }
     response = client.post("/orgs", json=org_data)
     assert response.status_code == 200
@@ -143,7 +145,7 @@ def test_upsert_topic_success(client, mock_neo4j_session):
         "id": "topic_ai",
         "name": "Artificial Intelligence",
         "field": "Computer Science",
-        "domain": "Technology"
+        "domain": "Technology",
     }
     response = client.post("/topics", json=topic_data)
     assert response.status_code == 200
@@ -151,6 +153,7 @@ def test_upsert_topic_success(client, mock_neo4j_session):
 
 
 # --- Additional Relationship Tests ---
+
 
 def test_link_author_work_success(client, mock_neo4j_session):
     """Test linking an author to a work."""
