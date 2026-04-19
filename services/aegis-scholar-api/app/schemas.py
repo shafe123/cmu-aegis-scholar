@@ -33,6 +33,8 @@ class Author(BaseModel):
     h_index: int | None = Field(default=None, ge=0)
     citation_count: int | None = Field(default=None, ge=0)
     works_count: int | None = Field(default=None, ge=0)
+    # --- ADDED FOR FRONTEND FILTERING ---
+    latest_year: int | None = Field(default=None, description="Year of most recent publication")
     sources: list[Source] | None = None
     last_updated: datetime | None = None
 
