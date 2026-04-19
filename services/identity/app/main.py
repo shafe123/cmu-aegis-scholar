@@ -11,6 +11,12 @@ from ldap3.core.exceptions import LDAPEntryAlreadyExistsResult
 from ldap3.utils.dn import escape_rdn
 from rapidfuzz import process, fuzz
 
+from .docs import (
+    HEALTH_RESPONSES,
+    LOOKUP_RESPONSES,
+    STATS_RESPONSES,
+    SYNC_FILE_RESPONSES,
+)
 from .schemas import LookupResponse, SimilarMatch, UserRecord
 
 logging.basicConfig(
@@ -94,7 +100,7 @@ def get_org_list() -> list[str]:
     return _ORG_LIST_CACHE
 
 
-@app.get("/health")
+@app.get("/health", responses=HEALTH_RESPONSES)
 async def health_check():
     return {
         "status": "ok",
@@ -103,7 +109,7 @@ async def health_check():
     }
 
 
-@app.get("/stats")
+@app.get("/stats", responses=STATS_RESPONSES)
 async def get_stats():
     server = Server(LDAP_SERVER, get_info=ALL)
     try:
@@ -124,7 +130,7 @@ async def get_stats():
         raise HTTPException(status_code=500, detail=f"LDAP Error: {str(e)}") from e
 
 
-@app.post("/sync-file")
+@app.post("/sync-file", responses=SYNC_FILE_RESPONSES)
 async def trigger_sync(background_tasks: BackgroundTasks, force: bool = Query(False)):
     background_tasks.add_task(process_and_sync_file, force=force)
     return {"message": "Sync started. Check docker logs for progress."}
@@ -212,7 +218,7 @@ def process_and_sync_file(force: bool = False):
         logger.error(f"Critical Sync Error: {e}")
 
 
-@app.get("/lookup", response_model=LookupResponse)
+@app.get("/lookup", response_model=LookupResponse, responses=LOOKUP_RESPONSES)
 async def lookup_record(name: str = Query(...)):
     server = Server(LDAP_SERVER, get_info=ALL)
     try:
