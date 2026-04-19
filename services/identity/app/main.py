@@ -38,6 +38,8 @@ DOMAINS = [
     "us.gov",
 ]
 
+_ORG_LIST_CACHE: set[str] | None = None
+
 
 def _mask_config_value(value: str) -> str:
     return "<set>" if value else "<not set>"
@@ -67,8 +69,13 @@ def clean_uid(text: str) -> str:
     return re.sub(r"[^a-zA-Z0-9.-]", "", text).lower()
 
 
-def get_org_list() -> set[str]:
-    orgs = set()
+def get_org_list() -> list[str]:
+    global _ORG_LIST_CACHE
+
+    if _ORG_LIST_CACHE is not None:
+        return _ORG_LIST_CACHE
+
+    orgs: set[str] = set()
     if os.path.exists(ORG_FILE):
         try:
             with gzip.open(ORG_FILE, "rb") as f:
@@ -81,7 +88,10 @@ def get_org_list() -> set[str]:
                         continue
         except:  # noqa: E722
             pass
-    return orgs if orgs else set("DefaultOrg")
+
+    _ORG_LIST_CACHE = list(orgs) if orgs else ["DefaultOrg"]
+    logger.info("Loaded %d organizations into cache", len(_ORG_LIST_CACHE))
+    return _ORG_LIST_CACHE
 
 
 @app.get("/stats")
