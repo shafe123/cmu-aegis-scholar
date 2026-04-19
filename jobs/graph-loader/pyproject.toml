@@ -5,7 +5,7 @@ description = "Job for importing DTIC structural data and relationships into Neo
 authors = ["Aegis Scholar Team"]
 
 [tool.poetry.dependencies]
-python = ">=3.12"
+python = ">=3.12,<3.13"
 orjson = ">=3.9"
 httpx = ">=0.24"
 h11 = ">=0.16.0"  # CVE-2025-43859 (HTTP request smuggling, critical 9.1; transitive via httpx)
@@ -13,43 +13,19 @@ pydantic = ">=2.0"
 pydantic-settings = ">=2.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = ">=7.0"
-pytest-asyncio = ">=0.21"
-pytest-cov = ">=4.1"
-pytest-mock = ">=3.12"
-ruff = ">=0.3.0"
-pylint = ">=3.0.0"
-pylint-pydantic = ">=0.3.0"
+pytest = "^7.4.0"
+pytest-asyncio = "^0.23.0"
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.12.0"
+ruff = "^0.15.8"
+pylint = "^4.0.5"
+bandit = "^1.9.0"
+mypy = "^1.10.0"
+pylint-pydantic = "^0.3.5"
 
 [[tool.poetry.packages]]
 include = "app"
 from = "."
-
-[tool.ruff]
-line-length = 100
-target-version = "py312"
-
-[tool.ruff.lint]
-# E: pycodestyle, F: Pyflakes, B: flake8-bugbear, I: isort, UP: pyupgrade
-select = ["E", "F", "B", "I", "UP"]
-ignore = ["E501"] # Ignore long lines (formatter handles logic, avoids noise)
-
-[tool.ruff.lint.isort]
-known-first-party = ["app"]
-
-# --- STATIC ANALYSIS (Pylint) ---
-[tool.pylint."MESSAGES CONTROL"]
-max-line-length = 100
-disable = [
-    "C0114", # Missing module docstring
-    "C0115", # Missing class docstring
-    "C0116", # Missing function docstring
-    "R0903", # Too few public methods (common in Pydantic models)
-    "W0718", # Catching too general exception (often necessary for loaders to keep running)
-]
-
-[tool.pylint.MASTER]
-load-plugins = "pylint_pydantic"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -59,6 +35,47 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = ["--import-mode=importlib"]
 
+[tool.coverage.run]
+source = ["app"]
+omit = ["tests/*", "*/__pycache__/*", "*/.venv/*"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 80.0
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "C0114",
+    "C0115",
+    "C0116",
+    "R0903",
+    "W0718",
+]
+
+[tool.pylint.MASTER]
+load-plugins = "pylint_pydantic"
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true

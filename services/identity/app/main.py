@@ -235,9 +235,13 @@ async def lookup_record(name: str = Query(...)):
             if conn.entries:
                 entry = conn.entries[0]
                 exact_record = UserRecord(
-                    username=str(entry.uid) if hasattr(entry, "uid") else clean_uid(str(entry.cn)),
+                    username=str(entry.uid)
+                    if hasattr(entry, "uid")
+                    else clean_uid(str(entry.cn)),
                     name=str(entry.cn),
-                    email=str(entry.mail) if hasattr(entry, "mail") and entry.mail else None,
+                    email=str(entry.mail)
+                    if hasattr(entry, "mail") and entry.mail
+                    else None,
                     org=str(entry.o) if hasattr(entry, "o") else None,
                 )
 
@@ -283,4 +287,3 @@ async def lookup_record(name: str = Query(...)):
             )
     except Exception as entry:
         raise HTTPException(status_code=500, detail=str(entry)) from entry
-

@@ -66,7 +66,7 @@ LOOKUP_RESPONSES = {
                                     "email": "jing.zhang@research.gov",
                                     "org": "Research Lab",
                                     "score": 84.21,
-                                }
+                                },
                             ],
                             "message": "Exact match and suggestions provided.",
                         },
@@ -99,9 +99,7 @@ LOOKUP_RESPONSES = {
     500: {
         "description": "LDAP lookup error",
         "content": {
-            "application/json": {
-                "example": {"detail": "LDAP connection failed"}
-            }
+            "application/json": {"example": {"detail": "LDAP connection failed"}}
         },
     },
 }
