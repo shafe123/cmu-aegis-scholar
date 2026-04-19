@@ -1,24 +1,27 @@
+"""Identity service endpoints and LDAP synchronization helpers."""
+
 import gzip
+import json
 import logging
 import os
 import random
 import re
 from contextlib import asynccontextmanager
+from typing import Any
 
-import orjson
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
 from ldap3 import ALL, SUBTREE, Connection, Server
 from ldap3.core.exceptions import LDAPEntryAlreadyExistsResult
 from ldap3.utils.dn import escape_rdn
 from rapidfuzz import fuzz, process
 
-from .docs import (
+from app.docs import (
     HEALTH_RESPONSES,
     LOOKUP_RESPONSES,
     STATS_RESPONSES,
     SYNC_FILE_RESPONSES,
 )
-from .schemas import LookupResponse, SimilarMatch, UserRecord
+from app.schemas import LookupResponse, SimilarMatch, UserRecord
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -45,10 +48,12 @@ _ORG_LIST_CACHE: list[str] | None = None
 
 
 def _mask_config_value(value: str) -> str:
+    """Hide sensitive configuration values in logs."""
     return "<set>" if value else "<not set>"
 
 
-async def log_startup_config():
+async def log_startup_config() -> None:
+    """Log the effective startup configuration for the identity service."""
     logger.info(
         "Identity service startup configuration:\n"
         "  LDAP_SERVER=%s\n"
@@ -67,7 +72,8 @@ async def log_startup_config():
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
+    """Run startup actions using the FastAPI lifespan hook."""
     await log_startup_config()
     yield
 
@@ -76,12 +82,13 @@ app = FastAPI(lifespan=lifespan)
 
 
 def clean_uid(text: str) -> str:
-    """Removes any characters that are illegal in an LDAP UID."""
+    """Return a lowercase LDAP-safe UID derived from the input text."""
     return re.sub(r"[^a-zA-Z0-9.-]", "", text).lower()
 
 
 def get_org_list() -> list[str]:
-    global _ORG_LIST_CACHE
+    """Load and cache organization names from the configured org data file."""
+    global _ORG_LIST_CACHE  # pylint: disable=global-statement
 
     if _ORG_LIST_CACHE is not None:
         return _ORG_LIST_CACHE
@@ -89,15 +96,16 @@ def get_org_list() -> list[str]:
     orgs: set[str] = set()
     if os.path.exists(ORG_FILE):
         try:
-            with gzip.open(ORG_FILE, "rb") as f:
-                for line in f:
+            with gzip.open(ORG_FILE, "rb") as file_handle:
+                for line in file_handle:
                     try:
-                        d = orjson.loads(line)
-                        if "name" in d:
-                            orgs.add(d["name"])
-                    except:  # noqa: E722
+                        org_data = json.loads(line)
+                    except (json.JSONDecodeError, TypeError, ValueError):
                         continue
-        except:  # noqa: E722
+
+                    if "name" in org_data:
+                        orgs.add(org_data["name"])
+        except OSError:
             pass
 
     _ORG_LIST_CACHE = list(orgs) if orgs else ["DefaultOrg"]
@@ -106,7 +114,8 @@ def get_org_list() -> list[str]:
 
 
 @app.get("/health", responses=HEALTH_RESPONSES)
-async def health_check():
+async def health_check() -> dict[str, str]:
+    """Return a lightweight health response for container probes."""
     return {
         "status": "ok",
         "service": "identity",
@@ -115,7 +124,8 @@ async def health_check():
 
 
 @app.get("/stats", responses=STATS_RESPONSES)
-async def get_stats():
+async def get_stats() -> dict[str, int]:
+    """Return basic LDAP population statistics for the identity directory."""
     server = Server(LDAP_SERVER, get_info=ALL)
     try:
         with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
@@ -129,93 +139,99 @@ async def get_stats():
                 "with_email": with_email,
                 "without_email": total - with_email,
             }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LDAP Error: {str(e)}") from e
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        raise HTTPException(status_code=500, detail=f"LDAP Error: {exc}") from exc
 
 
 @app.post("/sync-file", responses=SYNC_FILE_RESPONSES)
-async def trigger_sync(background_tasks: BackgroundTasks, force: bool = Query(False)):
+async def trigger_sync(background_tasks: BackgroundTasks, force: bool = Query(False)) -> dict[str, str]:
+    """Queue a background synchronization job for the author source file."""
     background_tasks.add_task(process_and_sync_file, force=force)
     return {"message": "Sync started. Check docker logs for progress."}
 
 
-def process_and_sync_file(force: bool = False):
+def _build_ldap_attributes(name: str, org: str, email: str | None) -> dict[str, Any]:
+    """Build the LDAP attribute payload for a single author record."""
+    attrs: dict[str, Any] = {
+        "sn": escape_rdn(name.split()[-1] if " " in name else name),
+        "cn": name,
+        "o": org,
+    }
+    if email:
+        attrs["mail"] = email
+    return attrs
+
+
+def _sync_author_record(conn: Connection, author_data: dict[str, Any], org_names: list[str]) -> bool:
+    """Create or skip a single LDAP author record and return whether it was added."""
+    name = author_data.get("name", "")
+    if not name:
+        return False
+
+    email = author_data.get("email")
+    if not email and random.random() < 0.5:
+        email = f"{name.replace(' ', '.').lower()}@{random.choice(DOMAINS)}"
+
+    org = author_data.get("org_name") or random.choice(org_names)
+    safe_uid = escape_rdn(clean_uid(author_data.get("uid", name.replace(" ", ""))))
+    dn = f"uid={safe_uid},ou=users,{LDAP_BASE_DN}"
+    attrs = _build_ldap_attributes(name, org, email)
+
+    try:
+        return bool(conn.add(dn, ["inetOrgPerson", "top"], attrs))
+    except LDAPEntryAlreadyExistsResult:
+        logger.debug("LDAP entry already exists for dn=%s", dn)
+        return False
+
+
+def process_and_sync_file(force: bool = False) -> None:
+    """Load author data from disk and synchronize it into the LDAP directory."""
     if not os.path.exists(AUTHOR_FILE):
-        logger.error(f"File not found: {AUTHOR_FILE}")
+        logger.error("File not found: %s", AUTHOR_FILE)
         return
 
     server = Server(LDAP_SERVER, get_info=ALL)
     try:
-        # The 'auto_bind' here uses the LDAP_USER (Admin DN)
         with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
-            # Create OU if missing
             users_ou = f"ou=users,{LDAP_BASE_DN}"
-            conn.search(LDAP_BASE_DN, "(ou=users)", search_scope=SUBTREE)
+            conn.search(LDAP_BASE_DN, "(ou=users)", SUBTREE)
             if not conn.entries:
                 logger.info("Creating ou=users...")
-                conn.add(
-                    users_ou,
-                    objectClass=["organizationalUnit", "top"],
-                    attributes={"ou": "users"},
-                )
+                conn.add(users_ou, ["organizationalUnit", "top"], {"ou": "users"})
 
             if not force:
                 conn.search(users_ou, "(objectClass=inetOrgPerson)", attributes=["cn"])
-                if len(conn.entries) > 1000:
-                    logger.info(f"Skipping sync: {len(conn.entries)} records exist.")
+                existing_records = len(conn.entries)
+                if existing_records > 1000:
+                    logger.info("Skipping sync: %s records exist.", existing_records)
                     return
 
             org_names = get_org_list()
-            with gzip.open(AUTHOR_FILE, "rb") as f:
-                count = 0
-                for line in f:
+            count = 0
+            with gzip.open(AUTHOR_FILE, "rb") as file_handle:
+                for line in file_handle:
                     if not line.strip():
                         continue
+
                     try:
-                        author_data = orjson.loads(line)
-                        name = author_data.get("name", "")
-                        if not name:
-                            continue
-
-                        email = None
-                        if random.random() < 0.5:
-                            email = (
-                                author_data.get("email") or f"{name.replace(' ', '.').lower()}@{random.choice(DOMAINS)}"
-                            )
-
-                        org = author_data.get("org_name") or random.choice(org_names)
-
-                        # Use escape_rdn to prevent invalidDNSyntax for users
-                        safe_uid = escape_rdn(clean_uid(author_data.get("uid", name.replace(" ", ""))))
-                        dn = f"uid={safe_uid},ou=users,{LDAP_BASE_DN}"
-
-                        attrs = {
-                            "sn": escape_rdn(name.split()[-1] if " " in name else name),
-                            "cn": name,
-                            "o": org,
-                            "objectClass": ["inetOrgPerson", "top"],
-                        }
-                        if email:
-                            attrs["mail"] = email
-
-                        try:
-                            if conn.add(dn, attributes=attrs):
-                                count += 1
-                                if count % 1000 == 0:
-                                    logger.info(f"Synced {count} records...")
-                        except LDAPEntryAlreadyExistsResult:
-                            logger.debug("LDAP entry already exists for dn=%s", dn)
-                            continue
-                    except Exception as e:
-                        logger.exception("Failed to process author record during sync: %s", e)
+                        author_data = json.loads(line)
+                    except (json.JSONDecodeError, TypeError, ValueError):
+                        logger.debug("Skipping unreadable author record during sync.")
                         continue
-            logger.info(f"Final: Sync finished. {count} records added.")
-    except Exception as e:
-        logger.error(f"Critical Sync Error: {e}")
+
+                    if _sync_author_record(conn, author_data, org_names):
+                        count += 1
+                        if count % 1000 == 0:
+                            logger.info("Synced %s records...", count)
+
+            logger.info("Final: Sync finished. %s records added.", count)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        logger.error("Critical Sync Error: %s", exc)
 
 
 @app.get("/lookup", response_model=LookupResponse, responses=LOOKUP_RESPONSES)
-async def lookup_record(name: str = Query(...)):
+async def lookup_record(name: str = Query(...)) -> LookupResponse:
+    """Return an exact identity match plus fuzzy-match suggestions for a name query."""
     server = Server(LDAP_SERVER, get_info=ALL)
     try:
         with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
@@ -223,7 +239,6 @@ async def lookup_record(name: str = Query(...)):
             exact_record = None
 
             conn.search(search_base, f"(cn={name})", attributes=["mail", "cn", "uid", "o"])
-
             if conn.entries:
                 entry = conn.entries[0]
                 exact_record = UserRecord(
@@ -233,18 +248,17 @@ async def lookup_record(name: str = Query(...)):
                     org=str(entry.o) if hasattr(entry, "o") else None,
                 )
 
-            # Fuzzy logic with fuzz.ratio for your 54.55 score requirement
             conn.search(
                 search_base,
                 "(&(objectClass=inetOrgPerson)(mail=*))",
                 attributes=["cn", "mail", "o"],
             )
             candidate_map = {
-                str(e.cn): {
-                    "email": str(e.mail),
-                    "org": str(e.o) if hasattr(e, "o") else None,
+                str(entry.cn): {
+                    "email": str(entry.mail),
+                    "org": str(entry.o) if hasattr(entry, "o") else None,
                 }
-                for e in conn.entries
+                for entry in conn.entries
             }
 
             matches = process.extract(name, list(candidate_map.keys()), scorer=fuzz.ratio, limit=10)
@@ -271,5 +285,5 @@ async def lookup_record(name: str = Query(...)):
                 similar_records=results or [],
                 message=message,
             )
-    except Exception as entry:
-        raise HTTPException(status_code=500, detail=str(entry)) from entry
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        raise HTTPException(status_code=500, detail=str(exc)) from exc

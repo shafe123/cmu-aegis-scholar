@@ -1,3 +1,5 @@
+"""OpenAPI response metadata for the identity service endpoints."""
+
 HEALTH_RESPONSES = {
     200: {
         "description": "Service health status",
