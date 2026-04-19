@@ -275,7 +275,7 @@ async def search_authors(
             query_text=q,
             limit=fetch_limit,
             offset=fetch_offset,
-             # ADDED 'latest_year' to the output fields
+            # ADDED 'latest_year' to the output fields
             output_fields=["author_id", "author_name", "num_abstracts", "citation_count", "latest_year"],
         )
     except httpx.ConnectError as exc:
