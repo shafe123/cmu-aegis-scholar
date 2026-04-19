@@ -71,8 +71,8 @@ LOOKUP_RESPONSES = {
                             "message": "Exact match and suggestions provided.",
                         },
                     },
-                    "suggestions": {
-                        "summary": "Fuzzy suggestions returned",
+                    "no_exact_match": {
+                        "summary": "No exact match found",
                         "value": {
                             "exact_match": None,
                             "similar_records": [
@@ -89,7 +89,7 @@ LOOKUP_RESPONSES = {
                                     "score": 66.67,
                                 },
                             ],
-                            "message": "Suggestions provided.",
+                            "message": "No exact match found. Suggestions provided.",
                         },
                     },
                 }
