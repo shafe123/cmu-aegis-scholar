@@ -31,11 +31,7 @@ STATS_RESPONSES = {
 SYNC_FILE_RESPONSES = {
     200: {
         "description": "Background sync job accepted",
-        "content": {
-            "application/json": {
-                "example": {"message": "Sync started. Check docker logs for progress."}
-            }
-        },
+        "content": {"application/json": {"example": {"message": "Sync started. Check docker logs for progress."}}},
     }
 }
 
@@ -98,8 +94,6 @@ LOOKUP_RESPONSES = {
     },
     500: {
         "description": "LDAP lookup error",
-        "content": {
-            "application/json": {"example": {"detail": "LDAP connection failed"}}
-        },
+        "content": {"application/json": {"example": {"detail": "LDAP connection failed"}}},
     },
 }

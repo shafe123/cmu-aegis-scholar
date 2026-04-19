@@ -1,15 +1,16 @@
-import os
 import gzip
-import orjson
-import random
 import logging
+import os
+import random
 import re
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Query
+from contextlib import asynccontextmanager
 
-from ldap3 import Server, Connection, ALL, SUBTREE
+import orjson
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
+from ldap3 import ALL, SUBTREE, Connection, Server
 from ldap3.core.exceptions import LDAPEntryAlreadyExistsResult
 from ldap3.utils.dn import escape_rdn
-from rapidfuzz import process, fuzz
+from rapidfuzz import fuzz, process
 
 from .docs import (
     HEALTH_RESPONSES,
@@ -19,12 +20,8 @@ from .docs import (
 )
 from .schemas import LookupResponse, SimilarMatch, UserRecord
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
-
-app = FastAPI()
 
 # Config - Explicitly stripping whitespace to prevent invalidDNSyntax
 LDAP_SERVER = os.getenv("LDAP_SERVER", "ldap://ldap-server:1389").strip()
@@ -44,14 +41,13 @@ DOMAINS = [
     "us.gov",
 ]
 
-_ORG_LIST_CACHE: set[str] | None = None
+_ORG_LIST_CACHE: list[str] | None = None
 
 
 def _mask_config_value(value: str) -> str:
     return "<set>" if value else "<not set>"
 
 
-@app.on_event("startup")
 async def log_startup_config():
     logger.info(
         "Identity service startup configuration:\n"
@@ -68,6 +64,15 @@ async def log_startup_config():
         AUTHOR_FILE,
         ORG_FILE,
     )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await log_startup_config()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 def clean_uid(text: str) -> str:
@@ -113,9 +118,7 @@ async def health_check():
 async def get_stats():
     server = Server(LDAP_SERVER, get_info=ALL)
     try:
-        with Connection(
-            server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True
-        ) as conn:
+        with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
             search_base = f"ou=users,{LDAP_BASE_DN}"
             conn.search(search_base, "(objectClass=inetOrgPerson)", attributes=["cn"])
             total = len(conn.entries)
@@ -144,9 +147,7 @@ def process_and_sync_file(force: bool = False):
     server = Server(LDAP_SERVER, get_info=ALL)
     try:
         # The 'auto_bind' here uses the LDAP_USER (Admin DN)
-        with Connection(
-            server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True
-        ) as conn:
+        with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
             # Create OU if missing
             users_ou = f"ou=users,{LDAP_BASE_DN}"
             conn.search(LDAP_BASE_DN, "(ou=users)", search_scope=SUBTREE)
@@ -179,16 +180,13 @@ def process_and_sync_file(force: bool = False):
                         email = None
                         if random.random() < 0.5:
                             email = (
-                                author_data.get("email")
-                                or f"{name.replace(' ', '.').lower()}@{random.choice(DOMAINS)}"
+                                author_data.get("email") or f"{name.replace(' ', '.').lower()}@{random.choice(DOMAINS)}"
                             )
 
                         org = author_data.get("org_name") or random.choice(org_names)
 
                         # Use escape_rdn to prevent invalidDNSyntax for users
-                        safe_uid = escape_rdn(
-                            clean_uid(author_data.get("uid", name.replace(" ", "")))
-                        )
+                        safe_uid = escape_rdn(clean_uid(author_data.get("uid", name.replace(" ", ""))))
                         dn = f"uid={safe_uid},ou=users,{LDAP_BASE_DN}"
 
                         attrs = {
@@ -209,9 +207,7 @@ def process_and_sync_file(force: bool = False):
                             logger.debug("LDAP entry already exists for dn=%s", dn)
                             continue
                     except Exception as e:
-                        logger.exception(
-                            "Failed to process author record during sync: %s", e
-                        )
+                        logger.exception("Failed to process author record during sync: %s", e)
                         continue
             logger.info(f"Final: Sync finished. {count} records added.")
     except Exception as e:
@@ -222,26 +218,18 @@ def process_and_sync_file(force: bool = False):
 async def lookup_record(name: str = Query(...)):
     server = Server(LDAP_SERVER, get_info=ALL)
     try:
-        with Connection(
-            server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True
-        ) as conn:
+        with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
             search_base = f"ou=users,{LDAP_BASE_DN}"
             exact_record = None
 
-            conn.search(
-                search_base, f"(cn={name})", attributes=["mail", "cn", "uid", "o"]
-            )
+            conn.search(search_base, f"(cn={name})", attributes=["mail", "cn", "uid", "o"])
 
             if conn.entries:
                 entry = conn.entries[0]
                 exact_record = UserRecord(
-                    username=str(entry.uid)
-                    if hasattr(entry, "uid")
-                    else clean_uid(str(entry.cn)),
+                    username=str(entry.uid) if hasattr(entry, "uid") else clean_uid(str(entry.cn)),
                     name=str(entry.cn),
-                    email=str(entry.mail)
-                    if hasattr(entry, "mail") and entry.mail
-                    else None,
+                    email=str(entry.mail) if hasattr(entry, "mail") and entry.mail else None,
                     org=str(entry.o) if hasattr(entry, "o") else None,
                 )
 
@@ -259,9 +247,7 @@ async def lookup_record(name: str = Query(...)):
                 for e in conn.entries
             }
 
-            matches = process.extract(
-                name, list(candidate_map.keys()), scorer=fuzz.ratio, limit=10
-            )
+            matches = process.extract(name, list(candidate_map.keys()), scorer=fuzz.ratio, limit=10)
             results = [
                 SimilarMatch(
                     name=match[0],

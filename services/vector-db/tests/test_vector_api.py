@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
-from app.main import app
+
 from app.config import AVAILABLE_MODELS
+from app.main import app
 
 client = TestClient(app)
 
@@ -87,9 +88,7 @@ def test_vector_search_validation():
 
 def test_vector_search_with_valid_input():
     """Test vector search with valid input (may fail if collection doesn't exist)."""
-    response = client.post(
-        "/search/vector", json={"query_vector": [0.1] * 768, "limit": 5}
-    )
+    response = client.post("/search/vector", json={"query_vector": [0.1] * 768, "limit": 5})
     # May return 404 if collection doesn't exist, or 500 if Milvus not connected
     assert response.status_code in [200, 404, 500]
 
@@ -104,9 +103,7 @@ def test_vector_search_with_valid_input():
 
 def test_vector_search_with_pagination():
     """Test vector search with pagination parameters."""
-    response = client.post(
-        "/search/vector", json={"query_vector": [0.1] * 768, "limit": 10, "offset": 5}
-    )
+    response = client.post("/search/vector", json={"query_vector": [0.1] * 768, "limit": 10, "offset": 5})
     # May return 404 if collection doesn't exist, or 500 if Milvus not connected
     assert response.status_code in [200, 404, 500]
 
@@ -289,17 +286,13 @@ def test_create_author_embedding_upsert():
         assert data["author_id"] == "test_upsert_author"
         assert data["num_abstracts_processed"] == 2  # New count
         # Message should indicate created or updated
-        assert (
-            "created" in data["message"].lower() or "updated" in data["message"].lower()
-        )
+        assert "created" in data["message"].lower() or "updated" in data["message"].lower()
 
 
 def test_create_author_vector_validation():
     """Test author vector creation with invalid input."""
     # Test with missing author_id
-    response = client.post(
-        "/authors/vector", json={"author_name": "John Doe", "embedding": [0.1] * 384}
-    )
+    response = client.post("/authors/vector", json={"author_name": "John Doe", "embedding": [0.1] * 384})
     assert response.status_code == 422  # Validation error
 
     # Test with empty embedding
@@ -424,9 +417,7 @@ def test_create_author_vector_upsert():
         assert data["author_id"] == "test_vector_upsert"
         assert data["embedding_dim"] == 384
         # Message should indicate created or updated
-        assert (
-            "created" in data["message"].lower() or "updated" in data["message"].lower()
-        )
+        assert "created" in data["message"].lower() or "updated" in data["message"].lower()
 
 
 def test_model_consistency_workflow():

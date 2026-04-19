@@ -45,6 +45,9 @@ jobs:
             - name: Install Poetry
               run: pip install poetry --quiet
 
+            - name: Lock dependencies
+              run: poetry lock
+
             - name: Cache Poetry virtualenv
               uses: actions/cache@v5
               with:
@@ -99,6 +102,9 @@ jobs:
 
             - name: Install Poetry
               run: pip install poetry --quiet
+
+            - name: Lock dependencies
+              run: poetry lock
 
             - name: Cache Poetry virtualenv
               uses: actions/cache@v5
@@ -161,6 +167,9 @@ jobs:
             - name: Install Poetry
               run: pip install poetry --quiet
 
+            - name: Lock dependencies
+              run: poetry lock
+
             - name: Cache Poetry virtualenv
               uses: actions/cache@v5
               with:
@@ -206,6 +215,9 @@ jobs:
             - name: Install Poetry
               run: pip install poetry --quiet
 
+            - name: Lock dependencies
+              run: poetry lock
+
             - name: Cache Poetry virtualenv
               uses: actions/cache@v5
               with:
@@ -243,7 +255,7 @@ jobs:
                     - service: services/vector-db
                       image: vector-db
                     - service: services/identity
-                      name: identity
+                      image: identity
 
         steps:
             - uses: actions/checkout@v6

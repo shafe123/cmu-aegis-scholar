@@ -1,9 +1,8 @@
 """Pydantic models for API request and response validation."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 # Request Models
 
@@ -11,14 +10,14 @@ from pydantic import BaseModel, ConfigDict, Field
 class VectorSearchRequest(BaseModel):
     """Request model for vector search."""
 
-    query_vector: List[float] = Field(
+    query_vector: list[float] = Field(
         ...,
         description="Query vector for similarity search",
         json_schema_extra={
             "example": [0.023, -0.145, 0.089] + [0.0] * 381  # type: ignore[dict-item]
         },  # 384-dim vector
     )
-    collection_name: Optional[str] = Field(
+    collection_name: str | None = Field(
         None,
         description="Collection to search in",
         json_schema_extra={"example": "aegis_vectors"},
@@ -36,12 +35,12 @@ class VectorSearchRequest(BaseModel):
         description="Number of results to skip for pagination",
         json_schema_extra={"example": 0},
     )
-    output_fields: Optional[List[str]] = Field(
+    output_fields: list[str] | None = Field(
         None,
         description="Fields to include in results",
         json_schema_extra={"example": ["author_id", "author_name", "num_abstracts"]},
     )
-    filter_expr: Optional[str] = Field(
+    filter_expr: str | None = Field(
         None,
         description="Filter expression for search",
         json_schema_extra={"example": "num_abstracts > 10"},
@@ -57,12 +56,12 @@ class TextSearchRequest(BaseModel):
         description="Query text to search for",
         json_schema_extra={"example": "adversarial machine learning network security"},
     )
-    model_name: Optional[str] = Field(
+    model_name: str | None = Field(
         None,
         description="Embedding model to use for encoding the query (uses default if not specified)",
         json_schema_extra={"example": "sentence-transformers/all-MiniLM-L6-v2"},
     )
-    collection_name: Optional[str] = Field(
+    collection_name: str | None = Field(
         None,
         description="Collection to search in",
         json_schema_extra={"example": "aegis_vectors"},
@@ -80,12 +79,12 @@ class TextSearchRequest(BaseModel):
         description="Number of results to skip for pagination",
         json_schema_extra={"example": 0},
     )
-    output_fields: Optional[List[str]] = Field(
+    output_fields: list[str] | None = Field(
         None,
         description="Fields to include in results",
         json_schema_extra={"example": ["author_id", "author_name", "num_abstracts"]},
     )
-    filter_expr: Optional[str] = Field(
+    filter_expr: str | None = Field(
         None,
         description="Filter expression for search",
         json_schema_extra={"example": "num_abstracts >= 5"},
@@ -105,7 +104,7 @@ class CreateAuthorEmbeddingRequest(BaseModel):
         description="Name of the author",
         json_schema_extra={"example": "Dr. Sarah Chen"},
     )
-    abstracts: List[str] = Field(
+    abstracts: list[str] = Field(
         ...,
         min_length=1,
         description="List of paper abstracts by the author",
@@ -120,20 +119,18 @@ class CreateAuthorEmbeddingRequest(BaseModel):
             ]
         },
     )
-    model_name: Optional[str] = Field(
+    model_name: str | None = Field(
         None,
         description="Embedding model to use for encoding abstracts (uses default if not specified)",
         json_schema_extra={"example": "sentence-transformers/all-MiniLM-L6-v2"},
     )
-    collection_name: Optional[str] = Field(
+    collection_name: str | None = Field(
         None,
         description="Collection to store the embedding in",
         json_schema_extra={"example": "aegis_vectors"},
     )
-    citation_count: Optional[int] = Field(
-        None, description="Author's citation count", json_schema_extra={"example": 8924}
-    )
-    metadata: Optional[Dict[str, Any]] = Field(
+    citation_count: int | None = Field(None, description="Author's citation count", json_schema_extra={"example": 8924})
+    metadata: dict[str, Any] | None = Field(
         default_factory=dict,
         description="Additional metadata for the author",
         json_schema_extra={"example": {"h_index": 42, "works_count": 156}},
@@ -153,32 +150,30 @@ class CreateAuthorVectorRequest(BaseModel):
         description="Name of the author",
         json_schema_extra={"example": "Dr. Michael Rodriguez"},
     )
-    embedding: List[float] = Field(
+    embedding: list[float] = Field(
         ...,
         description="Pre-computed embedding vector for the author",
         json_schema_extra={
             "example": [0.025, -0.134, 0.078] + [0.0] * 381  # type: ignore[dict-item]
         },  # 384-dim vector
     )
-    model_name: Optional[str] = Field(
+    model_name: str | None = Field(
         None,
         description="Model name that was used to generate the embedding (for dimension validation)",
         json_schema_extra={"example": "sentence-transformers/all-MiniLM-L6-v2"},
     )
-    num_abstracts: Optional[int] = Field(
+    num_abstracts: int | None = Field(
         None,
         description="Number of abstracts used to compute the embedding",
         json_schema_extra={"example": 132},
     )
-    collection_name: Optional[str] = Field(
+    collection_name: str | None = Field(
         None,
         description="Collection to store the embedding in",
         json_schema_extra={"example": "aegis_vectors"},
     )
-    citation_count: Optional[int] = Field(
-        None, description="Author's citation count", json_schema_extra={"example": 7234}
-    )
-    metadata: Optional[Dict[str, Any]] = Field(
+    citation_count: int | None = Field(None, description="Author's citation count", json_schema_extra={"example": 7234})
+    metadata: dict[str, Any] | None = Field(
         default_factory=dict,
         description="Additional metadata for the author",
         json_schema_extra={"example": {"h_index": 38, "works_count": 132}},
@@ -191,9 +186,7 @@ class CreateAuthorVectorRequest(BaseModel):
 class VectorSearchResult(BaseModel):
     """Single search result with flattened entity fields."""
 
-    model_config = ConfigDict(
-        extra="allow"
-    )  # Allow additional fields from output_fields
+    model_config = ConfigDict(extra="allow")  # Allow additional fields from output_fields
 
     distance: float = Field(
         ...,
@@ -215,9 +208,7 @@ class VectorSearchResult(BaseModel):
         description="Number of abstracts used for this embedding",
         json_schema_extra={"example": 124},
     )
-    citation_count: Optional[int] = Field(
-        None, description="Author's citation count", json_schema_extra={"example": 8924}
-    )
+    citation_count: int | None = Field(None, description="Author's citation count", json_schema_extra={"example": 8924})
 
 
 class PaginationMetadata(BaseModel):
@@ -232,7 +223,7 @@ class PaginationMetadata(BaseModel):
 class VectorSearchResponse(BaseModel):
     """Response model for vector search."""
 
-    results: List[VectorSearchResult] = Field(
+    results: list[VectorSearchResult] = Field(
         ...,
         json_schema_extra={
             "example": [
@@ -257,9 +248,7 @@ class VectorSearchResponse(BaseModel):
     search_time_ms: float = Field(..., json_schema_extra={"example": 45.23})
     pagination: PaginationMetadata = Field(
         ...,
-        json_schema_extra={
-            "example": {"offset": 0, "limit": 10, "returned": 5, "has_more": True}
-        },
+        json_schema_extra={"example": {"offset": 0, "limit": 10, "returned": 5, "has_more": True}},
     )
 
 
@@ -268,9 +257,7 @@ class HealthResponse(BaseModel):
 
     status: str = Field(..., json_schema_extra={"example": "healthy"})
     milvus_connected: bool = Field(..., json_schema_extra={"example": True})
-    collections: List[str] = Field(
-        ..., json_schema_extra={"example": ["aegis_vectors", "test_collection"]}
-    )
+    collections: list[str] = Field(..., json_schema_extra={"example": ["aegis_vectors", "test_collection"]})
 
 
 class CollectionInfo(BaseModel):
@@ -278,26 +265,20 @@ class CollectionInfo(BaseModel):
 
     name: str = Field(..., json_schema_extra={"example": "aegis_vectors"})
     num_entities: int = Field(..., json_schema_extra={"example": 15427})
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
-        json_schema_extra={
-            "example": "Author embeddings from averaged paper abstracts"
-        },
+        json_schema_extra={"example": "Author embeddings from averaged paper abstracts"},
     )
 
 
 class ModelInfo(BaseModel):
     """Information about an available embedding model."""
 
-    name: str = Field(
-        ..., json_schema_extra={"example": "sentence-transformers/all-MiniLM-L6-v2"}
-    )
-    dimension: Optional[int] = Field(None, json_schema_extra={"example": 384})
+    name: str = Field(..., json_schema_extra={"example": "sentence-transformers/all-MiniLM-L6-v2"})
+    dimension: int | None = Field(None, json_schema_extra={"example": 384})
     description: str = Field(
         ...,
-        json_schema_extra={
-            "example": "Fast and efficient sentence embeddings (384 dimensions)"
-        },
+        json_schema_extra={"example": "Fast and efficient sentence embeddings (384 dimensions)"},
     )
     loaded: bool = Field(..., json_schema_extra={"example": True})
 
@@ -305,7 +286,7 @@ class ModelInfo(BaseModel):
 class ModelsResponse(BaseModel):
     """Response model for listing available models."""
 
-    models: List[ModelInfo] = Field(
+    models: list[ModelInfo] = Field(
         ...,
         json_schema_extra={
             "example": [
@@ -324,9 +305,7 @@ class ModelsResponse(BaseModel):
             ]
         },
     )
-    default_model: str = Field(
-        ..., json_schema_extra={"example": "sentence-transformers/all-MiniLM-L6-v2"}
-    )
+    default_model: str = Field(..., json_schema_extra={"example": "sentence-transformers/all-MiniLM-L6-v2"})
 
 
 class CreateAuthorEmbeddingResponse(BaseModel):
@@ -343,9 +322,7 @@ class CreateAuthorEmbeddingResponse(BaseModel):
     success: bool = Field(..., json_schema_extra={"example": True})
     message: str = Field(
         ...,
-        json_schema_extra={
-            "example": "Author embedding created and stored successfully"
-        },
+        json_schema_extra={"example": "Author embedding created and stored successfully"},
     )
 
 
@@ -356,9 +333,7 @@ class CreateAuthorVectorResponse(BaseModel):
         ...,
         json_schema_extra={"example": "author_e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"},
     )
-    author_name: str = Field(
-        ..., json_schema_extra={"example": "Dr. Michael Rodriguez"}
-    )
+    author_name: str = Field(..., json_schema_extra={"example": "Dr. Michael Rodriguez"})
     embedding_dim: int = Field(..., json_schema_extra={"example": 384})
     collection_name: str = Field(..., json_schema_extra={"example": "aegis_vectors"})
     success: bool = Field(..., json_schema_extra={"example": True})
