@@ -1,3 +1,4 @@
+"""Main FastAPI application for the Aegis Scholar Graph DB service."""
 import logging
 from contextlib import asynccontextmanager
 
@@ -238,8 +239,8 @@ async def get_author_network(author_id: str):
                         "label": work["title"][:30] + "...",
                         "group": "work",
                         "color": "#4ecdc4",
-                        "year" : work["year"],
-                        "citations" : work["citation_count"],
+                        "year": work["year"],
+                        "citations": work["citation_count"],
                     }
                 )
                 node_ids.add(work["id"])
