@@ -76,8 +76,11 @@ def test_calculate_author_relevance_matches_wolfram_formula():
 @pytest.mark.parametrize(
     ("x", "y", "t", "expected"),
     [
+        # Best vector match (x=0), very high citations, oldest allowed work (t=4)
         (0.0, 0, 4.0, 0.4652),
+        # Worst vector match (x=1), maximum citations, most recent possible work (t=0)
         (1.0, 10000, 0.0, 0.6607),
+        # Mid-range across all three terms
         (0.5, 100, 2.0, 0.5),
     ],
 )
@@ -117,6 +120,8 @@ async def test_map_vector_results_prefers_more_recent_work():
     ]
 
     async def _year_by_author(author_id: str) -> int | None:
+        # "1a2b" is a substring of the "Recent" author's ID; return the current year for them
+        # and current_year - 40 (4 decades ago) for the "Older" author.
         return current_year if "1a2b" in author_id else current_year - 40
 
     with patch.object(graph_client, "get_most_recent_work_year", side_effect=_year_by_author):

@@ -7,8 +7,8 @@ from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture(autouse=True)
-def mock_graph_db_year():
-    """Auto-mock graph DB year lookup for all tests to avoid live network calls.
+def mock_graph_db_most_recent_work_year():
+    """Auto-mock graph DB most_recent_work_year for all tests to avoid live network calls.
 
     Tests that need specific years can override with their own patch.object block.
     """

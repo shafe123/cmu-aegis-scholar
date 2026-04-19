@@ -43,8 +43,11 @@ class GraphDBClient:
                 if node.get("group") == "work" and node.get("year") is not None
             ]
             return max(years) if years else None
+        except (httpx.HTTPError, httpx.RequestError) as exc:
+            logger.warning("Graph DB unavailable when fetching work year for %s: %s", author_id, exc)
+            return None
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            logger.debug("Could not fetch work year for %s from graph DB: %s", author_id, exc)
+            logger.debug("Unexpected error fetching work year for %s from graph DB: %s", author_id, exc)
             return None
 
 

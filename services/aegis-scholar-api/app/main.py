@@ -52,9 +52,6 @@ from app.services.graph_db import graph_client
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
 
-MIN_VALID_YEAR = 1000
-MAX_VALID_YEAR = 9999
-
 
 # ---------------------------------------------------------------------------
 # Application lifecycle
@@ -113,24 +110,15 @@ def _distance_to_relevance(distance: float) -> float:
     return round(1.0 / (1.0 + distance), 4)
 
 
-def _extract_year(value) -> int | None:
-    """Extract a 4-digit year from an integer or string value."""
-    if isinstance(value, (int, float)):
-        year = int(value)
-        return year if MIN_VALID_YEAR <= year <= MAX_VALID_YEAR else None
-    if isinstance(value, str):
-        if len(value) >= 4 and value[:4].isdigit():
-            year = int(value[:4])
-            return year if MIN_VALID_YEAR <= year <= MAX_VALID_YEAR else None
-    return None
+DEFAULT_RECENCY_DECADES = 2.0  # Midpoint of the [0,4] range; used when recency data is unavailable.
 
 
 def _calculate_decades_since_most_recent_work(most_recent_work_year: int | None) -> float:
     """Return decades in the past from today, capped to WolframAlpha's t-range [0,4]."""
     if most_recent_work_year is None:
-        # Use midpoint (2.0) of the [0,4] range when recency data is unavailable
+        # Use midpoint (DEFAULT_RECENCY_DECADES) of the [0,4] range when recency data is unavailable
         # to avoid either penalizing or favoring missing-recency authors.
-        return 2.0
+        return DEFAULT_RECENCY_DECADES
 
     years_since = max(0, date.today().year - most_recent_work_year)
     return min(years_since / 10.0, 4.0)
