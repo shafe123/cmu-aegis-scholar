@@ -26,7 +26,7 @@ LDAP_USER = os.getenv("LDAP_ADMIN_DN", "cn=admin,dc=example,dc=org").strip()
 LDAP_PASS = os.getenv("LDAP_ADMIN_PASSWORD", "admin").strip()
 LDAP_BASE_DN = os.getenv("LDAP_BASE_DN", "dc=example,dc=org").strip()
 
-INPUT_FILE = os.getenv("AUTH_JSONL_FILE_PATH", "/data/dtic_authors_001.jsonl.gz")
+AUTHOR_FILE = os.getenv("AUTH_JSONL_FILE_PATH", "/data/dtic_authors_001.jsonl.gz")
 ORG_FILE = os.getenv("ORG_JSONL_FILE_PATH", "/data/dtic_orgs_001.jsonl.gz")
 DOMAINS = [
     "dtic.mil",
@@ -59,7 +59,7 @@ async def log_startup_config():
         LDAP_USER,
         _mask_config_value(LDAP_PASS),
         LDAP_BASE_DN,
-        INPUT_FILE,
+        AUTHOR_FILE,
         ORG_FILE,
     )
 
@@ -94,6 +94,15 @@ def get_org_list() -> list[str]:
     return _ORG_LIST_CACHE
 
 
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "ok",
+        "service": "identity",
+        "ldap_server": LDAP_SERVER,
+    }
+
+
 @app.get("/stats")
 async def get_stats():
     server = Server(LDAP_SERVER, get_info=ALL)
@@ -122,8 +131,8 @@ async def trigger_sync(background_tasks: BackgroundTasks, force: bool = Query(Fa
 
 
 def process_and_sync_file(force: bool = False):
-    if not os.path.exists(INPUT_FILE):
-        logger.error(f"File not found: {INPUT_FILE}")
+    if not os.path.exists(AUTHOR_FILE):
+        logger.error(f"File not found: {AUTHOR_FILE}")
         return
 
     server = Server(LDAP_SERVER, get_info=ALL)
@@ -150,29 +159,29 @@ def process_and_sync_file(force: bool = False):
                     return
 
             org_names = get_org_list()
-            with gzip.open(INPUT_FILE, "rb") as f:
+            with gzip.open(AUTHOR_FILE, "rb") as f:
                 count = 0
                 for line in f:
                     if not line.strip():
                         continue
                     try:
-                        data = orjson.loads(line)
-                        name = data.get("name", "")
+                        author_data = orjson.loads(line)
+                        name = author_data.get("name", "")
                         if not name:
                             continue
 
                         email = None
                         if random.random() < 0.5:
                             email = (
-                                data.get("email")
+                                author_data.get("email")
                                 or f"{name.replace(' ', '.').lower()}@{random.choice(DOMAINS)}"
                             )
 
-                        org = data.get("org_name") or random.choice(org_names)
+                        org = author_data.get("org_name") or random.choice(org_names)
 
                         # Use escape_rdn to prevent invalidDNSyntax for users
                         safe_uid = escape_rdn(
-                            clean_uid(data.get("uid", name.replace(" ", "")))
+                            clean_uid(author_data.get("uid", name.replace(" ", "")))
                         )
                         dn = f"uid={safe_uid},ou=users,{LDAP_BASE_DN}"
 
