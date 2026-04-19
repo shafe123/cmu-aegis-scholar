@@ -1,4 +1,5 @@
 """Main FastAPI application for the Aegis Scholar Graph DB service."""
+
 import logging
 from contextlib import asynccontextmanager
 
