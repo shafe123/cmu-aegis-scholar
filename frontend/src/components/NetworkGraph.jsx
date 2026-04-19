@@ -1,13 +1,32 @@
 import React, { useEffect, useRef } from "react";
-import { DataSet, Network } from "vis-network/standalone";
+// ADDED 'DataView' to your import
+import { DataSet, Network, DataView} from "vis-network/standalone";
 
-const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger }) => {
+// ADDED to the props
+const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, onDataLoaded, onLoadingChange, initialNode, yearFilter }) => {
   const containerRef = useRef(null);
   const networkRef = useRef(null);
 
   // DataSets are reactive containers that allow adding data without a full refresh
   const nodesRef = useRef(new DataSet([]));
   const edgesRef = useRef(new DataSet([]));
+
+  // --- 1. Create the Filtered View ---
+  // This reactively filters nodes based on the yearFilter prop
+  const nodesView = new DataView(nodesRef.current, {
+    filter: (node) => {
+      // If no filter is set, show everything
+      if (!yearFilter) return true;
+      
+      // If it's a work, only show if it's newer or equal to the filter
+      if (node.group === "work") {
+        return node.year >= parseInt(yearFilter, 10);
+      }
+      
+      // Always show authors and organizations
+      return true;
+    }
+  });
 
   /**
    * Fetches data from the Graph API and updates the local DataSet.
@@ -107,9 +126,10 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger }) => {
       // Create the network instance
       if (networkRef.current) networkRef.current.destroy();
 
+      // --- 2. IMPORTANT CHANGE: Pass 'nodesView' instead of 'nodesRef.current' ---
       networkRef.current = new Network(
         containerRef.current,
-        { nodes: nodesRef.current, edges: edgesRef.current },
+        { nodes: nodesView, edges: edgesRef.current },
         options,
       );
 
@@ -122,8 +142,9 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger }) => {
       });
     };
 
+    // ADDED yearFilter to this dependency array.
     initGraph();
-  }, [authorId, onNodeSelect]);
+  }, [authorId, yearFilter, onNodeSelect]);
 
   // EXPANSION LOAD: Runs when "Explore Connections" is clicked in App.jsx
   useEffect(() => {

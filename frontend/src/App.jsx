@@ -356,7 +356,16 @@ export default function App() {
                   <div className="flex-1 relative">
                     <NetworkGraph
                       authorId={selectedAuthor.id}
-                      onNodeSelect={setInspectedNode}
+                      onNodeSelect={setInspectedNode}                      
+                      // --- ADD THESE LINES FOR FILTERING ---
+                      onDataLoaded={setGraphData}
+                      onLoadingChange={setIsGraphLoading}
+                      yearFilter={yearFilter} 
+                      initialNode={{
+                        id: selectedAuthor.id,
+                        label: selectedAuthor.name,
+                        group: "author"
+                      }}
                     />
                   </div>
 
