@@ -4,13 +4,14 @@ import orjson
 import random
 import logging
 import re
-from typing import Optional, List
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Query
-from pydantic import BaseModel
+
 from ldap3 import Server, Connection, ALL, SUBTREE
 from ldap3.core.exceptions import LDAPEntryAlreadyExistsResult
 from ldap3.utils.dn import escape_rdn
 from rapidfuzz import process, fuzz
+
+from .schemas import LookupResponse, SimilarMatch, UserRecord
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -38,24 +39,27 @@ DOMAINS = [
 ]
 
 
-class UserRecord(BaseModel):
-    username: str
-    name: str
-    email: Optional[str] = None
-    org: Optional[str] = None
+def _mask_config_value(value: str) -> str:
+    return "<set>" if value else "<not set>"
 
 
-class SimilarMatch(BaseModel):
-    name: str
-    email: str
-    org: Optional[str] = None
-    score: float
-
-
-class LookupResponse(BaseModel):
-    record: Optional[UserRecord] = None
-    similar_records: Optional[List[SimilarMatch]] = None
-    message: str
+@app.on_event("startup")
+async def log_startup_config():
+    logger.info(
+        "Identity service startup configuration:\n"
+        "  LDAP_SERVER=%s\n"
+        "  LDAP_ADMIN_DN=%s\n"
+        "  LDAP_ADMIN_PASSWORD=%s\n"
+        "  LDAP_BASE_DN=%s\n"
+        "  AUTH_JSONL_FILE_PATH=%s\n"
+        "  ORG_JSONL_FILE_PATH=%s",
+        LDAP_SERVER,
+        LDAP_USER,
+        _mask_config_value(LDAP_PASS),
+        LDAP_BASE_DN,
+        INPUT_FILE,
+        ORG_FILE,
+    )
 
 
 def clean_uid(text: str) -> str:
@@ -63,7 +67,7 @@ def clean_uid(text: str) -> str:
     return re.sub(r"[^a-zA-Z0-9.-]", "", text).lower()
 
 
-def get_org_list():
+def get_org_list() -> set[str]:
     orgs = set()
     if os.path.exists(ORG_FILE):
         try:
@@ -77,7 +81,7 @@ def get_org_list():
                         continue
         except:  # noqa: E722
             pass
-    return list(orgs) if orgs else ["DefaultOrg"]
+    return orgs if orgs else set("DefaultOrg")
 
 
 @app.get("/stats")

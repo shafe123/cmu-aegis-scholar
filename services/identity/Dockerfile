@@ -1,20 +1,43 @@
+# syntax=docker/dockerfile:1
+# Multi-stage build
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    libldap2-dev \
+    libsasl2-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry and export plugin
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
+RUN poetry self add poetry-plugin-export
+
+COPY pyproject.toml poetry.lock* ./
+
+RUN poetry lock
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --only main
+
+# Runtime stage
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system deps for LDAP and C-extensions
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libldap2-dev libsasl2-dev \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /app/requirements.txt ./
 
-RUN pip install poetry && poetry config virtualenvs.create false
+RUN pip install --upgrade "pip>=25.3"
 
-# Install dependencies first for caching
-COPY pyproject.toml poetry.lock* /app/
-RUN poetry install --no-interaction --no-ansi --no-root
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
 
-# Copy code
-COPY . /app/
+COPY app/ ./app/
+COPY entrypoint.sh ./entrypoint.sh
+COPY email_gen.py ./email_gen.py
+
 RUN chmod +x /app/entrypoint.sh
 
+EXPOSE 8000
 ENTRYPOINT ["/app/entrypoint.sh"]
