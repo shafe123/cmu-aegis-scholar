@@ -4,14 +4,14 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
-from fastembed import TextEmbedding
 from fastapi import FastAPI, HTTPException, status
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastembed import TextEmbedding
 from pymilvus import (
     Collection,
     CollectionSchema,
@@ -23,19 +23,19 @@ from pymilvus import (
 
 from app.config import AVAILABLE_MODELS, settings
 from app.schemas import (
-    VectorSearchRequest,
-    TextSearchRequest,
-    CreateAuthorEmbeddingRequest,
-    CreateAuthorVectorRequest,
-    VectorSearchResult,
-    PaginationMetadata,
-    VectorSearchResponse,
-    HealthResponse,
     CollectionInfo,
+    CreateAuthorEmbeddingRequest,
+    CreateAuthorEmbeddingResponse,
+    CreateAuthorVectorRequest,
+    CreateAuthorVectorResponse,
+    HealthResponse,
     ModelInfo,
     ModelsResponse,
-    CreateAuthorEmbeddingResponse,
-    CreateAuthorVectorResponse,
+    PaginationMetadata,
+    TextSearchRequest,
+    VectorSearchRequest,
+    VectorSearchResponse,
+    VectorSearchResult,
 )
 
 # Configure logging
@@ -43,12 +43,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Global variables (initialized on startup)
-embedding_models: Dict[str, TextEmbedding] = {}  # Cache of loaded models
-model_dimensions: Dict[str, int] = {}  # Cache of model dimensions
+embedding_models: dict[str, TextEmbedding] = {}  # Cache of loaded models
+model_dimensions: dict[str, int] = {}  # Cache of model dimensions
 
 # Cache for loaded collections and their schema info
-_loaded_collections: Dict[str, Collection] = {}
-_collection_schema_cache: Dict[str, Dict[str, Any]] = {}
+_loaded_collections: dict[str, Collection] = {}
+_collection_schema_cache: dict[str, dict[str, Any]] = {}
 
 
 # Model management functions
@@ -68,9 +68,7 @@ def get_or_load_model(model_name: str) -> TextEmbedding:
     """
     if model_name not in AVAILABLE_MODELS:
         available = ", ".join(AVAILABLE_MODELS.keys())
-        raise ValueError(
-            f"Model '{model_name}' is not available. Available models: {available}"
-        )
+        raise ValueError(f"Model '{model_name}' is not available. Available models: {available}")
 
     # Return from cache if already loaded
     if model_name in embedding_models:
@@ -116,17 +114,12 @@ def get_model_dimension(model_name: str) -> int:
         return model_dimensions[model_name]
 
     # Check config
-    if (
-        model_name in AVAILABLE_MODELS
-        and AVAILABLE_MODELS[model_name]["dimension"] is not None
-    ):
+    if model_name in AVAILABLE_MODELS and AVAILABLE_MODELS[model_name]["dimension"] is not None:
         return AVAILABLE_MODELS[model_name]["dimension"]
 
     # Model not found or dimension not configured
     available = ", ".join(AVAILABLE_MODELS.keys())
-    raise ValueError(
-        f"Model '{model_name}' is not available. Available models: {available}"
-    )
+    raise ValueError(f"Model '{model_name}' is not available. Available models: {available}")
 
 
 # Milvus connection management
@@ -140,9 +133,7 @@ def get_milvus_connection():
             user=settings.milvus_user if settings.milvus_user else None,
             password=settings.milvus_password if settings.milvus_password else None,
         )
-        logger.info(
-            "Connected to Milvus at %s:%d", settings.milvus_host, settings.milvus_port
-        )
+        logger.info("Connected to Milvus at %s:%d", settings.milvus_host, settings.milvus_port)
         return True
     except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Failed to connect to Milvus: %s", e)
@@ -164,9 +155,7 @@ def initialize_default_collection():
 
     try:
         if not utility.has_collection(collection_name):
-            logger.info(
-                "Collection '%s' does not exist. Creating it...", collection_name
-            )
+            logger.info("Collection '%s' does not exist. Creating it...", collection_name)
 
             # Get the embedding dimension from config/cache
             try:
@@ -176,8 +165,7 @@ def initialize_default_collection():
                 embedding_dim = model_dimensions[settings.default_embedding_model]
             except Exception as e:  # pylint: disable=broad-exception-caught
                 logger.warning(
-                    "Could not determine embedding dimension for "
-                    "collection initialization: %s",
+                    "Could not determine embedding dimension for collection initialization: %s",
                     e,
                 )
                 logger.warning("Skipping collection initialization.")
@@ -185,18 +173,12 @@ def initialize_default_collection():
 
             # Define schema
             fields = [
-                FieldSchema(
-                    name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=255
-                ),
+                FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=255),
                 FieldSchema(name="author_id", dtype=DataType.VARCHAR, max_length=255),
                 FieldSchema(name="author_name", dtype=DataType.VARCHAR, max_length=500),
-                FieldSchema(
-                    name="embedding", dtype=DataType.FLOAT_VECTOR, dim=embedding_dim
-                ),
+                FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=embedding_dim),
                 FieldSchema(name="num_abstracts", dtype=DataType.INT64),
-                FieldSchema(
-                    name="citation_count", dtype=DataType.INT64, default_value=0
-                ),
+                FieldSchema(name="citation_count", dtype=DataType.INT64, default_value=0),
             ]
 
             schema = CollectionSchema(
@@ -233,9 +215,7 @@ async def lifespan(_app: FastAPI):
     get_milvus_connection()
 
     # Preload default embedding model
-    logger.info(
-        "Preloading default embedding model: %s", settings.default_embedding_model
-    )
+    logger.info("Preloading default embedding model: %s", settings.default_embedding_model)
     try:
         # Load model into cache (side effect is the purpose)
         get_or_load_model(settings.default_embedding_model)
@@ -259,13 +239,9 @@ async def lifespan(_app: FastAPI):
 
             # Cache schema info for validation
             schema_dict = collection.schema.to_dict()
-            embedding_field = next(
-                (f for f in schema_dict["fields"] if f["name"] == "embedding"), None
-            )
+            embedding_field = next((f for f in schema_dict["fields"] if f["name"] == "embedding"), None)
             if embedding_field:
-                _collection_schema_cache[collection_name] = {
-                    "embedding_dim": embedding_field["params"]["dim"]
-                }
+                _collection_schema_cache[collection_name] = {"embedding_dim": embedding_field["params"]["dim"]}
             logger.info("Pre-loaded collection '%s' into memory", collection_name)
     except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error pre-loading default collection: %s", e)
@@ -336,9 +312,7 @@ def _upsert_author_embedding(  # pylint: disable=too-many-positional-arguments
             _ = collection.num_entities
         except Exception as e:  # pylint: disable=broad-exception-caught
             # Collection lost connection, reload it
-            logger.warning(
-                "Collection '%s' lost connection, reloading: %s", collection_name, e
-            )
+            logger.warning("Collection '%s' lost connection, reloading: %s", collection_name, e)
             collection = Collection(collection_name)
             collection.load()
             _loaded_collections[collection_name] = collection
@@ -347,17 +321,12 @@ def _upsert_author_embedding(  # pylint: disable=too-many-positional-arguments
         if not utility.has_collection(collection_name):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=(
-                    f"Collection '{collection_name}' not found. "
-                    "Use the default collection or create it first."
-                ),
+                detail=(f"Collection '{collection_name}' not found. Use the default collection or create it first."),
             )
         collection = Collection(collection_name)
         collection.load()
         _loaded_collections[collection_name] = collection
-        logger.info(
-            "Loaded collection '%s' into memory (not in cache)", collection_name
-        )
+        logger.info("Loaded collection '%s' into memory (not in cache)", collection_name)
 
     # Validate embedding dimension using cached schema or fetch it
     if collection_name in _collection_schema_cache:
@@ -365,9 +334,7 @@ def _upsert_author_embedding(  # pylint: disable=too-many-positional-arguments
     else:
         # Schema not cached, fetch and cache it
         schema_dict = collection.schema.to_dict()
-        embedding_field = next(
-            (f for f in schema_dict["fields"] if f["name"] == "embedding"), None
-        )
+        embedding_field = next((f for f in schema_dict["fields"] if f["name"] == "embedding"), None)
         if embedding_field:
             expected_dim = embedding_field["params"]["dim"]
             _collection_schema_cache[collection_name] = {"embedding_dim": expected_dim}
@@ -386,9 +353,7 @@ def _upsert_author_embedding(  # pylint: disable=too-many-positional-arguments
     # Check if author already exists (optional, for logging purposes)
     author_pk = author_id
     try:
-        existing_entities = collection.query(
-            expr=f'id == "{author_pk}"', output_fields=["id"], limit=1
-        )
+        existing_entities = collection.query(expr=f'id == "{author_pk}"', output_fields=["id"], limit=1)
         is_update = len(existing_entities) > 0
     except Exception as e:  # pylint: disable=broad-exception-caught
         # If query fails, assume it's a new insert
@@ -436,14 +401,10 @@ async def health_check():
         # List all collections
         collections = utility.list_collections()
 
-        return HealthResponse(
-            status="healthy", milvus_connected=True, collections=collections
-        )
+        return HealthResponse(status="healthy", milvus_connected=True, collections=collections)
     except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Health check failed: %s", e)
-        return HealthResponse(
-            status="unhealthy", milvus_connected=False, collections=[]
-        )
+        return HealthResponse(status="unhealthy", milvus_connected=False, collections=[])
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -473,7 +434,7 @@ async def custom_redoc_html():
     )
 
 
-@app.get("/collections", response_model=List[CollectionInfo], tags=["Collections"])
+@app.get("/collections", response_model=list[CollectionInfo], tags=["Collections"])
 async def list_collections():
     """List all available collections."""
     try:
@@ -487,9 +448,7 @@ async def list_collections():
                 CollectionInfo(
                     name=name,
                     num_entities=collection.num_entities,
-                    description=collection.description
-                    if hasattr(collection, "description")
-                    else None,
+                    description=collection.description if hasattr(collection, "description") else None,
                 )
             )
 
@@ -522,9 +481,7 @@ async def get_collection_info(collection_name: str):
         return CollectionInfo(
             name=collection_name,
             num_entities=collection.num_entities,
-            description=collection.description
-            if hasattr(collection, "description")
-            else None,
+            description=collection.description if hasattr(collection, "description") else None,
         )
     except HTTPException:
         raise
@@ -560,9 +517,7 @@ async def list_models():
                 )
             )
 
-        return ModelsResponse(
-            models=models_list, default_model=settings.default_embedding_model
-        )
+        return ModelsResponse(models=models_list, default_model=settings.default_embedding_model)
     except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Error listing models: %s", e)
         raise HTTPException(
@@ -679,13 +634,9 @@ async def text_search(request: TextSearchRequest):
         try:
             model = get_or_load_model(model_name)
         except ValueError as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-            ) from e
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
         except RuntimeError as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-            ) from e
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
         # Check if collection exists
         if not utility.has_collection(collection_name):
@@ -799,13 +750,9 @@ async def create_author_embedding(request: CreateAuthorEmbeddingRequest):
         try:
             model = get_or_load_model(model_name)
         except ValueError as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-            ) from e
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
         except RuntimeError as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-            ) from e
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
         # Validate abstracts
         if not request.abstracts:
@@ -815,9 +762,7 @@ async def create_author_embedding(request: CreateAuthorEmbeddingRequest):
             )
 
         # Filter out empty abstracts
-        valid_abstracts = [
-            abstract.strip() for abstract in request.abstracts if abstract.strip()
-        ]
+        valid_abstracts = [abstract.strip() for abstract in request.abstracts if abstract.strip()]
         if not valid_abstracts:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -877,9 +822,7 @@ async def create_author_embedding(request: CreateAuthorEmbeddingRequest):
         ) from e
 
 
-@app.post(
-    "/authors/vector", response_model=CreateAuthorVectorResponse, tags=["Authors"]
-)
+@app.post("/authors/vector", response_model=CreateAuthorVectorResponse, tags=["Authors"])
 async def create_author_vector(request: CreateAuthorVectorRequest):
     """
     Create or update author with a pre-computed embedding vector.

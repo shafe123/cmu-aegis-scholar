@@ -5,7 +5,7 @@ description = "FastAPI gateway for Neo4j graph operations"
 authors = ["Aegis Scholar Team"]
 
 [tool.poetry.dependencies]
-python = ">=3.12"
+python = ">=3.12,<3.13"
 fastapi = ">=0.100"
 uvicorn = ">=0.22"
 neo4j = ">=5.12"
@@ -14,15 +14,16 @@ pydantic-settings = ">=2.0"
 httpx = ">=0.24"
 
 [tool.poetry.group.dev.dependencies]
-pytest = ">=7.0"
-pytest-asyncio = ">=0.21"
-pytest-cov = ">=4.1"
-pytest-mock = ">=3.12"
-httpx = ">=0.24"
-ruff = ">=0.3.0"
-pylint = ">=4.0.5"
+pytest = ">=7.4.0"
+pytest-asyncio = ">=0.23.0"
+pytest-cov = ">=4.1.0"
+pytest-mock = ">=3.12.0"
+httpx = ">=0.27.0"
+ruff = ">=0.15.8"
+pylint = ">=3.0.0"
 bandit = ">=1.9.0"
-mypy = ">=1.0.0"
+mypy = ">=1.10.0"
+pylint-pydantic = ">=0.3.0"
 
 [[tool.poetry.packages]]
 include = "app"
@@ -51,7 +52,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
@@ -62,7 +63,7 @@ ignore = ["E501"]
 known-first-party = ["app"]
 
 [tool.pylint.format]
-max-line-length = 100
+max-line-length = 120
 
 [tool.mypy]
 python_version = "3.12"

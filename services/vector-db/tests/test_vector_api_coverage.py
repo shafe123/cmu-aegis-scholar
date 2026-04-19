@@ -3,23 +3,24 @@ Additional tests targeting uncovered branches in app/main.py.
 Uses unittest.mock to simulate Milvus responses without a live database.
 """
 
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import numpy as np
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-from fastapi.testclient import TestClient
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 
 import app.main as main_module
+from app.config import AVAILABLE_MODELS, settings
 from app.main import (
-    app,
-    get_or_load_model,
-    get_model_dimension,
-    get_milvus_connection,
-    disconnect_milvus,
-    initialize_default_collection,
     _upsert_author_embedding,
+    app,
+    disconnect_milvus,
+    get_milvus_connection,
+    get_model_dimension,
+    get_or_load_model,
+    initialize_default_collection,
 )
-from app.config import settings, AVAILABLE_MODELS
 
 client = TestClient(app)
 
@@ -277,9 +278,7 @@ def _make_mock_hit(distance: float, fields: dict) -> MagicMock:
 
 def test_vector_search_success_mocked():
     """Vector search returns results when Milvus is happy."""
-    hit = _make_mock_hit(
-        0.12, {"author_id": "a1", "author_name": "Alice", "num_abstracts": 3}
-    )
+    hit = _make_mock_hit(0.12, {"author_id": "a1", "author_name": "Alice", "num_abstracts": 3})
 
     with (
         patch("app.main.utility") as mock_util,
@@ -408,9 +407,7 @@ def test_text_search_collection_not_found_mocked():
 def test_text_search_success_mocked():
     """Text search returns results when model and Milvus are available."""
     fake_embedding = np.array([0.1] * 384)
-    hit = _make_mock_hit(
-        0.05, {"author_id": "b1", "author_name": "Bob", "num_abstracts": 4}
-    )
+    hit = _make_mock_hit(0.05, {"author_id": "b1", "author_name": "Bob", "num_abstracts": 4})
 
     with (
         patch("app.main.get_or_load_model") as mock_load,
@@ -509,18 +506,14 @@ def test_health_check_reconnects_when_no_connection():
 def test_get_or_load_model_raises_runtime_error_on_load_failure():
     """If TextEmbedding raises during load, get_or_load_model wraps it in RuntimeError."""
     # Remove the model from cache so it will be re-loaded
-    original = main_module.embedding_models.pop(
-        "sentence-transformers/all-MiniLM-L6-v2", None
-    )
+    original = main_module.embedding_models.pop("sentence-transformers/all-MiniLM-L6-v2", None)
     try:
         with patch("app.main.TextEmbedding", side_effect=Exception("ONNX load error")):
             with pytest.raises(RuntimeError, match="Failed to load model"):
                 get_or_load_model("sentence-transformers/all-MiniLM-L6-v2")
     finally:
         if original is not None:
-            main_module.embedding_models["sentence-transformers/all-MiniLM-L6-v2"] = (
-                original
-            )
+            main_module.embedding_models["sentence-transformers/all-MiniLM-L6-v2"] = original
 
 
 # ---------------------------------------------------------------------------
@@ -644,9 +637,7 @@ def test_lifespan_preloads_collection_when_it_exists():
     main_module._collection_schema_cache.clear()
 
     mock_col = MagicMock()
-    mock_col.schema.to_dict.return_value = {
-        "fields": [{"name": "embedding", "params": {"dim": 384}}]
-    }
+    mock_col.schema.to_dict.return_value = {"fields": [{"name": "embedding", "params": {"dim": 384}}]}
 
     with (
         patch("app.main.get_milvus_connection"),
@@ -707,9 +698,7 @@ def test_lifespan_model_load_failure_at_startup():
 def _make_collection_mock(dim: int = 384, query_result=None) -> MagicMock:
     """Build a fully-spec'd Collection mock for _upsert_author_embedding."""
     col = MagicMock()
-    col.schema.to_dict.return_value = {
-        "fields": [{"name": "embedding", "params": {"dim": dim}}]
-    }
+    col.schema.to_dict.return_value = {"fields": [{"name": "embedding", "params": {"dim": dim}}]}
     col.query.return_value = query_result if query_result is not None else []
     return col
 
@@ -721,18 +710,14 @@ def test_upsert_uses_cached_collection_with_reconnect():
 
     stale_col = MagicMock()
     # Accessing .num_entities raises (simulates lost connection)
-    type(stale_col).num_entities = PropertyMock(
-        side_effect=Exception("lost connection")
-    )
+    type(stale_col).num_entities = PropertyMock(side_effect=Exception("lost connection"))
 
     fresh_col = _make_collection_mock(dim=384)
 
     main_module._loaded_collections[col_name] = stale_col
 
     with patch("app.main.Collection", return_value=fresh_col):
-        is_update, action = _upsert_author_embedding(
-            col_name, "auth1", "Author One", [0.1] * 384, 3
-        )
+        is_update, action = _upsert_author_embedding(col_name, "auth1", "Author One", [0.1] * 384, 3)
 
     assert action in ("created", "updated")
     # Cache should now point at the fresh collection
@@ -753,9 +738,7 @@ def test_upsert_loads_uncached_collection():
         patch("app.main.Collection", return_value=mock_col),
     ):
         mock_util.has_collection.return_value = True
-        is_update, action = _upsert_author_embedding(
-            col_name, "auth2", "Author Two", [0.2] * 384, 5
-        )
+        is_update, action = _upsert_author_embedding(col_name, "auth2", "Author Two", [0.2] * 384, 5)
 
     assert col_name in main_module._loaded_collections
     assert action in ("created", "updated")
@@ -787,9 +770,7 @@ def test_upsert_raises_500_when_schema_missing_embedding_field():
     main_module._collection_schema_cache.pop(col_name, None)
 
     mock_col = MagicMock()
-    mock_col.schema.to_dict.return_value = {
-        "fields": [{"name": "author_id", "params": {}}]
-    }
+    mock_col.schema.to_dict.return_value = {"fields": [{"name": "author_id", "params": {}}]}
 
     with (
         patch("app.main.utility") as mock_util,
@@ -812,9 +793,7 @@ def test_upsert_query_failure_defaults_to_new_insert():
 
     main_module._loaded_collections[col_name] = mock_col
 
-    is_update, action = _upsert_author_embedding(
-        col_name, "auth5", "Author Five", [0.5] * 384, 4
-    )
+    is_update, action = _upsert_author_embedding(col_name, "auth5", "Author Five", [0.5] * 384, 4)
     assert is_update is False
     assert action == "created"
 
@@ -827,8 +806,6 @@ def test_upsert_returns_is_update_true_for_existing_author():
     mock_col = _make_collection_mock(dim=384, query_result=[{"id": "existing_auth"}])
     main_module._loaded_collections[col_name] = mock_col
 
-    is_update, action = _upsert_author_embedding(
-        col_name, "existing_auth", "Author Six", [0.6] * 384, 7
-    )
+    is_update, action = _upsert_author_embedding(col_name, "existing_auth", "Author Six", [0.6] * 384, 7)
     assert is_update is True
     assert action == "updated"

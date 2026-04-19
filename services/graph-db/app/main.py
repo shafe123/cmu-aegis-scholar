@@ -80,9 +80,7 @@ async def get_stats():
             return {"author_count": count}
     except Exception as e:
         logger.error("Database error in /stats: %s", e)
-        raise HTTPException(
-            status_code=500, detail=f"Graph database connection error: {str(e)}"
-        ) from e
+        raise HTTPException(status_code=500, detail=f"Graph database connection error: {str(e)}") from e
 
 
 # --- 6. Ingestion Endpoints ---

@@ -13,11 +13,12 @@ services:
       - ETCD_SNAPSHOT_COUNT=50000
     volumes:
       - milvus-etcd:/etcd
-    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls
+      http://0.0.0.0:2379 --data-dir /etcd
     networks:
       - aegisnet
     healthcheck:
-      test: ["CMD", "etcdctl", "endpoint", "health"]
+      test: [ "CMD", "etcdctl", "endpoint", "health" ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -39,14 +40,7 @@ services:
     networks:
       - aegisnet
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--spider",
-          "-q",
-          "http://localhost:9333/cluster/status",
-        ]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:9333/cluster/status" ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -54,7 +48,7 @@ services:
   milvus-standalone:
     container_name: milvus-standalone
     image: milvusdb/milvus:v2.6.13
-    command: ["milvus", "run", "standalone"]
+    command: [ "milvus", "run", "standalone" ]
     environment:
       ETCD_ENDPOINTS: milvus-etcd:2379
       MINIO_ADDRESS: milvus-seaweedfs:8333
@@ -64,7 +58,7 @@ services:
     volumes:
       - milvus-standalone:/var/lib/milvus
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9091/healthz" ]
       interval: 30s
       start_period: 90s
       timeout: 20s
@@ -92,7 +86,8 @@ services:
     depends_on:
       - milvus-standalone
     healthcheck:
-      test: python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')"
+      test: python -c "import urllib.request;
+        urllib.request.urlopen('http://127.0.0.1:8002/health')"
       interval: 30s
       timeout: 10s
       retries: 3
@@ -123,7 +118,7 @@ services:
     networks:
       - aegisnet
 
-    # --- GRAPH STACK (NEW) ---
+  # --- GRAPH STACK (NEW) ---
   neo4j:
     container_name: neo4j
     image: neo4j:5.12
@@ -137,7 +132,7 @@ services:
       - NEO4J_PLUGINS=["apoc"]
       - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD} 'RETURN 1'"]
+      test: [ "CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD} 'RETURN 1'" ]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -158,7 +153,8 @@ services:
       neo4j:
         condition: service_healthy
     healthcheck:
-      test: python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8003/health')"
+      test: python -c "import urllib.request;
+        urllib.request.urlopen('http://127.0.0.1:8003/health')"
       interval: 10s
       timeout: 5s
       retries: 5
@@ -195,7 +191,8 @@ services:
     depends_on:
       - vector-db
     healthcheck:
-      test: python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+      test: python -c "import urllib.request;
+        urllib.request.urlopen('http://127.0.0.1:8000/health')"
       interval: 30s
       timeout: 10s
       retries: 3
@@ -204,21 +201,79 @@ services:
       - aegisnet
 
   frontend:
-      build:
-        context: ../frontend
-        # [PRODUCTION SWITCH 1]: Change 'development' to 'production'
-        target: development
-      # [PRODUCTION SWITCH 2]: Change "5173:5173" to "8080:80" to map Nginx's port
-      ports:
-        - "5173:5173"
-      # [PRODUCTION SWITCH 3]: Delete or comment out these 3 lines for production so local files aren't mounted
-      volumes:
-        - ../frontend:/app
-        - /app/node_modules
-      depends_on:
-        - aegis-scholar-api
-      networks:
-        - aegisnet
+    build:
+      context: ../frontend
+      # [PRODUCTION SWITCH 1]: Change 'development' to 'production'
+      target: development
+    # [PRODUCTION SWITCH 2]: Change "5173:5173" to "8080:80" to map Nginx's port
+    ports:
+      - "5173:5173"
+    # [PRODUCTION SWITCH 3]: Delete or comment out these 3 lines for production so local files aren't mounted
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    depends_on:
+      - aegis-scholar-api
+    networks:
+      - aegisnet
+
+  ldap-server:
+    image: symas/openldap:latest
+    container_name: ldap-server
+    environment:
+      - LDAP_ROOT=dc=example,dc=org
+      - LDAP_ADMIN_USERNAME=admin
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD}
+      - LDAP_PORT_NUMBER=1389
+      - LDAP_MDB_MAPSIZE=2147483648
+    volumes:
+      - ldap-data:/var/symas/openldap-data/
+      - ldap-config:/opt/symas/etc/openldap/slapd.d/
+    ports:
+      - "1389:1389"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "ldapsearch -x -H ldap://127.0.0.1:1389 -D
+            'cn=admin,dc=example,dc=org' -w \"$LDAP_ADMIN_PASSWORD\" -b
+            'dc=example,dc=org' -s base >/dev/null 2>&1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - aegisnet
+
+  identity:
+    build: ../services/identity
+    container_name: identity
+    environment:
+      - LDAP_SERVER=ldap://ldap-server:1389
+      - LDAP_ADMIN_DN=cn=admin,dc=example,dc=org
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD}
+      - LDAP_BASE_DN=dc=example,dc=org
+      - AUTH_JSONL_FILE_PATH=/data/dtic_authors_001.jsonl.gz
+      - ORG_JSONL_FILE_PATH=/data/dtic_orgs_001.jsonl.gz
+    volumes:
+      - ../data/dtic_compressed:/data
+    ports:
+      - "8005:8000"
+    depends_on:
+      ldap-server:
+        condition: service_healthy
+    healthcheck:
+      test: python -c "import urllib.request;
+        urllib.request.urlopen('http://127.0.0.1:8000/health')"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - aegisnet
 
 volumes:
   milvus-etcd:
@@ -227,3 +282,5 @@ volumes:
   model-cache:
   neo4j-data:
   neo4j-logs:
+  ldap-data:
+  ldap-config:

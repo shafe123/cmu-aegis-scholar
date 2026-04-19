@@ -1,9 +1,10 @@
 """Configuration settings for the Vector DB API service."""
 
-from typing import Any, Dict
+from typing import Any
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-AVAILABLE_MODELS: Dict[str, Dict[str, Any]] = {  # Any capitalized
+AVAILABLE_MODELS: dict[str, dict[str, Any]] = {  # Any capitalized
     "sentence-transformers/all-MiniLM-L6-v2": {
         "dimension": 384,
         "description": "Fast and efficient sentence embeddings (384 dimensions)",
