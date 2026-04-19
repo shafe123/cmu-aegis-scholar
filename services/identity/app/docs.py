@@ -46,22 +46,35 @@ LOOKUP_RESPONSES = {
             "application/json": {
                 "examples": {
                     "exact_match": {
-                        "summary": "Exact match found",
+                        "summary": "Exact match with suggestions",
                         "value": {
-                            "record": {
+                            "exact_match": {
                                 "username": "jzhang",
                                 "name": "Jue Zhang",
                                 "email": "jue.zhang@university.edu",
                                 "org": "Carnegie Mellon University",
                             },
-                            "similar_records": None,
-                            "message": "Match found.",
+                            "similar_records": [
+                                {
+                                    "name": "Jue Zhuang",
+                                    "email": "jue.zhuang@university.edu",
+                                    "org": "Carnegie Mellon University",
+                                    "score": 88.89,
+                                },
+                                {
+                                    "name": "Jing Zhang",
+                                    "email": "jing.zhang@research.gov",
+                                    "org": "Research Lab",
+                                    "score": 84.21,
+                                }
+                            ],
+                            "message": "Exact match and suggestions provided.",
                         },
                     },
                     "suggestions": {
                         "summary": "Fuzzy suggestions returned",
                         "value": {
-                            "record": None,
+                            "exact_match": None,
                             "similar_records": [
                                 {
                                     "name": "Jue Zhang",

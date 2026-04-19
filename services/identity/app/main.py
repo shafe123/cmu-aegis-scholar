@@ -226,22 +226,20 @@ async def lookup_record(name: str = Query(...)):
             server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True
         ) as conn:
             search_base = f"ou=users,{LDAP_BASE_DN}"
+            exact_record = None
+
             conn.search(
                 search_base, f"(cn={name})", attributes=["mail", "cn", "uid", "o"]
             )
 
             if conn.entries:
-                e = conn.entries[0]
-                if hasattr(e, "mail") and e.mail:
-                    return LookupResponse(
-                        record=UserRecord(
-                            username=str(e.uid),
-                            name=str(e.cn),
-                            email=str(e.mail),
-                            org=str(e.o) if hasattr(e, "o") else None,
-                        ),
-                        message="Match found.",
-                    )
+                entry = conn.entries[0]
+                exact_record = UserRecord(
+                    username=str(entry.uid) if hasattr(entry, "uid") else clean_uid(str(entry.cn)),
+                    name=str(entry.cn),
+                    email=str(entry.mail) if hasattr(entry, "mail") and entry.mail else None,
+                    org=str(entry.o) if hasattr(entry, "o") else None,
+                )
 
             # Fuzzy logic with fuzz.ratio for your 54.55 score requirement
             conn.search(
@@ -262,15 +260,27 @@ async def lookup_record(name: str = Query(...)):
             )
             results = [
                 SimilarMatch(
-                    name=m[0],
-                    email=candidate_map[m[0]]["email"],
-                    org=candidate_map[m[0]]["org"],
-                    score=round(m[1], 2),
+                    name=match[0],
+                    email=candidate_map[match[0]]["email"],
+                    org=candidate_map[match[0]]["org"],
+                    score=round(match[1], 2),
                 )
-                for m in matches
+                for match in matches
+                if not exact_record or match[0] != exact_record.name
             ]
+
+            if exact_record and results:
+                message = "Exact match and suggestions provided."
+            elif exact_record:
+                message = "Exact match only."
+            else:
+                message = "Suggestions provided."
+
             return LookupResponse(
-                similar_records=results, message="Suggestions provided."
+                exact_match=exact_record,
+                similar_records=results or [],
+                message=message,
             )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    except Exception as entry:
+        raise HTTPException(status_code=500, detail=str(entry)) from entry
+

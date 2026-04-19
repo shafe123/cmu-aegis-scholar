@@ -16,6 +16,6 @@ class SimilarMatch(BaseModel):
 
 
 class LookupResponse(BaseModel):
-    record: UserRecord | None = None
+    exact_match: UserRecord | None = None
     similar_records: list[SimilarMatch] | None = None
     message: str
