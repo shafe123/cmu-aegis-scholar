@@ -16,7 +16,7 @@ class SimilarMatch(BaseModel):
     """A fuzzy-match suggestion returned for a lookup query."""
 
     name: str
-    email: str
+    email: str | None = None
     org: str | None = None
     score: float
 

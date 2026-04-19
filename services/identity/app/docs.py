@@ -1,6 +1,8 @@
 """OpenAPI response metadata for the identity service endpoints."""
 
-HEALTH_RESPONSES = {
+from typing import Any
+
+HEALTH_RESPONSES: dict[int | str, dict[str, Any]] = {
     200: {
         "description": "Service health status",
         "content": {
@@ -15,7 +17,7 @@ HEALTH_RESPONSES = {
     }
 }
 
-STATS_RESPONSES = {
+STATS_RESPONSES: dict[int | str, dict[str, Any]] = {
     200: {
         "description": "LDAP record statistics",
         "content": {
@@ -30,14 +32,14 @@ STATS_RESPONSES = {
     }
 }
 
-SYNC_FILE_RESPONSES = {
+SYNC_FILE_RESPONSES: dict[int | str, dict[str, Any]] = {
     200: {
         "description": "Background sync job accepted",
         "content": {"application/json": {"example": {"message": "Sync started. Check docker logs for progress."}}},
     }
 }
 
-LOOKUP_RESPONSES = {
+LOOKUP_RESPONSES: dict[int | str, dict[str, Any]] = {
     200: {
         "description": "Exact match or fuzzy-match suggestions",
         "content": {
