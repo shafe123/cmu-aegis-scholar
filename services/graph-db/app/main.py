@@ -1,3 +1,5 @@
+"""Main FastAPI application for the Aegis Scholar Graph DB service."""
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -203,7 +205,7 @@ async def get_author_network(author_id: str):
     OPTIONAL MATCH (work)<-[:AUTHORED]-(coAuthor:Author)
     OPTIONAL MATCH (author)-[:AFFILIATED_WITH]->(org:Organization)
     RETURN author, work, coAuthor, org
-    LIMIT 50
+    LIMIT 100
     """
 
     with driver.session() as session:
@@ -238,6 +240,8 @@ async def get_author_network(author_id: str):
                         "label": work["title"][:30] + "...",
                         "group": "work",
                         "color": "#4ecdc4",
+                        "year": work["year"],
+                        "citations": work["citation_count"],
                     }
                 )
                 node_ids.add(work["id"])
@@ -264,6 +268,7 @@ async def get_author_network(author_id: str):
                         "label": org["name"],
                         "group": "organization",
                         "color": "#f9ca24",
+                        "org_id": org["id"],
                     }
                 )
                 node_ids.add(org["id"])

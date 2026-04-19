@@ -25,6 +25,9 @@ class WorkNode(BaseModel):
 
     id: str = Field(..., description="work_...")
     title: str
+    name: str
+    type: str
+    country: str | None = None
     year: int | None = None
     citation_count: int | None = 0
     sources: list[Source] | None = []
