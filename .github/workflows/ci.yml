@@ -29,6 +29,8 @@ jobs:
                       name: graph-db
                     - service: services/vector-db
                       name: vector-db
+                    - service: services/identity
+                      name: identity
         defaults:
             run:
                 working-directory: ${{ matrix.service }}
@@ -82,6 +84,8 @@ jobs:
                       name: graph-db
                     - service: services/vector-db
                       name: vector-db
+                    - service: services/identity
+                      name: identity
         defaults:
             run:
                 working-directory: ${{ matrix.service }}
@@ -141,6 +145,8 @@ jobs:
                       name: graph-db
                     - service: services/vector-db
                       name: vector-db
+                    - service: services/identity
+                      name: identity
         defaults:
             run:
                 working-directory: ${{ matrix.service }}
@@ -236,6 +242,8 @@ jobs:
                       image: graph-db
                     - service: services/vector-db
                       image: vector-db
+                    - service: services/identity
+                      name: identity
 
         steps:
             - uses: actions/checkout@v6
