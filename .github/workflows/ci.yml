@@ -244,6 +244,9 @@ jobs:
         if: |
             github.event_name == 'pull_request' ||
             github.event_name == 'workflow_dispatch'
+        permissions:
+            contents: read
+            pull-requests: write
         strategy:
             fail-fast: false
             matrix:
@@ -286,6 +289,7 @@ jobs:
                   only-severities: critical,high
                   exit-code: false
                   sarif-file: ${{ matrix.service }}/scout-report.json
+                  write-comment: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
               continue-on-error: true
 
             - name: Upload Docker Scout report
