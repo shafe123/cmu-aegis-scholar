@@ -200,8 +200,12 @@ def process_and_sync_file(force: bool = False):
                                 if count % 1000 == 0:
                                     logger.info(f"Synced {count} records...")
                         except LDAPEntryAlreadyExistsResult:
+                            logger.debug("LDAP entry already exists for dn=%s", dn)
                             continue
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(
+                            "Failed to process author record during sync: %s", e
+                        )
                         continue
             logger.info(f"Final: Sync finished. {count} records added.")
     except Exception as e:

@@ -34,10 +34,11 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt
 
 COPY app/ ./app/
+
 COPY entrypoint.sh ./entrypoint.sh
 COPY email_gen.py ./email_gen.py
 
 RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8000
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
