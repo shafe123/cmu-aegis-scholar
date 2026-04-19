@@ -10,10 +10,10 @@ done
 
 # We use a flag file in the HOST-MOUNTED 'data' volume 
 # to track if we've ever successfully finished the 94k load.
-SYNC_FLAG="/data/.initial_sync_done"
+SYNC_FLAG="../../data/.initial_sync_done"
 
 if [ ! -f "$SYNC_FLAG" ]; then
-    echo "--- First-time setup: Starting 94k record sync ---"
+    echo "--- First-time setup: Starting record sync ---"
     python3 -c "from app.main import process_and_sync_file; process_and_sync_file()"
     touch "$SYNC_FLAG"
 else
@@ -22,5 +22,5 @@ else
 fi
 
 echo "Starting FastAPI Gateway..."
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+exec uvicorn app.main:app --host 0.0.0.0 --port 9027
 

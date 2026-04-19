@@ -6,12 +6,12 @@ services:
       - LDAP_ROOT=dc=example,dc=org
       - LDAP_ADMIN_USERNAME=admin
       - LDAP_ADMIN_PASSWORD=admin
-      # Automatically creates the 'ou=users' branch on first boot
-      - LDAP_USER_DC=users
       - LDAP_PORT_NUMBER=1389
+      - LDAP_MDB_MAPSIZE=2147483648
     volumes:
-      - ./ldap_data:/var/lib/ldap
-      - ./ldap_config:/etc/openldap/slapd.d
+      # Use these paths for Symas to ensure persistence works
+      - ./ldap_data:/var/symas/openldap-data/
+      - ./ldap_config:/opt/symas/etc/openldap/slapd.d/
     ports:
       - "1389:1389"
     restart: unless-stopped
@@ -23,12 +23,13 @@ services:
       - LDAP_SERVER=ldap://ldap-server:1389
       - LDAP_ADMIN_DN=cn=admin,dc=example,dc=org
       - LDAP_ADMIN_PASSWORD=admin
-      - JSONL_FILE_PATH=/data/dtic_authors_001.jsonl.gz
+      - LDAP_BASE_DN=dc=example,dc=org
+      - AUTH_JSONL_FILE_PATH=/data/dtic_authors_001.jsonl.gz
+      - ORG_JSONL_FILE_PATH=/data/dtic_orgs_001.jsonl.gz
     volumes:
-      - ./data:/data
+      - ../../data/dtic_compressed:/data
     ports:
       - "8000:8000"
     depends_on:
       - ldap-server
     restart: unless-stopped
-

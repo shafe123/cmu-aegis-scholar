@@ -2,16 +2,19 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Standard LDAP build dependencies
+# Install system deps for LDAP and C-extensions
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential libldap2-dev libsasl2-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install poetry && poetry config virtualenvs.create false
 
-COPY . .
+# Install dependencies first for caching
+COPY pyproject.toml poetry.lock* /app/
+RUN poetry install --no-interaction --no-ansi --no-root
+
+# Copy code
+COPY . /app/
 RUN chmod +x /app/entrypoint.sh
-RUN chmod -R 777 ./*
 
 ENTRYPOINT ["/app/entrypoint.sh"]

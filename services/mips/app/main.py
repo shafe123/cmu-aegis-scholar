@@ -1,32 +1,26 @@
-import os
-import gzip
-import orjson
-import random
-import logging
-import time
+import os, gzip, orjson, random, logging, re
 from typing import Optional, List
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel
-from ldap3 import Server, Connection, ALL, MODIFY_REPLACE, SUBTREE
+from ldap3 import Server, Connection, ALL, SUBTREE
+from ldap3.core.exceptions import LDAPEntryAlreadyExistsResult
+from ldap3.utils.dn import escape_rdn
 from rapidfuzz import process, fuzz
 
-# Setup logging for Docker
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Config
-LDAP_SERVER = os.getenv("LDAP_SERVER", "ldap://localhost:1389")
-LDAP_USER = os.getenv("LDAP_ADMIN_DN", "cn=admin,dc=example,dc=org")
-LDAP_PASS = os.getenv("LDAP_ADMIN_PASSWORD", "admin")
-INPUT_FILE = os.getenv("JSONL_FILE_PATH", "/cmu-aegis-scholar/data/dtic_compressed/dtic_authors_001.jsonl.gz")
-ORG_FILE = os.getenv('ORG_JSONL_FILE_PATH', '/cmu-aegis-scholar/data/dtic_compressed/dtic_orgs_001.jsonl.gz')
+# Config - Explicitly stripping whitespace to prevent invalidDNSyntax
+LDAP_SERVER = os.getenv("LDAP_SERVER", "ldap://ldap-server:1389").strip()
+LDAP_USER = os.getenv("LDAP_ADMIN_DN", "cn=admin,dc=example,dc=org").strip()
+LDAP_PASS = os.getenv("LDAP_ADMIN_PASSWORD", "admin").strip()
+LDAP_BASE_DN = os.getenv("LDAP_BASE_DN", "dc=example,dc=org").strip()
+
+INPUT_FILE = os.getenv("AUTH_JSONL_FILE_PATH", "/data/dtic_authors_001.jsonl.gz")
+ORG_FILE = os.getenv('ORG_JSONL_FILE_PATH', '/data/dtic_orgs_001.jsonl.gz')
 DOMAINS = ["dtic.mil", "navy.mil", "army.mil", "af.mil", "usmc.mil", "university.edu", "us.gov"]
-LETTERS_LIST = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-CONTACT = LETTERS_LIST[0:26:3]
-NO_CONTACT = LETTERS_LIST[1:26:3]
-SIMILAR_CONTACT = LETTERS_LIST[2:26:3]
 
 class UserRecord(BaseModel):
     username: str
@@ -34,223 +28,143 @@ class UserRecord(BaseModel):
     email: Optional[str] = None
     org: Optional[str] = None
 
-class StatusResponse(BaseModel):
-    success: bool
+class SimilarMatch(BaseModel):
+    name: str
+    email: str
+    org: Optional[str] = None
+    score: float
+
+class LookupResponse(BaseModel):
+    record: Optional[UserRecord] = None
+    similar_records: Optional[List[SimilarMatch]] = None
     message: str
 
-def count_records(file_path):
-    if not os.path.exists(file_path):
-        return 0
-    with gzip.open(file_path, 'rb') as f:
-        return sum(1 for _ in f)
+def clean_uid(text: str) -> str:
+    """Removes any characters that are illegal in an LDAP UID."""
+    return re.sub(r'[^a-zA-Z0-9.-]', '', text).lower()
 
-def generate_email(name: str) -> str:
-    punc = ['.', '-', '_']
-    clean_name = name.replace('.', '').lower().replace(' ', random.choice(punc))
-    return f"{clean_name}@{random.choice(DOMAINS)}"
-
-def perform_upsert(conn: Connection, record: UserRecord):
-    """Internal helper to upsert a single record into an active LDAP connection."""
-    dn = f"uid={record.username},ou=users,dc=example,dc=org"
-    attrs = {
-        'sn': record.name.split()[-1] if ' ' in record.name else record.name,
-        'cn': record.name,
-        'objectClass': ['inetOrgPerson']
-    }
-    
-    # We only include the mail attribute if it was actually generated
-    if record.email:
-        attrs['mail'] = record.email
-        
-    # Search to determine if we should add or modify
-    conn.search(dn, '(objectClass=*)')
-    if not conn.entries:
-        conn.add(dn, attributes=attrs)
-    else:
-        if record.email:
-            conn.modify(dn, {'mail': [(MODIFY_REPLACE, [record.email])]})
-
-def process_and_sync_file():
-    """Optimized batch processing for the 94k record JSONL file."""
-    output_file = INPUT_FILE + ".tmp"
-    if not os.path.exists(INPUT_FILE):
-        logger.error(f"File {INPUT_FILE} not found!")
-        return
-
-    start_time = time.time()
-    server = Server(LDAP_SERVER, get_info=ALL)
-    
-    try:
-        with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
-            with gzip.open(INPUT_FILE, "rb") as f, gzip.open(output_file, "wb", compresslevel=5) as out_f:
-                count = 0
-                upsert_count = 0
-                logger.info(f"0.0% complete - Starting batch sync (Target: ~{TOTAL_ESTIMATED_RECORDS} records)...")
-
-                for line in f:
-                    if not line.strip(): continue
-                    data = orjson.loads(line)
-                    
-                    name = data.get('name', '')
-                    if not name: 
-                        continue
-                        
-                    first_char = name[0].upper()
-                    
-                    # 1. Skip the names that start with a letter in the NO_CONTACT variable
-                    if first_char in NO_CONTACT:
-                        continue
-                        
-                    # 2. Only add an email if the name starts with the letters in the CONTACT variable
-                    if first_char in CONTACT:
-                        if 'email' not in data or not data['email']:
-                            data['email'] = generate_email(name)
-                    
-                    if 'org_name' not in data or not data['org_name']:
-                        data['org_name'] = generate_org()
-                        
-                    record = UserRecord(
-                        username=data.get('uid', name.replace(' ', '').lower()),
-                        name=name,
-                        email=data.get('email'),
-                        org=data['org_name']
-                    )
-                    
-                    # Speed optimization: direct connection add
-                    dn_org = record.org.replace(' ', '').replace(',', '')  # Sanitized
-                    dn = f"uid={record.username},ou=users,dc=example,dc={dn_org}"
-                    
-                    attrs = {
-                        'sn': record.name.split()[-1] if ' ' in record.name else record.name,
-                        'cn': record.name,
-                        'o': record.org,
-                        'objectClass': ['inetOrgPerson']
-                    }
-                    if record.email:
-                        attrs['mail'] = record.email
-                        
-                    conn.add(dn, attributes=attrs)
-                    upsert_count += 1
-
-                    out_f.write(orjson.dumps(data) + b'\n')
-                    count += 1
-
-                    if count % 1000 == 0:
-                        percent = (count / TOTAL_ESTIMATED_RECORDS) * 100 if TOTAL_ESTIMATED_RECORDS else 0
-                        logger.info(f"{percent:.1f}% complete - Processed {count} records - Elapsed: {time.time()-start_time:.2f}s")
-                
-        os.replace(output_file, INPUT_FILE)
-        logger.info(f"100% complete - Sync Finished in {time.time()-start_time:.2f}s.")
-    except Exception as e:
-        if os.path.exists(output_file): os.remove(output_file)
-        logger.error(f"Sync failed: {e}")
-
-def generate_org():
-    return random.choice(org_names) if org_names else "DefaultOrg"
-
-def generate_org_list(org_file_path):
+def get_org_list():
     orgs = set()
-    if os.path.exists(org_file_path):
+    if os.path.exists(ORG_FILE):
         try:
-            with gzip.open(org_file_path, 'rb') as f:
+            with gzip.open(ORG_FILE, 'rb') as f:
                 for line in f:
                     try:
-                        data = orjson.loads(line)
-                        orgs.add(data['name'])
-                    except:
-                        continue
-        except Exception as e:
-            logger.error(f"Could not read org file: {e}")
-            
-    if not orgs:
-        orgs.add("DefaultOrg")
-    return list(orgs)
+                        d = orjson.loads(line)
+                        if 'name' in d: orgs.add(d['name'])
+                    except: continue
+        except: pass
+    return list(orgs) if orgs else ["DefaultOrg"]
 
-# --- Generated variables ---
-
-org_names = generate_org_list(ORG_FILE)
-TOTAL_ESTIMATED_RECORDS = count_records(INPUT_FILE)
-
-# --- Endpoints ---
-
-@app.post("/upsert", response_model=StatusResponse)
-async def http_upsert_bulk(records: List[UserRecord]):
-    """Accepts a list of records for manual bulk upserting."""
+@app.get("/stats")
+async def get_stats():
     server = Server(LDAP_SERVER, get_info=ALL)
     try:
         with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
-            for record in records:
-                if not record.name:
-                    continue
-                    
-                first_char = record.name[0].upper()
-                if first_char in NO_CONTACT:
-                    continue
-                    
-                if first_char in CONTACT:
-                    if not record.email:
-                        record.email = generate_email(record.name)
-                        
-                perform_upsert(conn, record)
-        return {"success": True, "message": f"Successfully upserted {len(records)} records."}
+            search_base = f"ou=users,{LDAP_BASE_DN}"
+            conn.search(search_base, "(objectClass=inetOrgPerson)", attributes=['cn'])
+            total = len(conn.entries)
+            conn.search(search_base, "(mail=*)", attributes=['cn'])
+            with_email = len(conn.entries)
+            return {"total_in_ldap": total, "with_email": with_email, "without_email": total - with_email}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/search", response_model=UserRecord)
-async def search_by_name(name: str = Query(...)):
-    server = Server(LDAP_SERVER, get_info=ALL)
-    with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
-        conn.search("ou=users,dc=example,dc=org", f"(cn={name})", attributes=['mail', 'cn', 'uid'])
-        if not conn.entries: raise HTTPException(status_code=404, detail="User not found")
-        entry = conn.entries[0]
-        return UserRecord(
-            username=str(entry.uid), 
-            name=str(entry.cn), 
-            email=str(entry.mail) if entry.mail else None
-        )
-
-@app.get("/similar-emails")
-async def similar_emails(name: str = Query(..., description="Target name to match against SIMILAR_CONTACT candidates")):
-    """
-    3. Returns the emails for any name that is similar to a name 
-    that starts with a letter in SIMILAR_CONTACT variable using rapidfuzz.
-    """
-    server = Server(LDAP_SERVER, get_info=ALL)
-    try:
-        with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
-            # Gather candidates explicitly filtering so they start with a SIMILAR_CONTACT letter
-            conn.search("dc=example", "(objectClass=inetOrgPerson)", search_scope=SUBTREE, attributes=['cn', 'mail'])
-            
-            candidates = {}
-            for entry in conn.entries:
-                if entry.cn:
-                    cn_str = str(entry.cn)
-                    if cn_str[0].upper() in SIMILAR_CONTACT:
-                        candidates[cn_str] = str(entry.mail) if entry.mail else None
-            
-            if not candidates:
-                return {"similar_emails": []}
-
-            # Uses RapidFuzz to find visually similar names
-            matches = process.extract(name, candidates.keys(), scorer=fuzz.WRatio, limit=10)
-            
-            results = []
-            for match_name, score, _ in matches:
-                # matching threshold (score of 60) for acceptable similarity
-                if score >= 60:
-                    email = candidates.get(match_name)
-                    if email:
-                        results.append({
-                            "name": match_name,
-                            "email": email,
-                            "score": score
-                        })
-                        
-            return {"similar_emails": results}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"LDAP Error: {str(e)}")
 
 @app.post("/sync-file")
-async def trigger_sync(background_tasks: BackgroundTasks):
-    background_tasks.add_task(process_and_sync_file)
-    return {"message": "Background sync started."}
+async def trigger_sync(background_tasks: BackgroundTasks, force: bool = Query(False)):
+    background_tasks.add_task(process_and_sync_file, force=force)
+    return {"message": "Sync started. Check docker logs for progress."}
+
+def process_and_sync_file(force: bool = False):
+    if not os.path.exists(INPUT_FILE):
+        logger.error(f"File not found: {INPUT_FILE}")
+        return
+
+    server = Server(LDAP_SERVER, get_info=ALL)
+    try:
+        # The 'auto_bind' here uses the LDAP_USER (Admin DN)
+        with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
+            # Create OU if missing
+            users_ou = f"ou=users,{LDAP_BASE_DN}"
+            conn.search(LDAP_BASE_DN, f"(ou=users)", search_scope=SUBTREE)
+            if not conn.entries:
+                logger.info("Creating ou=users...")
+                conn.add(users_ou, objectClass=['organizationalUnit', 'top'], attributes={'ou': 'users'})
+
+            if not force:
+                conn.search(users_ou, "(objectClass=inetOrgPerson)", attributes=['cn'])
+                if len(conn.entries) > 1000:
+                    logger.info(f"Skipping sync: {len(conn.entries)} records exist.")
+                    return
+
+            org_names = get_org_list()
+            with gzip.open(INPUT_FILE, "rb") as f:
+                count = 0
+                for line in f:
+                    if not line.strip(): continue
+                    try:
+                        data = orjson.loads(line)
+                        name = data.get('name', '')
+                        if not name: continue
+                        
+                        email = None
+                        if random.random() < 0.5:
+                            email = data.get('email') or f"{name.replace(' ', '.').lower()}@{random.choice(DOMAINS)}"
+                        
+                        org = data.get('org_name') or random.choice(org_names)
+                        
+                        # Use escape_rdn to prevent invalidDNSyntax for users
+                        safe_uid = escape_rdn(clean_uid(data.get('uid', name.replace(' ', ''))))
+                        dn = f"uid={safe_uid},ou=users,{LDAP_BASE_DN}"
+                        
+                        attrs = {
+                            'sn': escape_rdn(name.split()[-1] if ' ' in name else name),
+                            'cn': name,
+                            'o': org,
+                            'objectClass': ['inetOrgPerson', 'top']
+                        }
+                        if email: attrs['mail'] = email
+                        
+                        try:
+                            if conn.add(dn, attributes=attrs):
+                                count += 1
+                                if count % 1000 == 0: logger.info(f"Synced {count} records...")
+                        except LDAPEntryAlreadyExistsResult:
+                            continue
+                    except Exception as e:
+                        continue
+            logger.info(f"Final: Sync finished. {count} records added.")
+    except Exception as e:
+        logger.error(f"Critical Sync Error: {e}")
+
+@app.get("/lookup", response_model=LookupResponse)
+async def lookup_record(name: str = Query(...)):
+    server = Server(LDAP_SERVER, get_info=ALL)
+    try:
+        with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
+            search_base = f"ou=users,{LDAP_BASE_DN}"
+            conn.search(search_base, f"(cn={name})", attributes=['mail', 'cn', 'uid', 'o'])
+            
+            if conn.entries:
+                e = conn.entries[0]
+                if hasattr(e, 'mail') and e.mail:
+                    return LookupResponse(
+                        record=UserRecord(
+                            username=str(e.uid), name=str(e.cn), 
+                            email=str(e.mail), org=str(e.o) if hasattr(e, 'o') else None
+                        ),
+                        message="Match found."
+                    )
+
+            # Fuzzy logic with fuzz.ratio for your 54.55 score requirement
+            conn.search(search_base, "(&(objectClass=inetOrgPerson)(mail=*))", attributes=['cn', 'mail', 'o'])
+            candidate_map = {str(e.cn): {"email": str(e.mail), "org": str(e.o) if hasattr(e, 'o') else None} for e in conn.entries}
+            
+            matches = process.extract(name, list(candidate_map.keys()), scorer=fuzz.ratio, limit=10)
+            results = [
+                SimilarMatch(name=m[0], email=candidate_map[m[0]]["email"], org=candidate_map[m[0]]["org"], score=round(m[1], 2))
+                for m in matches
+            ]
+            return LookupResponse(similar_records=results, message="Suggestions provided.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
