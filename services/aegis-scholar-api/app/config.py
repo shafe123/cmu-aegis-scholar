@@ -19,22 +19,14 @@ class Settings(BaseSettings):
     vector_db_url: str = "http://localhost:8002"
     vector_db_timeout: int = 30
 
-    # Database Configuration (to be implemented)
-    database_url: str = ""
-
-    # Azure Cosmos DB Configuration (if using)
-    cosmos_endpoint: str = ""
-    cosmos_key: str = ""
-    cosmos_database: str = "aegis"
+    # Graph DB Service Configuration
+    graph_db_url: str = "http://localhost:8003"
+    graph_db_timeout: int = 30
 
     # Search Configuration
     default_limit: int = 10
     max_limit: int = 100
     default_offset: int = 0
-
-    # Cache Configuration (to be implemented)
-    redis_url: str = ""
-    cache_ttl: int = 3600  # 1 hour default
 
     # Logging Configuration
     log_level: str = "INFO"

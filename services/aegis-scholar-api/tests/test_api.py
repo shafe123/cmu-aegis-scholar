@@ -510,3 +510,15 @@ async def test_graph_db_client_get_viz_data():
         mock_get.return_value = mock_response
         result = await client.get_viz_data("author_1a2b3c4d-1234-5678-abcd-1234567890ab")
     assert "nodes" in result
+
+
+def test_graph_db_client_uses_configured_settings():
+    """GraphDBClient should read its base URL and timeout from settings."""
+    from app.config import settings
+    from app.services.graph_db import GraphDBClient
+
+    client = GraphDBClient()
+
+    assert client.url == settings.graph_db_url
+    assert client.timeout.connect == settings.graph_db_timeout
+    assert client.timeout.read == settings.graph_db_timeout

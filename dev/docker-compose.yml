@@ -185,6 +185,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - VECTOR_DB_URL=http://vector-db:8002
+      - GRAPH_DB_URL=http://graph-db:8003
+      - GRAPH_DB_TIMEOUT=30
       - API_HOST=0.0.0.0
       - API_PORT=8000
       - LOG_LEVEL=INFO
