@@ -112,7 +112,6 @@ class GraphNodeViz(BaseModel):
     year: str | None = Field(None, examples=["2024"])
     citations: int | None = Field(None, examples=[10])
     full_title: str | None = None  # Added for validation
-    citations: int | None = None  # Added for validation
     abstract: str | None = None
 
 
