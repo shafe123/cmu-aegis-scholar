@@ -38,7 +38,7 @@ def test_distance_to_relevance_large():
     assert score < 0.01
 
 
-def test_map_vector_results_valid():
+async def test_map_vector_results_valid():
     """Valid results should be mapped to AuthorSearchResult objects."""
     from app.main import _map_vector_results
 
@@ -51,7 +51,7 @@ def test_map_vector_results_valid():
             "distance": 0.3,
         }
     ]
-    results = _map_vector_results(raw)
+    results = await _map_vector_results(raw)
     assert len(results) == 1
     assert results[0].id == "author_1a2b3c4d-1234-5678-abcd-1234567890ab"
     assert results[0].name == "Dr. Test"
@@ -60,23 +60,92 @@ def test_map_vector_results_valid():
     assert 0 < results[0].relevance_score <= 1.0
 
 
-def test_map_vector_results_malformed_skipped():
+def test_calculate_author_relevance_matches_wolfram_formula():
+    """Formula should match the WolframAlpha equation exactly."""
+    import math
+
+    from app.main import _calculate_author_relevance
+
+    score = _calculate_author_relevance(x=0.8, y=100, t=2.0)
+    sigmoid_term = 1.0 / (1.0 + math.exp(-0.005 * (100 - 100)))
+    recency_term = (-math.tanh(2.0 - 2.0) + 1.0) / 2.0
+    assert score == round(((1.0 - 0.8) + sigmoid_term + recency_term) / 3.0, 4)
+    assert score == 0.4
+
+
+@pytest.mark.parametrize(
+    ("x", "y", "t", "expected"),
+    [
+        # Best vector match (x=0), very high citations, oldest allowed work (t=4)
+        (0.0, 0, 4.0, 0.4652),
+        # Worst vector match (x=1), maximum citations, most recent possible work (t=0)
+        (1.0, 10000, 0.0, 0.6607),
+        # Mid-range across all three terms
+        (0.5, 100, 2.0, 0.5),
+    ],
+)
+def test_calculate_author_relevance_range_examples(x, y, t, expected):
+    """Equation should behave correctly at representative input ranges.
+
+    Expected values are precomputed from the same WolframAlpha equation.
+    """
+    from app.main import _calculate_author_relevance
+
+    assert _calculate_author_relevance(x=x, y=y, t=t) == expected
+
+
+async def test_map_vector_results_prefers_more_recent_work():
+    """Newer most recent work should improve relevance for equal x/y."""
+    from datetime import date
+
+    from app.main import _map_vector_results
+    from app.services.graph_db import graph_client
+
+    current_year = date.today().year
+    raw = [
+        {
+            "author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab",
+            "author_name": "Recent",
+            "num_abstracts": 10,
+            "citation_count": 500,
+            "distance": 0.3,
+        },
+        {
+            "author_id": "author_2b3c4d5e-2345-6789-bcde-2345678901bc",
+            "author_name": "Older",
+            "num_abstracts": 10,
+            "citation_count": 500,
+            "distance": 0.3,
+        },
+    ]
+
+    async def _year_by_author(author_id: str) -> int | None:
+        # "1a2b" is a substring of the "Recent" author's ID; return the current year for them
+        # and current_year - 40 (4 decades ago) for the "Older" author.
+        return current_year if "1a2b" in author_id else current_year - 40
+
+    with patch.object(graph_client, "get_most_recent_work_year", side_effect=_year_by_author):
+        results = await _map_vector_results(raw)
+    assert results[0].name == "Recent"
+
+
+async def test_map_vector_results_malformed_skipped():
     """Malformed results missing required fields should be skipped."""
     from app.main import _map_vector_results
 
     raw = [{"bad_field": "no_id_here"}]
-    results = _map_vector_results(raw)
+    results = await _map_vector_results(raw)
     assert len(results) == 0
 
 
-def test_map_vector_results_empty():
+async def test_map_vector_results_empty():
     """Empty input should return empty list."""
     from app.main import _map_vector_results
 
-    assert _map_vector_results([]) == []
+    assert await _map_vector_results([]) == []
 
 
-def test_sort_author_results_by_citation_desc():
+async def test_sort_author_results_by_citation_desc():
     """Results should be sortable by citation_count descending."""
     from app.main import _map_vector_results, _sort_author_results
 
@@ -96,12 +165,12 @@ def test_sort_author_results_by_citation_desc():
             "distance": 0.5,
         },
     ]
-    results = _map_vector_results(raw)
+    results = await _map_vector_results(raw)
     sorted_results = _sort_author_results(results, "citation_count", "desc")
     assert sorted_results[0].citation_count == 9999
 
 
-def test_sort_author_results_by_citation_asc():
+async def test_sort_author_results_by_citation_asc():
     """Results should be sortable by citation_count ascending."""
     from app.main import _map_vector_results, _sort_author_results
 
@@ -121,12 +190,12 @@ def test_sort_author_results_by_citation_asc():
             "distance": 0.5,
         },
     ]
-    results = _map_vector_results(raw)
+    results = await _map_vector_results(raw)
     sorted_results = _sort_author_results(results, "citation_count", "asc")
     assert sorted_results[0].citation_count == 10
 
 
-def test_sort_author_results_invalid_field_returns_original():
+async def test_sort_author_results_invalid_field_returns_original():
     """Invalid sort field should return results unchanged."""
     from app.main import _map_vector_results, _sort_author_results
 
@@ -139,12 +208,12 @@ def test_sort_author_results_invalid_field_returns_original():
             "distance": 0.1,
         },
     ]
-    results = _map_vector_results(raw)
+    results = await _map_vector_results(raw)
     sorted_results = _sort_author_results(results, "nonexistent_field", "desc")
     assert sorted_results == results
 
 
-def test_sort_author_results_no_sort_field():
+async def test_sort_author_results_no_sort_field():
     """None sort field should return results unchanged."""
     from app.main import _map_vector_results, _sort_author_results
 
@@ -157,7 +226,7 @@ def test_sort_author_results_no_sort_field():
             "distance": 0.1,
         },
     ]
-    results = _map_vector_results(raw)
+    results = await _map_vector_results(raw)
     sorted_results = _sort_author_results(results, None, "desc")
     assert sorted_results == results
 

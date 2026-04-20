@@ -10,18 +10,20 @@ Architecture
                                               │                                    │
                                               │◀──── ranked author results ────────┘
                                               │
+                                              │  (for each author, fetch most recent
+                                              │   work year from Graph DB)
+                                              │──GET /viz/author-network/{id}──▶  Graph DB (port 8003)
+                                              │◀──── work nodes with year ──────────┘
+                                              │
                                               ▼
-                                        Format into AuthorSearchResponse and return
-
-The vector DB stores one embedding per author (the average of all their
-paper-abstract embeddings).  When a user searches, the vector DB converts
-the query text into a 384-dim vector and finds the nearest authors in
-Milvus.  This API reformats those results into the Aegis Scholar schema.
+                                        Score with WolframAlpha formula and return
+                                        AuthorSearchResponse
 """
 
 import logging
 import math
 from contextlib import asynccontextmanager
+from datetime import date
 from pathlib import Path
 
 import httpx
@@ -44,6 +46,7 @@ from app.schemas import (
     WorkSearchResponse,
 )
 from app.services import vector_db
+from app.services.graph_db import graph_client
 
 # Configure logging
 logging.basicConfig(level=settings.log_level)
@@ -107,26 +110,65 @@ def _distance_to_relevance(distance: float) -> float:
     return round(1.0 / (1.0 + distance), 4)
 
 
-def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
+DEFAULT_RECENCY_DECADES = 2.0  # Midpoint of the [0,4] range; used when recency data is unavailable.
+
+
+def _calculate_decades_since_most_recent_work(most_recent_work_year: int | None) -> float:
+    """Return decades in the past from today, capped to WolframAlpha's t-range [0,4]."""
+    if most_recent_work_year is None:
+        # Use midpoint (DEFAULT_RECENCY_DECADES) of the [0,4] range when recency data is unavailable
+        # to avoid either penalizing or favoring missing-recency authors.
+        return DEFAULT_RECENCY_DECADES
+
+    years_since = max(0, date.today().year - most_recent_work_year)
+    return min(years_since / 10.0, 4.0)
+
+
+def _calculate_author_relevance(x: float, y: int, t: float) -> float:
+    """
+    WolframAlpha formula:
+    z(x, y, t) = 1/3*(1-x) + 1/3*(1/(1 + e^(-0.005*(y-100)))) + 1/3*((-tanh(t-2)+1)/2)
+
+    x: vector similarity score (0-1)
+    y: citation count (>=0)
+    t: decades since most recent work (0-4)
+    """
+    x = min(max(x, 0.0), 1.0)
+    y = max(y, 0)
+    t = min(max(t, 0.0), 4.0)
+
+    citations_term = 1.0 / (1.0 + math.exp(-0.005 * (y - 100)))
+    recency_term = (-math.tanh(t - 2.0) + 1.0) / 2.0
+    return round(((1.0 - x) + citations_term + recency_term) / 3.0, 4)
+
+
+async def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
     """
     Transform raw vector DB dicts into AuthorSearchResult Pydantic models.
-    Uses a hybrid score: 70% semantic relevance + 30% citation authority.
+    Uses the WolframAlpha relevance formula combining vector score (x),
+    citation count (y), and decades since most recent work (t).
+
+    The most recent work year is fetched from the graph DB via
+    /viz/author-network/{author_id} for each author.  If the graph DB is
+    unavailable the recency term defaults to the neutral midpoint (t=2.0).
     """
     results: list[AuthorSearchResult] = []
     for res in vector_results:
         try:
             distance = res.get("distance", 1.0)
             citation_count = res.get("citation_count", 0) or 0
-            relevance_score = _distance_to_relevance(distance)
-            authority_score = min(math.log10(citation_count + 1) / 4.0, 1.0)
-            hybrid_score = round((0.7 * relevance_score) + (0.3 * authority_score), 4)
+            vector_score = _distance_to_relevance(distance)
+            author_id = res["author_id"]
+            most_recent_work_year = await graph_client.get_most_recent_work_year(author_id)
+            decades_since_recent_work = _calculate_decades_since_most_recent_work(most_recent_work_year)
+            relevance_score = _calculate_author_relevance(vector_score, citation_count, decades_since_recent_work)
             results.append(
                 AuthorSearchResult(
-                    id=res["author_id"],
+                    id=author_id,
                     name=res.get("author_name", "Unknown"),
                     citation_count=citation_count,
                     works_count=res.get("num_abstracts", 0),
-                    relevance_score=hybrid_score,
+                    relevance_score=relevance_score,
                 )
             )
         except Exception as e:  # pylint: disable=broad-exception-caught
@@ -289,7 +331,7 @@ async def search_authors(
         ) from e
 
     # Map and optionally re-sort
-    authors = _map_vector_results(raw.get("results", []))
+    authors = await _map_vector_results(raw.get("results", []))
     authors = _sort_author_results(authors, sort_by, order or "desc")
 
     if need_resort:

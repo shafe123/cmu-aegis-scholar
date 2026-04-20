@@ -6,6 +6,18 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 
+@pytest.fixture(autouse=True)
+def mock_graph_db_most_recent_work_year():
+    """Auto-mock graph DB most_recent_work_year for all tests to avoid live network calls.
+
+    Tests that need specific years can override with their own patch.object block.
+    """
+    from app.services.graph_db import graph_client
+
+    with patch.object(graph_client, "get_most_recent_work_year", new=AsyncMock(return_value=None)):
+        yield
+
+
 @pytest.fixture
 def mock_vector_db_search():
     """Standard successful vector DB search response."""
