@@ -126,8 +126,9 @@ class ExtractionStateManager:
     def get_or_create_org_id(self, grid_id: str) -> str:
         """Get existing org_id or create a new one."""
         if grid_id not in self.state['organizations']:
-            # Generate deterministic GUID based on grid_id
-            namespace = uuid.UUID('00000000-0000-0000-0000-000000000002')
+            # Generate deterministic GUID based on grid_id.
+            # Keep this aligned with clean_works.py and clean_authors.py.
+            namespace = uuid.UUID('00000000-0000-0000-0000-000000000001')
             org_uuid = uuid.uuid5(namespace, grid_id)
             self.state['organizations'][grid_id] = f"org_{org_uuid}"
             self.state['total_orgs_found'] += 1
