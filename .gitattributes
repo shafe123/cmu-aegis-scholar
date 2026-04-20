@@ -1,0 +1,3 @@
+# Keep shell entrypoints in LF format on all platforms
+*.sh text eol=lf
+services/identity/entrypoint.sh text eol=lf
