@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Settings,
@@ -54,7 +54,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false); // Tracks if we are on the Home or Results screen
+  const [hasSearched, setHasSearched] = useState(false);
 
   const [selectedAuthor, setSelectedAuthor] = useState(null);
   const [modalView, setModalView] = useState("profile");
@@ -64,6 +64,22 @@ export default function App() {
   const [minWorks, setMinWorks] = useState(0);
   const [minCitations, setMinCitations] = useState(0);
   const [sortBy, setSortBy] = useState("relevance");
+
+  // --- ADDED: Dynamic Page Title ---
+  useEffect(() => {
+    if (selectedAuthor) {
+      if (modalView === "profile") {
+        document.title = selectedAuthor.name;
+      } else if (modalView === "graph") {
+        document.title = `${selectedAuthor.name} Network`;
+      }
+    } else if (hasSearched) {
+      document.title = "Author Search";
+    } else {
+      document.title = "Aegis Scholar";
+    }
+  }, [selectedAuthor, modalView, hasSearched]);
+  // ---------------------------------
 
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
@@ -110,19 +126,12 @@ export default function App() {
   return (
     <div className="flex flex-col min-h-screen bg-[#0a0c10] text-slate-300 font-sans selection:bg-aegis-cyan selection:text-[#0a0c10]">
       {!hasSearched ? (
-        /* --- ORIGINAL CENTERED HOME SCREEN --- */
         <main className="flex-1 flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
           <img
             src="/favicon.svg"
             alt="Aegis Logo"
-            className="w-56 h-56 mb-6 hover:scale-110 hover:-translate-y-2 transition-all duration-300 cursor-pointer"
+            className="w-48 h-48 object-cover rounded-2xl mb-8 shadow-2xl border border-slate-800 hover:scale-110 hover:-translate-y-2 transition-all duration-300 cursor-pointer"
           />
-          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase mb-2">
-            AEGIS Scholar Discovery
-          </h1>
-          <p className="text-slate-400 mb-10 font-mono text-sm uppercase tracking-widest text-center">
-            Advanced Researcher & Entity Network Analysis
-          </p>
 
           <form onSubmit={handleSearch} className="w-full max-w-2xl relative">
             <input
@@ -149,7 +158,6 @@ export default function App() {
         <>
           <header className="border-b border-slate-800 bg-[#0d1117] sticky top-0 z-10 animate-in slide-in-from-top duration-300">
             <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-              {/* Clicking the logo now returns the user to the home screen */}
               <div
                 className="flex items-center gap-2 cursor-pointer group"
                 onClick={goHome}
@@ -284,19 +292,14 @@ export default function App() {
         </>
       )}
 
-      {/* --- NEW FOOTER --- */}
-      <footer className="border-t border-slate-800 bg-[#0d1117] mt-auto py-6">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col items-center justify-center text-center gap-2">
-          <div className="flex items-center gap-2 text-slate-500">
-            <ShieldCheck size={16} className="text-aegis-cyan" />
-            <span className="text-xs font-mono uppercase tracking-widest font-bold">
-              AEGIS Network Systems
-            </span>
+      {/* --- NEW MINIMAL FOOTER --- */}
+      <footer className="py-6 border-t border-slate-900 mt-auto bg-[#0d1117]">
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center text-[10px] uppercase tracking-[0.2em] font-bold text-slate-600">
+          <span>© {new Date().getFullYear()} AEGIS Network Systems</span>
+          <div className="flex gap-6">
+            <span className="hover:text-aegis-cyan cursor-pointer transition-colors">Documentation</span>
+            <span className="hover:text-aegis-cyan cursor-pointer transition-colors">System Status: Nominal</span>
           </div>
-          <p className="text-[10px] text-slate-600 uppercase tracking-widest font-bold">
-            © {new Date().getFullYear()} Scholar Discovery Platform. All Rights
-            Reserved.
-          </p>
         </div>
       </footer>
 
@@ -356,6 +359,7 @@ export default function App() {
                   <div className="flex-1 relative">
                     <NetworkGraph
                       authorId={selectedAuthor.id}
+                      selectedAuthorName={selectedAuthor.name}
                       onNodeSelect={setInspectedNode}
                     />
                   </div>
@@ -382,7 +386,7 @@ export default function App() {
                             Selected Entity
                           </p>
                           <p className="text-white font-bold text-sm leading-tight">
-                            {inspectedNode.label}
+                            {inspectedNode.full_title || inspectedNode.label}
                           </p>
                           <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded bg-aegis-cyan/10 text-aegis-cyan border border-aegis-cyan/20 font-mono uppercase">
                             {inspectedNode.group}
@@ -400,7 +404,7 @@ export default function App() {
                                   Publication Year
                                 </p>
                                 <p className="font-mono text-white text-lg">
-                                  {inspectedNode.details?.year || "N/A"}
+                                  {inspectedNode.year || "N/A"}
                                 </p>
                               </div>
                             </div>
@@ -415,7 +419,7 @@ export default function App() {
                                 </summary>
                                 <p className="mt-3 text-[13px] leading-relaxed text-slate-400 italic font-serif">
                                   "
-                                  {inspectedNode.details?.abstract ||
+                                  {inspectedNode.abstract ||
                                     "No abstract available for this record."}
                                   "
                                 </p>
@@ -433,7 +437,7 @@ export default function App() {
                                   Contact
                                 </p>
                                 <p className="font-mono text-white text-[13px]">
-                                  {inspectedNode.details?.email || "N/A"}
+                                  {inspectedNode.email || "N/A"}
                                 </p>
                               </div>
                             </div>
@@ -446,7 +450,7 @@ export default function App() {
                                   Total Works
                                 </p>
                                 <p className="font-mono text-white text-lg">
-                                  {inspectedNode.details?.works || 0}
+                                  {inspectedNode.works_count || 0}
                                 </p>
                               </div>
                             </div>
