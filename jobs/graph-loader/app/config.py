@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     min_entities_threshold: int = 100
 
     # Processing settings
-    batch_size: int = 100
+    batch_size: int = 1000
     log_level: str = "INFO"
 
 

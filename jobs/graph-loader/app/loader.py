@@ -92,16 +92,20 @@ class GraphLoader:
         """Standard node loader for Authors, Orgs, and Topics."""
         files = self.get_files(entity_type)
         total_files = len(files)
+        progress_interval = max(1, settings.batch_size)
         count = 0
 
         logger.info("--- Loading %s nodes from %s file(s) ---", entity_type, total_files)
 
         for file_index, file_path in enumerate(files, start=1):
             file_count = 0
+            processed_count = 0
             with gzip.open(file_path, "rb") as f:
                 for line in f:
                     if not line.strip():
                         continue
+
+                    processed_count += 1
                     node_data = json.loads(line)
                     # Ensure Org data has a default 'type' if missing to satisfy Schema
                     if entity_type == "orgs" and not node_data.get("type"):
@@ -110,12 +114,25 @@ class GraphLoader:
                         count += 1
                         file_count += 1
 
+                    if processed_count % progress_interval == 0:
+                        logger.info(
+                            "Progress [%s]: file %s/%s in progress (%s) - processed=%s successful=%s total_successful=%s",
+                            entity_type,
+                            file_index,
+                            total_files,
+                            file_path.name,
+                            processed_count,
+                            file_count,
+                            count,
+                        )
+
             logger.info(
-                "Progress [%s]: file %s/%s complete (%s) - file_nodes=%s total_nodes=%s",
+                "Progress [%s]: file %s/%s complete (%s) - processed=%s successful=%s total_successful=%s",
                 entity_type,
                 file_index,
                 total_files,
                 file_path.name,
+                processed_count,
                 file_count,
                 count,
             )
@@ -151,6 +168,7 @@ class GraphLoader:
         """Processes Work nodes and establishes all graph relationships."""
         files = self.get_files("works")
         total_files = len(files)
+        progress_interval = max(1, settings.batch_size)
         total_works = 0
         total_relationships = 0
 
@@ -159,10 +177,12 @@ class GraphLoader:
         for file_index, file_path in enumerate(files, start=1):
             file_work_count = 0
             file_relationship_count = 0
+            processed_count = 0
             with gzip.open(file_path, "rb") as f:
                 for line in f:
                     if not line.strip():
                         continue
+                    processed_count += 1
                     work = self.normalize_work_payload(json.loads(line))
                     work_id = work.get("id")
 
@@ -203,11 +223,25 @@ class GraphLoader:
                             total_relationships += 1
                             file_relationship_count += 1
 
+                    if processed_count % progress_interval == 0:
+                        logger.info(
+                            "Progress [works]: file %s/%s in progress (%s) - processed=%s file_works=%s file_relationships=%s total_works=%s total_relationships=%s",
+                            file_index,
+                            total_files,
+                            file_path.name,
+                            processed_count,
+                            file_work_count,
+                            file_relationship_count,
+                            total_works,
+                            total_relationships,
+                        )
+
             logger.info(
-                "Progress [works]: file %s/%s complete (%s) - file_works=%s file_relationships=%s total_works=%s total_relationships=%s",
+                "Progress [works]: file %s/%s complete (%s) - processed=%s file_works=%s file_relationships=%s total_works=%s total_relationships=%s",
                 file_index,
                 total_files,
                 file_path.name,
+                processed_count,
                 file_work_count,
                 file_relationship_count,
                 total_works,

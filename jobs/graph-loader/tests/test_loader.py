@@ -3,7 +3,7 @@ import json
 import logging
 from unittest.mock import MagicMock, patch
 
-from app.loader import GraphDBClient, GraphLoader, main
+from app.loader import GraphDBClient, GraphLoader, main, settings
 
 
 # --- Helpers ---
@@ -71,6 +71,28 @@ class TestGraphLoader:
         loader.load_nodes("authors")
         assert api.upsert_node.called
         assert "Progress [authors]" in caplog.text
+
+    def test_load_nodes_logs_incremental_progress(self, tmp_data_dir, caplog):
+        """Ensures large author files emit progress before file completion."""
+        caplog.set_level(logging.INFO)
+        path = tmp_data_dir / "dtic_authors_2.jsonl.gz"
+        create_mock_gz(
+            path,
+            [
+                {"id": "a1", "name": "Alice"},
+                {"id": "a2", "name": "Bob"},
+                {"id": "a3", "name": "Carol"},
+            ],
+        )
+
+        api = MagicMock()
+        api.upsert_node.return_value = True
+        loader = GraphLoader(client=api, data_dir=tmp_data_dir)
+
+        with patch.object(settings, "batch_size", 2):
+            loader.load_nodes("authors")
+
+        assert "in progress" in caplog.text
 
     def test_load_works_and_rels_with_org(self, tmp_data_dir, caplog):
         """Covers relationship creation and verifies progress logging is emitted."""
