@@ -265,6 +265,11 @@ data/dtic/*
 data/
 *.gz
 *.jsonl
+!tests/dtic_test_subset/
+!tests/dtic_test_subset/*.gz
+!tests/dtic_test_subset/*.jsonl
+!tests/dtic_test_subset/*.json
+!tests/dtic_test_subset/*.md
 
 # Secrets and Env
 *.txt

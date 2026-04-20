@@ -1,0 +1,48 @@
+{
+  "connectivity": {
+    "authors_with_selected_works": 39,
+    "authors_without_selected_works": 11,
+    "orgs_referenced_by_subset": 37,
+    "topics_referenced_by_subset": 33
+  },
+  "counts": {
+    "authors": 50,
+    "orgs": 50,
+    "topics": 50,
+    "works": 50
+  },
+  "edge_cases": {
+    "authors_no_orgs": 16,
+    "authors_special_names": 41,
+    "authors_zero_citations": 11,
+    "authors_zero_works": 11,
+    "works_author_missing_org": 11,
+    "works_missing_abstract": 10,
+    "works_missing_doi": 7,
+    "works_no_authors": 5,
+    "works_no_orgs": 6,
+    "works_no_topics": 3
+  },
+  "integrity": {
+    "is_fully_linked": true,
+    "missing_author_org_refs": [],
+    "missing_work_author_refs": [],
+    "missing_work_org_refs": [],
+    "missing_work_topic_refs": []
+  },
+  "linked_reference_counts": {
+    "linked_authors_from_works": 39,
+    "required_orgs_from_links": 37,
+    "required_topics_from_links": 33
+  },
+  "selection_breakdown": {
+    "author_missing_org": 5,
+    "baseline": 20,
+    "missing_abstract": 8,
+    "missing_doi": 5,
+    "no_authors": 5,
+    "no_orgs": 2,
+    "no_topics": 3,
+    "older": 2
+  }
+}
