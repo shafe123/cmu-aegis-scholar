@@ -111,7 +111,6 @@ def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
     """
     Transform raw vector DB dicts into AuthorSearchResult Pydantic models.
     Uses a hybrid score: 70% semantic relevance + 30% citation authority.
-    Maps 'latest_year' so the frontend can perform filtering.
     """
     results: list[AuthorSearchResult] = []
     for res in vector_results:
@@ -128,7 +127,6 @@ def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
                     citation_count=citation_count,
                     works_count=res.get("num_abstracts", 0),
                     relevance_score=hybrid_score,
-                    latest_year=res.get("latest_year"),
                 )
             )
         except Exception as e:  # pylint: disable=broad-exception-caught
@@ -275,8 +273,7 @@ async def search_authors(
             query_text=q,
             limit=fetch_limit,
             offset=fetch_offset,
-            # ADDED 'latest_year' to the output fields
-            output_fields=["author_id", "author_name", "num_abstracts", "citation_count", "latest_year"],
+            output_fields=["author_id", "author_name", "num_abstracts", "citation_count"],
         )
     except httpx.ConnectError as exc:
         logger.error("Vector DB service is unreachable")
