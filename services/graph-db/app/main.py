@@ -234,11 +234,11 @@ async def get_author_network(author_id: str):
                 )
                 node_ids.add(author["id"])
 
-           # Add Work
+            # Add Work
             if work and work["id"] not in node_ids:
                 full_title = work.get("title", "Unknown Title")
                 short_label = full_title[:30] + "..." if len(full_title) > 30 else full_title
-                
+
                 # Extract year from publication_date (e.g., "2023-05-12" -> "2023")
                 raw_date = work.get("publication_date")
                 formatted_year = str(raw_date)[:4] if raw_date else "N/A"
@@ -247,7 +247,7 @@ async def get_author_network(author_id: str):
                     {
                         "id": work["id"],
                         "label": short_label,
-                        "full_title": full_title, 
+                        "full_title": full_title,
                         "group": "work",
                         "color": "#4ecdc4",
                         "year": formatted_year if formatted_year != "N/A" else (work.get("year") or "N/A"),

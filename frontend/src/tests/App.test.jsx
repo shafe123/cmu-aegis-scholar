@@ -260,7 +260,7 @@ describe("App Component", () => {
     fireEvent.click(searchBtn);
 
     // 3. Target the top-left logo which acts as the "Home" button
-    const homeLogo = screen.getByText(/AEGIS Scholar/i);
+    const homeLogo = screen.getByRole('heading', { name: /AEGIS Scholar/i });
 
     // 4. Click the logo to trigger the reset logic
     fireEvent.click(homeLogo);

@@ -295,7 +295,7 @@ export default function App() {
       {/* --- NEW MINIMAL FOOTER --- */}
       <footer className="py-6 border-t border-slate-900 mt-auto bg-[#0d1117]">
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center text-[10px] uppercase tracking-[0.2em] font-bold text-slate-600">
-          <span>© {new Date().getFullYear()} AEGIS Scholar</span>
+          <span>© {new Date().getFullYear()} AEGIS Network Systems</span>
           <div className="flex gap-6">
             <span className="hover:text-aegis-cyan cursor-pointer transition-colors">Documentation</span>
             <span className="hover:text-aegis-cyan cursor-pointer transition-colors">System Status: Nominal</span>
