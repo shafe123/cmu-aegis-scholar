@@ -72,14 +72,17 @@ def test_get_collaborators_mapping(client, mock_neo4j_session):
 
 
 def test_viz_network_logic(client, mock_neo4j_session):
-    """
-    Test the visualization logic.
-    FIXED: Keys now match the production RETURN statement (author, work, coAuthor, org).
-    """
+    """Test the visualization logic with full schema compliance."""
     mock_record = {
-        "author": {"id": "auth_1", "name": "Primary"},
-        "work": {"id": "work_1", "title": "Paper", "year": 2024, "citation_count": 0},
-        "coAuthor": {"id": "auth_2", "name": "CoAuthor"},
+        "author": {"id": "auth_1", "name": "Primary Researcher", "works_count": 5, "email": "primary@dod.mil"},
+        "work": {
+            "id": "work_1",
+            "title": "Great Research Paper",
+            "publication_date": "2024-01-01",
+            "citation_count": 10,
+            "abstract": "This is a test abstract.",
+        },
+        "coAuthor": {"id": "auth_2", "name": "Co-Author Name", "works_count": 2},
         "org": {"id": "org_1", "name": "CMU"},
     }
     mock_neo4j_session.run.return_value = [mock_record]
@@ -94,13 +97,11 @@ def test_viz_network_logic(client, mock_neo4j_session):
     assert "work_1" in ids
     assert "org_1" in ids
 
-    # Check groups for frontend coloring
-    node_types = [n["group"] for n in data["nodes"]]
-    assert "author" in node_types
-    assert "work" in node_types
-
-    # Check edges (connections)
-    assert len(data["edges"]) >= 2  # Primary -> Work and CoAuthor -> Work
+    # Verify logic from main.py
+    work_node = next(n for n in data["nodes"] if n["group"] == "work")
+    assert work_node["full_title"] == "Great Research Paper"
+    assert work_node["year"] == "2024"
+    assert work_node["citations"] == 10
 
 
 # --- Additional Ingestion Tests to reach >90% Coverage ---

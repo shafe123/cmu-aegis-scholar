@@ -25,9 +25,9 @@ def mock_neo4j_driver(mock_neo4j_session):
 
 @pytest.fixture
 def client(mock_neo4j_driver):
-    """Create a TestClient with the Neo4j driver patched and lifespan handled."""
-    with patch("app.main.get_driver", return_value=mock_neo4j_driver):
+    """Create a TestClient with the driver and getter patched."""
+    # We patch BOTH the constant and the getter function
+    with patch("app.main.DRIVER", mock_neo4j_driver), patch("app.main.get_driver", return_value=mock_neo4j_driver):
         from app.main import app
 
-        with TestClient(app) as test_client:
-            yield test_client
+        yield TestClient(app)

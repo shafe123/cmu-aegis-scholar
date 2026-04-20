@@ -2,7 +2,7 @@
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, List
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from neo4j import GraphDatabase
@@ -14,8 +14,8 @@ from app.schemas import (
     AuthorWorkRel,
     CollaboratorResponse,
     OrgNode,
-    StatusResponse,
     StatsResponse,
+    StatusResponse,
     TopicNode,
     VizResponse,
     WorkNode,
@@ -26,33 +26,37 @@ from app.schemas import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- 2. Database Driver Initialization ---
-driver = None
+# --- 2. Database Driver Initialization (upper case for Pylint constants) ---
+DRIVER: Any = None
 
 
 def get_driver():
     """Create the Neo4j driver lazily so tests and imports stay clean."""
-    global driver
-    if driver is None:
-        driver = GraphDatabase.driver(
+    # pylint: disable=global-statement
+
+    global DRIVER
+    if DRIVER is None:
+        DRIVER = GraphDatabase.driver(
             settings.neo4j_uri,
             auth=(settings.neo4j_user, settings.neo4j_password or ""),
         )
-    return driver
+    return DRIVER
 
 
 # --- 3. Application Lifespan ---
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Handles clean startup and shutdown of resources."""
-    global driver
+    # pylint: disable=global-statement
+
+    global DRIVER
     logger.info("Graph API starting up...")
     get_driver()
     yield
     logger.info("Graph API shutting down: Closing Neo4j Driver...")
-    if driver is not None:
-        driver.close()
-        driver = None
+    if DRIVER is not None:
+        DRIVER.close()
+        DRIVER = None
 
 
 # --- 4. Initialize FastAPI ---
@@ -85,7 +89,7 @@ async def health_check() -> dict[str, str]:
         return {"status": "unhealthy", "error": str(e)}
 
 
-@app.get("/stats", tags=["System"], response_model=StatusResponse)
+@app.get("/stats", tags=["System"], response_model=StatsResponse)
 async def get_stats() -> dict[str, Any]:
     """Returns counts of nodes to help loaders determine if ingestion is needed."""
     try:
@@ -196,8 +200,8 @@ async def link_work_topic(rel: WorkTopicRel) -> dict[str, str]:
 # --- 7. Search & Analysis Endpoints ---
 
 
-@app.get("/authors/{author_id}/collaborators", tags=["Analysis"], response_model=List[CollaboratorResponse])
-async def get_collaborators(author_id: str) -> List[dict]:
+@app.get("/authors/{author_id}/collaborators", tags=["Analysis"], response_model=list[CollaboratorResponse])
+async def get_collaborators(author_id: str) -> list[dict]:
     """Finds researchers who have shared works with the given author."""
     query = """
     MATCH (a:Author {id: $id})-[:AUTHORED]->(w:Work)<-[:AUTHORED]-(collab:Author)
@@ -213,6 +217,8 @@ async def get_collaborators(author_id: str) -> List[dict]:
 @app.get("/viz/author-network/{author_id}", tags=["Visualization"], response_model=VizResponse)
 async def get_author_network(author_id: str) -> dict:
     """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
+    # pylint: disable=too-many-locals
+
     query = """
     MATCH (author:Author {id: $node_id})
     OPTIONAL MATCH (author)-[:AUTHORED]->(work:Work)
