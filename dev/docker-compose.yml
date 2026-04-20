@@ -261,7 +261,7 @@ services:
       - LDAP_BASE_DN=dc=example,dc=org
       # ... updated filenames to match test subset ...
       - AUTH_JSONL_FILE_PATH=/data/dtic_authors_50.jsonl.gz
-      - ORG_JSONL_FILE_PATH=/data/dtic_orgs_050.jsonl.gz
+      - ORG_JSONL_FILE_PATH=/data/dtic_orgs_50.jsonl.gz
     volumes:
     # ... changed source to point to test subset ...
       - ../tests/dtic_test_subset:/data
