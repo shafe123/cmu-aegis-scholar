@@ -108,12 +108,11 @@ def test_viz_network_logic(client, mock_neo4j_session):
 
 def test_upsert_work_success(client, mock_neo4j_session):
     """Test successful work upsert."""
-    # FIXED: Added 'name' and 'type' to match the WorkNode schema requirements
     work_data = {
         "id": "work_123",
         "title": "Machine Learning for Defense",
-        "name": "ML_Defense_2024",  # Added required field
-        "type": "journal-article",  # Added required field
+        "name": "ML_Defense_2024",
+        "type": "journal-article",
         "year": 2024,
         "citation_count": 42,
         "sources": [],
@@ -124,6 +123,21 @@ def test_upsert_work_success(client, mock_neo4j_session):
 
     assert response.status_code == 200
     assert response.json()["id"] == "work_123"
+
+
+def test_upsert_work_minimal_payload_success(client, mock_neo4j_session):
+    """Minimal DTIC work payloads should not fail validation."""
+    work_data = {
+        "id": "work_minimal",
+        "title": "Sparse DTIC Report",
+        "publication_date": "2024-01-01",
+        "citation_count": 0,
+        "sources": [],
+    }
+    response = client.post("/works", json=work_data)
+
+    assert response.status_code == 200
+    assert response.json()["id"] == "work_minimal"
 
 
 def test_upsert_org_success(client, mock_neo4j_session):

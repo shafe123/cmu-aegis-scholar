@@ -22,21 +22,32 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- 2. Database Driver Initialization ---
-driver = GraphDatabase.driver(
-    settings.neo4j_uri,
-    auth=(settings.neo4j_user, settings.neo4j_password or ""),
-)
+driver = None
+
+
+def get_driver():
+    """Create the Neo4j driver lazily so tests and imports stay clean."""
+    global driver
+    if driver is None:
+        driver = GraphDatabase.driver(
+            settings.neo4j_uri,
+            auth=(settings.neo4j_user, settings.neo4j_password or ""),
+        )
+    return driver
 
 
 # --- 3. Application Lifespan ---
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Handles clean startup and shutdown of resources."""
+    global driver
     logger.info("Graph API starting up...")
+    get_driver()
     yield
     logger.info("Graph API shutting down: Closing Neo4j Driver...")
-    if driver:
+    if driver is not None:
         driver.close()
+        driver = None
 
 
 # --- 4. Initialize FastAPI ---
@@ -60,7 +71,7 @@ async def root():
 async def health_check() -> dict[str, str]:
     """Verifies connectivity to Neo4j and logs failures for troubleshooting."""
     try:
-        with driver.session() as session:
+        with get_driver().session() as session:
             session.run("RETURN 1")
         return {"status": "healthy", "neo4j": "connected"}
     except Exception as e:  # pylint: disable=broad-exception-caught
@@ -73,7 +84,7 @@ async def health_check() -> dict[str, str]:
 async def get_stats():
     """Returns counts of nodes to help loaders determine if ingestion is needed."""
     try:
-        with driver.session() as session:
+        with get_driver().session() as session:
             result = session.run("MATCH (a:Author) RETURN count(a) as count")
             record = result.single()
             count = record["count"] if record else 0
@@ -94,7 +105,7 @@ async def upsert_topic(topic: TopicNode) -> dict[str, str]:
     SET t.name = $name, t.field = $field, t.domain = $domain
     RETURN t.id
     """
-    with driver.session() as session:
+    with get_driver().session() as session:
         session.run(query, **topic.model_dump())
     return {"status": "success", "id": topic.id}
 
@@ -107,7 +118,7 @@ async def upsert_author(author: AuthorNode):
     SET a.name = $name, a.h_index = $h_index, a.works_count = $works_count
     RETURN a.id
     """
-    with driver.session() as session:
+    with get_driver().session() as session:
         session.run(query, **author.model_dump())
     return {"status": "success", "id": author.id}
 
@@ -120,7 +131,7 @@ async def upsert_work(work: WorkNode):
     SET w.title = $title, w.year = $year, w.citation_count = $citation_count
     RETURN w.id
     """
-    with driver.session() as session:
+    with get_driver().session() as session:
         session.run(query, **work.model_dump())
     return {"status": "success", "id": work.id}
 
@@ -133,7 +144,7 @@ async def link_author_work(rel: AuthorWorkRel):
     MATCH (w:Work {id: $work_id})
     MERGE (a)-[:AUTHORED]->(w)
     """
-    with driver.session() as session:
+    with get_driver().session() as session:
         session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
@@ -146,7 +157,7 @@ async def upsert_org(org: OrgNode):
     SET o.name = $name, o.type = $type, o.country = $country
     RETURN o.id
     """
-    with driver.session() as session:
+    with get_driver().session() as session:
         session.run(query, **org.model_dump())
     return {"status": "success", "id": org.id}
 
@@ -159,7 +170,7 @@ async def link_author_org(rel: AuthorOrgRel):
     MATCH (o:Organization {id: $org_id})
     MERGE (a)-[:AFFILIATED_WITH {role: $role}]->(o)
     """
-    with driver.session() as session:
+    with get_driver().session() as session:
         session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
@@ -172,7 +183,7 @@ async def link_work_topic(rel: WorkTopicRel) -> dict[str, str]:
     MATCH (t:Topic {id: $topic_id})
     MERGE (w)-[:COVERS_TOPIC {score: $score}]->(t)
     """
-    with driver.session() as session:
+    with get_driver().session() as session:
         session.run(query, **rel.model_dump())
     return {"status": "linked"}
 
@@ -188,7 +199,7 @@ async def get_collaborators(author_id: str):
     WHERE a <> collab
     RETURN DISTINCT collab.name as name, collab.id as id
     """
-    with driver.session() as session:
+    with get_driver().session() as session:
         result = session.run(query, id=author_id)
         return [dict(record) for record in result]
 
@@ -206,7 +217,7 @@ async def get_author_network(author_id: str):
     LIMIT 100
     """
 
-    with driver.session() as session:
+    with get_driver().session() as session:
         result = session.run(query, node_id=author_id)
         nodes, edges, node_ids = [], [], set()
 

@@ -1,5 +1,6 @@
 import gzip
 import json
+import logging
 from unittest.mock import MagicMock, patch
 
 from app.loader import GraphDBClient, GraphLoader, main
@@ -58,8 +59,9 @@ class TestGraphLoader:
             loader = GraphLoader(client=api)
             assert loader.should_skip_loading() is False
 
-    def test_load_nodes_full_loop(self, tmp_data_dir):
-        """Covers Lines 81-93: The node ingestion loop and file processing."""
+    def test_load_nodes_full_loop(self, tmp_data_dir, caplog):
+        """Covers node ingestion and verifies progress logging is emitted."""
+        caplog.set_level(logging.INFO)
         path = tmp_data_dir / "dtic_authors_1.jsonl.gz"
         create_mock_gz(path, [{"id": "a1", "name": "Alice"}])
 
@@ -68,9 +70,11 @@ class TestGraphLoader:
         loader = GraphLoader(client=api, data_dir=tmp_data_dir)
         loader.load_nodes("authors")
         assert api.upsert_node.called
+        assert "Progress [authors]" in caplog.text
 
-    def test_load_works_and_rels_with_org(self, tmp_data_dir):
-        """Covers Line 113 and Line 123: blank lines and org_id branching."""
+    def test_load_works_and_rels_with_org(self, tmp_data_dir, caplog):
+        """Covers relationship creation and verifies progress logging is emitted."""
+        caplog.set_level(logging.INFO)
         data = [
             {
                 "id": "work_1",
@@ -87,6 +91,30 @@ class TestGraphLoader:
         # upsert_work + authored_rel + affiliated_rel + covers_rel = 4 calls
         assert api.upsert_node.called
         assert api.create_relationship.call_count == 3
+        assert "Progress [works]" in caplog.text
+
+    def test_load_works_normalizes_required_fields(self, tmp_data_dir):
+        """Ensures work payloads include graph-required fallback fields."""
+        data = [
+            {
+                "id": "work_2",
+                "title": "Edge Case Paper",
+                "publication_date": "2024-03-15",
+                "authors": [],
+                "topics": [],
+            }
+        ]
+        create_mock_gz(tmp_data_dir / "dtic_works_2.jsonl.gz", data)
+
+        api = MagicMock()
+        api.upsert_node.return_value = True
+        loader = GraphLoader(client=api, data_dir=tmp_data_dir)
+        loader.load_works_and_rels()
+
+        sent_work = api.upsert_node.call_args.args[1]
+        assert sent_work["name"] == "Edge Case Paper"
+        assert sent_work["type"] == "report"
+        assert sent_work["year"] == 2024
 
     def test_run_integration(self):
         """Covers orchestration without mocking inner methods."""

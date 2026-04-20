@@ -36,6 +36,9 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = ["--import-mode=importlib"]
+filterwarnings = [
+    "ignore:`general_plain_validator_function` is deprecated.*:DeprecationWarning",
+]
 
 [tool.coverage.run]
 source = ["app"]
