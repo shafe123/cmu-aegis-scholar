@@ -37,7 +37,8 @@ from scraper import (
     Organization, 
     StateManager, 
     RateLimiter,
-    load_config
+    load_config,
+    extract_grid_id_from_affiliation
 )
 
 
@@ -292,19 +293,34 @@ class AuthorScraper:
                             if not researcher_id:
                                 researcher_id = orcid_list[0]
                         
-                        # Extract affiliation names
+                        # Extract affiliation names and GRID IDs for this author
                         affil_list = []
+                        affil_details = []
+                        author_org_ids = []
+                        seen_author_org_ids = set()
                         for affil in author_data.get('affiliations', []):
                             if isinstance(affil, dict):
                                 affil_name = affil.get('name')
+                                grid_id = extract_grid_id_from_affiliation(affil)
+                                country = affil.get('country')
                                 if affil_name:
                                     affil_list.append(affil_name)
+                                    affil_details.append({
+                                        'name': affil_name,
+                                        'org_id': grid_id,
+                                        'country': country
+                                    })
+                                if grid_id and grid_id not in seen_author_org_ids:
+                                    author_org_ids.append(grid_id)
+                                    seen_author_org_ids.add(grid_id)
                         
                         if name:
                             authors.append(Author(
                                 name=name,
                                 researcher_id=researcher_id,
-                                affiliations=affil_list
+                                affiliations=affil_list,
+                                org_ids=author_org_ids,
+                                affiliation_details=affil_details
                             ))
             
             logger.debug(f"Extracted {len(authors)} authors from JS")
@@ -318,7 +334,7 @@ class AuthorScraper:
                     if isinstance(author_data, dict):
                         for affil in author_data.get('affiliations', []):
                             if isinstance(affil, dict):
-                                org_id = affil.get('id')  # grid.* ID
+                                org_id = extract_grid_id_from_affiliation(affil)
                                 org_name = affil.get('name')
                                 if org_name and org_id and org_id not in seen_orgs:
                                     organizations.append(Organization(
