@@ -205,15 +205,11 @@ services:
   frontend:
     build:
       context: ../frontend
-      # [PRODUCTION SWITCH 1]: Change 'development' to 'production'
-      target: development
-    # [PRODUCTION SWITCH 2]: Change "5173:5173" to "8080:80" to map Nginx's port
+      target: production
     ports:
-      - "5173:5173"
-    # [PRODUCTION SWITCH 3]: Delete or comment out these 3 lines for production so local files aren't mounted
+      - "443:443"
     volumes:
-      - ../frontend:/app
-      - /app/node_modules
+      - ../dev/certs:/etc/nginx/certs:ro
     depends_on:
       - aegis-scholar-api
     networks:

@@ -258,6 +258,10 @@ terraform.rc
 
 *_cache.json
 
+# Local TLS certificates used by Dockerized frontend HTTPS
+dev/certs/*
+!dev/certs/.gitkeep
+
 data/dtic/
 data/dtic/*
 

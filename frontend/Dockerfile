@@ -23,6 +23,9 @@ RUN apk update && apk upgrade --no-cache
 
 # Copy the built assets from the previous stage to nginx's serving directory
 COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+COPY nginx-https.conf /etc/nginx/templates/nginx-https.conf
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+EXPOSE 443
 # Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/docker-entrypoint.sh"]

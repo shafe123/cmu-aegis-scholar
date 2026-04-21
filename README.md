@@ -156,3 +156,31 @@ Then start whichever version you want:
 docker compose --env-file dev/.env.subset -f dev/docker-compose.yml up --build
 docker compose --env-file dev/.env.full -f dev/docker-compose.yml up --build
 ```
+
+## HTTPS for Frontend in Docker (Domain: aegisscholar.org)
+
+The frontend container is configured for HTTPS only. Host port `443` is mapped directly to container port `443`.
+
+The container requires these files:
+
+- `dev/certs/fullchain.pem`
+- `dev/certs/privkey.pem`
+
+These are mounted into Nginx at `/etc/nginx/certs`. If either file is missing, the frontend container exits with an error.
+
+1. Point DNS in GoDaddy:
+   - Add an `A` record for `aegisscholar.org` (and optionally `www`) to your server public IP.
+2. Obtain cert files on your host (for example with Certbot), then place/copy them into:
+   - `dev/certs/fullchain.pem`
+   - `dev/certs/privkey.pem`
+3. Start frontend:
+
+```sh
+docker compose --env-file dev/.env.subset -f dev/docker-compose.yml up --build frontend
+```
+
+4. Open:
+   - `https://aegisscholar.org`
+
+Notes:
+- Never commit private keys. The repository ignores `dev/certs/*` except `.gitkeep`.
