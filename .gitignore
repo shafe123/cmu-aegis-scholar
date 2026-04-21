@@ -284,3 +284,5 @@ secrets.yaml
 node_modules/
 
 charts/
+
+.initial_sync_done

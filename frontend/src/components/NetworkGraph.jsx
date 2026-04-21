@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { DataSet, Network } from "vis-network/standalone";
 import { Download, Loader2, AlertCircle } from "lucide-react";
 
-const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorName }) => {
+const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorName, activeFilters, onDataLoad }) => {
   const containerRef = useRef(null);
   const networkRef = useRef(null);
 
@@ -34,7 +34,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     URL.revokeObjectURL(url);
   };
 
-  const loadNetworkData = async (id) => {
+  const loadNetworkData = useCallback(async (id) => {
     setIsLoading(true);
     setNoData(false);
     try {
@@ -42,11 +42,14 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       if (!response.ok) throw new Error("Graph API error");
       const data = await response.json();
 
+      if (onDataLoad) onDataLoad(data);
+
       if (!data.edges || data.edges.length === 0) {
         setNoData(true);
       }
 
       if (data.nodes && data.nodes.length > 0) {
+        nodesRef.current.clear();
         nodesRef.current.update(
           data.nodes.map((n) => ({
             ...n,
@@ -65,6 +68,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       }
 
       if (data.edges && data.edges.length > 0) {
+        edgesRef.current.clear();
         edgesRef.current.update(
           data.edges.map((e) => ({
             ...e,
@@ -83,14 +87,21 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onDataLoad]);
 
+  // Main Initialization Effect
   useEffect(() => {
     const initGraph = async () => {
-      if (nodesRef.current && typeof nodesRef.current.clear === 'function') nodesRef.current.clear();
-      if (edgesRef.current && typeof edgesRef.current.clear === 'function') edgesRef.current.clear();
+      if (!nodesRef.current || !edgesRef.current) return;
 
-      if (nodesRef.current && typeof nodesRef.current.add === 'function') {
+      if (typeof nodesRef.current.clear === 'function') {
+        nodesRef.current.clear();
+      }
+      if (typeof edgesRef.current.clear === 'function') {
+        edgesRef.current.clear();
+      }
+
+      if (typeof nodesRef.current.add === 'function') {
         nodesRef.current.add({
           id: authorId,
           label: selectedAuthorName || "Selected Entity",
@@ -119,23 +130,55 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       };
 
       if (networkRef.current) networkRef.current.destroy();
-      networkRef.current = new Network(containerRef.current, { nodes: nodesRef.current, edges: edgesRef.current }, options);
+      networkRef.current = new Network(
+        containerRef.current,
+        { nodes: nodesRef.current, edges: edgesRef.current },
+        options
+      );
 
       networkRef.current.on("selectNode", (params) => {
         const nodeId = params.nodes[0];
-        const nodeData = nodesRef.current.get(nodeId);
-        if (onNodeSelect) onNodeSelect(nodeData);
+        if (nodesRef.current && typeof nodesRef.current.get === 'function') {
+          const nodeData = nodesRef.current.get(nodeId);
+          if (onNodeSelect) onNodeSelect(nodeData);
+        }
       });
 
       await loadNetworkData(authorId);
     };
 
     initGraph();
-  }, [authorId, selectedAuthorName, onNodeSelect]);
+  }, [authorId, selectedAuthorName, onNodeSelect, loadNetworkData]);
 
+  // Expand Trigger Effect
   useEffect(() => {
-    if (expandTrigger) loadNetworkData(expandTrigger);
-  }, [expandTrigger]);
+    if (expandTrigger) {
+      loadNetworkData(expandTrigger);
+    }
+  }, [expandTrigger, loadNetworkData]); // Added loadNetworkData here
+
+  // Dynamic Filtering Logic
+  useEffect(() => {
+    if (!nodesRef.current || !activeFilters) return;
+
+    const allNodes = nodesRef.current.get();
+    const update = allNodes.map(node => {
+      let hidden = false;
+      if (node.group === 'work') {
+        if (activeFilters.year !== 'all' && node.year !== activeFilters.year) hidden = true;
+      }
+      if (node.group === 'organization') {
+        if (activeFilters.organization !== 'all' && node.label !== activeFilters.organization) hidden = true;
+      }
+      if (node.id === authorId) hidden = false;
+      return { id: node.id, hidden: hidden };
+    });
+
+    nodesRef.current.update(update);
+    if (networkRef.current) {
+      networkRef.current.fit({ animation: { duration: 500 } });
+    }
+  }, [activeFilters, authorId]);
 
   return (
     <div style={{ position: "relative", height: "100%", minHeight: "600px", width: "100%" }}>

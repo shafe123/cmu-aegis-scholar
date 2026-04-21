@@ -65,6 +65,12 @@ export default function App() {
   const [minCitations, setMinCitations] = useState(0);
   const [sortBy, setSortBy] = useState("relevance");
 
+  const [activeGraphFilters, setActiveGraphFilters] = useState({
+    year: 'all',
+    organization: 'all'
+  });
+  const [rawGraphData, setRawGraphData] = useState({ nodes: [], edges: [] });
+
   // --- ADDED: Dynamic Page Title ---
   useEffect(() => {
     if (selectedAuthor) {
@@ -110,6 +116,10 @@ export default function App() {
     setSelectedAuthor(null);
     setInspectedNode(null);
     setModalView("profile");
+  };
+
+  const resetGraphFilters = () => {
+    setActiveGraphFilters({ year: 'all', organization: 'all' });
   };
 
   const processedResults = results
@@ -310,11 +320,16 @@ export default function App() {
             <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-[#161b22]">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-aegis-cyan/10 rounded-lg text-aegis-cyan">
-                  <ShieldCheck size={24} />
                 </div>
                 <div>
-                  <h2 className="text-white font-bold text-xl tracking-tight">
-                    Subject Profile // {selectedAuthor.id}
+                  <h2 className="text-white font-black text-xl tracking-tighter uppercase flex items-center gap-3">
+                    <ShieldCheck className="text-aegis-cyan" size={24} />
+                    <span>
+                      {selectedAuthor.name}
+                      <span className="block text-[10px] text-slate-500 font-mono mt-0.5 tracking-normal normal-case opacity-70">
+                        System ID: {selectedAuthor.id}
+                      </span>
+                    </span>
                   </h2>
                 </div>
               </div>
@@ -357,10 +372,44 @@ export default function App() {
               ) : (
                 <>
                   <div className="flex-1 relative">
+                    {/* --- ADDED: Filter UI Bar --- */}
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 bg-[#161b22]/90 backdrop-blur-md p-2 rounded-lg border border-slate-700 shadow-2xl">
+                      <select
+                        value={activeGraphFilters.year}
+                        onChange={(e) => setActiveGraphFilters(f => ({ ...f, year: e.target.value }))}
+                        className="bg-slate-800 text-xs text-white rounded border border-slate-600 px-2 py-1 outline-none focus:border-aegis-cyan"
+                      >
+                        <option value="all">All Years</option>
+                        {[...new Set(rawGraphData.nodes.filter(n => n.group === 'work').map(n => n.year))].sort().reverse().map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+
+                      <select
+                        value={activeGraphFilters.organization}
+                        onChange={(e) => setActiveGraphFilters(f => ({ ...f, organization: e.target.value }))}
+                        className="bg-slate-800 text-xs text-white rounded border border-slate-600 px-2 py-1 outline-none focus:border-aegis-cyan"
+                      >
+                        <option value="all">All Orgs</option>
+                        {[...new Set(rawGraphData.nodes.filter(n => n.group === 'organization').map(n => n.label))].sort().map(o => (
+                          <option key={o} value={o}>{o}</option>
+                        ))}
+                      </select>
+
+                      <button
+                        onClick={resetGraphFilters}
+                        className="text-[10px] uppercase font-bold text-slate-500 hover:text-white px-2"
+                      >
+                        Reset
+                      </button>
+                    </div>
                     <NetworkGraph
                       authorId={selectedAuthor.id}
                       selectedAuthorName={selectedAuthor.name}
                       onNodeSelect={setInspectedNode}
+                      // Added Props
+                      activeFilters={activeGraphFilters}
+                      onDataLoad={setRawGraphData}
                     />
                   </div>
 
@@ -426,6 +475,23 @@ export default function App() {
                               </details>
                             </div>
                           </>
+                        ) : inspectedNode.group === "organization" ? (
+                          /* --- NEW: Organization Specific View --- */
+                          <div className="flex items-center gap-4 text-sm text-slate-300">
+                            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan">
+                              <Mail size={20} />
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                                Contact
+                              </p>
+                              <p className="font-mono text-white text-[13px]">
+                                {`contact@${inspectedNode.label
+                                  .toLowerCase()
+                                  .replace(/[^a-z0-9]/g, "")}.org`}
+                              </p>
+                            </div>
+                          </div>
                         ) : (
                           <>
                             <div className="flex items-center gap-4 text-sm text-slate-300">
