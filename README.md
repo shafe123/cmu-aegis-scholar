@@ -182,5 +182,10 @@ docker compose --env-file dev/.env.subset -f dev/docker-compose.yml up --build f
 4. Open:
    - `https://aegisscholar.org`
 
+Frontend API routing:
+- The browser calls `/api/...` on the same HTTPS origin.
+- Nginx proxies `/api` to `aegis-scholar-api:8000` inside Docker.
+- Do not use `localhost` in frontend API calls.
+
 Notes:
 - Never commit private keys. The repository ignores `dev/certs/*` except `.gitkeep`.

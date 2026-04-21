@@ -1,5 +1,5 @@
-// Main API URL
-const MAIN_API_URL = "http://localhost:8000";
+// Browser calls same-origin path; Nginx proxies /api to the backend service.
+const MAIN_API_URL = "/api";
 
 export const searchAuthors = async (query, activeTab = "Authors") => {
   if (activeTab !== "Authors" && activeTab !== "Year") {
