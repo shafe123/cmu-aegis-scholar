@@ -180,12 +180,16 @@ docker compose --env-file dev/.env.subset -f dev/docker-compose.yml up --build f
 ```
 
 4. Open:
-   - `https://aegisscholar.org`
+   - `https://aegisscholar.org` when `fullchain.pem` and `privkey.pem` are present
+   - `http://aegisscholar.org` when cert files are absent
 
 Frontend API routing:
-- The browser calls `/api/...` on the same HTTPS origin.
+- The browser calls `/api/...` on the same origin.
 - Nginx proxies `/api` to `aegis-scholar-api:8000` inside Docker.
 - Do not use `localhost` in frontend API calls.
 
 Notes:
+- Docker publishes both host ports `80` and `443` for the frontend container.
+- If TLS cert files exist, Nginx serves HTTPS on `443`.
+- If TLS cert files do not exist, Nginx falls back to HTTP on `80`.
 - Never commit private keys. The repository ignores `dev/certs/*` except `.gitkeep`.

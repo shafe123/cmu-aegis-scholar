@@ -207,6 +207,7 @@ services:
       context: ../frontend
       target: production
     ports:
+      - "80:80"
       - "443:443"
     volumes:
       - ../dev/certs:/etc/nginx/certs:ro

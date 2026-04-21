@@ -274,6 +274,7 @@ data/
 !tests/dtic_test_subset/*.jsonl
 !tests/dtic_test_subset/*.json
 !tests/dtic_test_subset/*.md
+tests/dtic_test_subset/.initial_sync_done
 
 # Secrets and Env
 *.txt
