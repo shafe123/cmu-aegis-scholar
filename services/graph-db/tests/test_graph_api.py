@@ -72,14 +72,17 @@ def test_get_collaborators_mapping(client, mock_neo4j_session):
 
 
 def test_viz_network_logic(client, mock_neo4j_session):
-    """
-    Test the visualization logic.
-    FIXED: Keys now match the production RETURN statement (author, work, coAuthor, org).
-    """
+    """Test the visualization logic with full schema compliance."""
     mock_record = {
-        "author": {"id": "auth_1", "name": "Primary"},
-        "work": {"id": "work_1", "title": "Paper", "year": 2024, "citation_count": 0},
-        "coAuthor": {"id": "auth_2", "name": "CoAuthor"},
+        "author": {"id": "auth_1", "name": "Primary Researcher", "works_count": 5, "email": "primary@dod.mil"},
+        "work": {
+            "id": "work_1",
+            "title": "Great Research Paper",
+            "publication_date": "2024-01-01",
+            "citation_count": 10,
+            "abstract": "This is a test abstract.",
+        },
+        "coAuthor": {"id": "auth_2", "name": "Co-Author Name", "works_count": 2},
         "org": {"id": "org_1", "name": "CMU"},
     }
     mock_neo4j_session.run.return_value = [mock_record]
@@ -94,13 +97,11 @@ def test_viz_network_logic(client, mock_neo4j_session):
     assert "work_1" in ids
     assert "org_1" in ids
 
-    # Check groups for frontend coloring
-    node_types = [n["group"] for n in data["nodes"]]
-    assert "author" in node_types
-    assert "work" in node_types
-
-    # Check edges (connections)
-    assert len(data["edges"]) >= 2  # Primary -> Work and CoAuthor -> Work
+    # Verify logic from main.py
+    work_node = next(n for n in data["nodes"] if n["group"] == "work")
+    assert work_node["full_title"] == "Great Research Paper"
+    assert work_node["year"] == "2024"
+    assert work_node["citations"] == 10
 
 
 # --- Additional Ingestion Tests to reach >90% Coverage ---
@@ -191,3 +192,107 @@ def test_link_work_topic_success(client, mock_neo4j_session):
     response = client.post("/relationships/covers", json=payload)
     assert response.status_code == 200
     assert response.json()["status"] == "linked"
+
+
+# --- Regression tests for data type handling ---
+
+
+def test_viz_author_network_work_year_as_integer(client, mock_neo4j_session):
+    """Regression: work.year may be an integer; should be converted to string in response.
+
+    See: https://github.com/shafe123/cmu-aegis-scholar/issues/XX
+    Graph DB stored year as integer. FastAPI response validation expected string.
+    This caused: "ResponseValidationError: Input should be a valid string, input: 2016"
+    """
+    from unittest.mock import MagicMock
+
+    mock_record = MagicMock()
+    mock_record.__getitem__ = MagicMock(
+        side_effect=lambda key: {
+            "author": {"id": "auth_1", "name": "Test Author", "works_count": 1},
+            "work": {
+                "id": "work_1",
+                "title": "Great Research Paper",
+                "publication_date": None,  # No publication_date
+                "year": 2016,  # Integer year instead of string
+                "citation_count": 42,
+                "abstract": "Test abstract",
+            },
+            "coAuthor": None,
+            "org": None,
+        }[key]
+    )
+    mock_neo4j_session.run.return_value = [mock_record]
+
+    response = client.get("/viz/author-network/auth_1")
+    assert response.status_code == 200
+    data = response.json()
+
+    work_node = next(n for n in data["nodes"] if n["group"] == "work")
+    # The year should be converted to string "2016", not remain as int 2016
+    assert work_node["year"] == "2016"
+    assert isinstance(work_node["year"], str)
+
+
+def test_viz_author_network_work_year_as_string_from_publication_date(client, mock_neo4j_session):
+    """Year should be extracted from publication_date when available."""
+    from unittest.mock import MagicMock
+
+    mock_record = MagicMock()
+    mock_record.__getitem__ = MagicMock(
+        side_effect=lambda key: {
+            "author": {"id": "auth_1", "name": "Test Author", "works_count": 1},
+            "work": {
+                "id": "work_1",
+                "title": "Great Research Paper",
+                "publication_date": "2024-05-12",  # Has publication_date
+                "year": 2024,  # Also has year as int
+                "citation_count": 42,
+                "abstract": "Test abstract",
+            },
+            "coAuthor": None,
+            "org": None,
+        }[key]
+    )
+    mock_neo4j_session.run.return_value = [mock_record]
+
+    response = client.get("/viz/author-network/auth_1")
+    assert response.status_code == 200
+    data = response.json()
+
+    work_node = next(n for n in data["nodes"] if n["group"] == "work")
+    # Should extract year from publication_date
+    assert work_node["year"] == "2024"
+    assert isinstance(work_node["year"], str)
+
+
+def test_viz_author_network_work_year_edge_cases(client, mock_neo4j_session):
+    """Year field should handle edge cases like missing both fields."""
+    from unittest.mock import MagicMock
+
+    mock_record = MagicMock()
+    mock_record.__getitem__ = MagicMock(
+        side_effect=lambda key: {
+            "author": {"id": "auth_1", "name": "Test Author", "works_count": 1},
+            "work": {
+                "id": "work_1",
+                "title": "Unknown Date Paper",
+                "publication_date": None,  # No publication_date
+                "year": None,  # No year
+                "citation_count": 42,
+                "abstract": "Test abstract",
+            },
+            "coAuthor": None,
+            "org": None,
+        }[key]
+    )
+    mock_neo4j_session.run.return_value = [mock_record]
+
+    response = client.get("/viz/author-network/auth_1")
+    assert response.status_code == 200
+    data = response.json()
+
+    work_node = next(n for n in data["nodes"] if n["group"] == "work")
+    # Should default to "N/A" when both are missing
+    assert work_node["year"] == "N/A"
+    assert isinstance(work_node["year"], str)

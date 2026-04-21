@@ -87,7 +87,7 @@ async def test_lifespan_shutdown_closes_driver():
     mock_app = MagicMock()
 
     # We patch the global driver in the main module
-    with patch("app.main.driver") as mock_driver:
+    with patch("app.main.DRIVER") as mock_driver:
         # lifespan is an async generator, so we use 'async with'
         async with lifespan(mock_app):
             pass

@@ -4,19 +4,23 @@ This service provides a RESTful interface to the **Neo4j** graph database. It ma
 
 ## Key Functions
 
-- **Ingestion**: Idempotent endpoints using `MERGE` logic to prevent duplicate data.
+- **Ingestion**: Idempotent endpoints using `MERGE` logic to prevent duplicate data for Authors, Works, Organizations, and Topics.
 - **Network Analysis**: Multi-hop discovery of collaborators and institutional research clusters.
-- **Visualization**: Specialized `/viz` endpoints returning JSON formatted for `vis-network`.
+- **Visualization**: Specialized `/viz` endpoints returning JSON formatted with metadata (years, citations) for `vis-network` interactive filtering.
 - **Security**: IL4-compliant credential handling via memory-mounted Docker Secrets.
 
 ## Endpoints
 
 - `GET /`: Service metadata and status.
-- `GET /health`: Connectivity check for the Neo4j backend.
-- `GET /stats`: Current node counts (used by data loaders).
+- `GET /health`: Connectivity check for the Neo4j backend with error logging.
+- `GET /stats`: Current node counts (used by data loaders to prevent redundant ingestion).
 - `POST /authors`: Upsert an author node with metrics (h-index, works count).
-- `POST /works`: Upsert a research work node.
+- `POST /orgs`: Upsert an organization node (type, country).
+- `POST /topics`: Upsert a research topic node (field, domain).
+- `POST /works`: Upsert a research work node (title, year, citations).
 - `POST /relationships/authored`: Link an author to a work.
+- `POST /relationships/affiliated`: Link an author to an organization.
+- `POST /relationships/covers`: Link a work to a topic.
 - `GET /authors/{id}/collaborators`: Retrieve professional research networks.
 - `GET /viz/author-network/{id}`: Graph data formatted for frontend visualization.
 

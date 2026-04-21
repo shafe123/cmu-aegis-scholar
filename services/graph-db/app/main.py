@@ -2,6 +2,7 @@
 
 import logging
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from neo4j import GraphDatabase
@@ -11,8 +12,12 @@ from app.schemas import (
     AuthorNode,
     AuthorOrgRel,
     AuthorWorkRel,
+    CollaboratorResponse,
     OrgNode,
+    StatsResponse,
+    StatusResponse,
     TopicNode,
+    VizResponse,
     WorkNode,
     WorkTopicRel,
 )
@@ -21,33 +26,37 @@ from app.schemas import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- 2. Database Driver Initialization ---
-driver = None
+# --- 2. Database Driver Initialization (upper case for Pylint constants) ---
+DRIVER: Any = None
 
 
 def get_driver():
     """Create the Neo4j driver lazily so tests and imports stay clean."""
-    global driver
-    if driver is None:
-        driver = GraphDatabase.driver(
+    # pylint: disable=global-statement
+
+    global DRIVER
+    if DRIVER is None:
+        DRIVER = GraphDatabase.driver(
             settings.neo4j_uri,
             auth=(settings.neo4j_user, settings.neo4j_password or ""),
         )
-    return driver
+    return DRIVER
 
 
 # --- 3. Application Lifespan ---
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Handles clean startup and shutdown of resources."""
-    global driver
+    # pylint: disable=global-statement
+
+    global DRIVER
     logger.info("Graph API starting up...")
     get_driver()
     yield
     logger.info("Graph API shutting down: Closing Neo4j Driver...")
-    if driver is not None:
-        driver.close()
-        driver = None
+    if DRIVER is not None:
+        DRIVER.close()
+        DRIVER = None
 
 
 # --- 4. Initialize FastAPI ---
@@ -62,7 +71,7 @@ app = FastAPI(
 
 
 @app.get("/", tags=["System"])
-async def root():
+async def root() -> dict[str, str]:
     """Root endpoint providing service information."""
     return {"title": settings.api_title, "version": settings.api_version, "status": "online"}
 
@@ -80,8 +89,8 @@ async def health_check() -> dict[str, str]:
         return {"status": "unhealthy", "error": str(e)}
 
 
-@app.get("/stats", tags=["System"])
-async def get_stats():
+@app.get("/stats", tags=["System"], response_model=StatsResponse)
+async def get_stats() -> dict[str, Any]:
     """Returns counts of nodes to help loaders determine if ingestion is needed."""
     try:
         with get_driver().session() as session:
@@ -97,7 +106,7 @@ async def get_stats():
 # --- 6. Ingestion Endpoints ---
 
 
-@app.post("/topics", tags=["Ingestion"])
+@app.post("/topics", tags=["Ingestion"], response_model=StatusResponse)
 async def upsert_topic(topic: TopicNode) -> dict[str, str]:
     """Upserts a Topic node into the graph."""
     query = """
@@ -110,8 +119,8 @@ async def upsert_topic(topic: TopicNode) -> dict[str, str]:
     return {"status": "success", "id": topic.id}
 
 
-@app.post("/authors", tags=["Ingestion"])
-async def upsert_author(author: AuthorNode):
+@app.post("/authors", tags=["Ingestion"], response_model=StatusResponse)
+async def upsert_author(author: AuthorNode) -> dict[str, str]:
     """Upserts an Author node into the graph."""
     query = """
     MERGE (a:Author {id: $id})
@@ -123,8 +132,8 @@ async def upsert_author(author: AuthorNode):
     return {"status": "success", "id": author.id}
 
 
-@app.post("/works", tags=["Ingestion"])
-async def upsert_work(work: WorkNode):
+@app.post("/works", tags=["Ingestion"], response_model=StatusResponse)
+async def upsert_work(work: WorkNode) -> dict[str, str]:
     """Upserts a Work node into the graph."""
     query = """
     MERGE (w:Work {id: $id})
@@ -137,7 +146,7 @@ async def upsert_work(work: WorkNode):
 
 
 @app.post("/relationships/authored", tags=["Relationships"])
-async def link_author_work(rel: AuthorWorkRel):
+async def link_author_work(rel: AuthorWorkRel) -> dict[str, str]:
     """Creates an AUTHORED relationship between an Author and a Work."""
     query = """
     MATCH (a:Author {id: $author_id})
@@ -149,8 +158,8 @@ async def link_author_work(rel: AuthorWorkRel):
     return {"status": "linked"}
 
 
-@app.post("/orgs", tags=["Ingestion"])
-async def upsert_org(org: OrgNode):
+@app.post("/orgs", tags=["Ingestion"], response_model=StatusResponse)
+async def upsert_org(org: OrgNode) -> dict[str, str]:
     """Upserts an Organization node into the graph."""
     query = """
     MERGE (o:Organization {id: $id})
@@ -163,7 +172,7 @@ async def upsert_org(org: OrgNode):
 
 
 @app.post("/relationships/affiliated", tags=["Relationships"])
-async def link_author_org(rel: AuthorOrgRel):
+async def link_author_org(rel: AuthorOrgRel) -> dict[str, str]:
     """Links an Author to an Organization (Affiliation)."""
     query = """
     MATCH (a:Author {id: $author_id})
@@ -191,8 +200,8 @@ async def link_work_topic(rel: WorkTopicRel) -> dict[str, str]:
 # --- 7. Search & Analysis Endpoints ---
 
 
-@app.get("/authors/{author_id}/collaborators", tags=["Analysis"])
-async def get_collaborators(author_id: str):
+@app.get("/authors/{author_id}/collaborators", tags=["Analysis"], response_model=list[CollaboratorResponse])
+async def get_collaborators(author_id: str) -> list[dict]:
     """Finds researchers who have shared works with the given author."""
     query = """
     MATCH (a:Author {id: $id})-[:AUTHORED]->(w:Work)<-[:AUTHORED]-(collab:Author)
@@ -205,9 +214,11 @@ async def get_collaborators(author_id: str):
 
 
 # --- Adds the Organization to visualization workflow ---
-@app.get("/viz/author-network/{author_id}", tags=["Visualization"])
-async def get_author_network(author_id: str):
+@app.get("/viz/author-network/{author_id}", tags=["Visualization"], response_model=VizResponse)
+async def get_author_network(author_id: str) -> dict:
     """Returns a JSON structure (nodes/edges) for frontend graph visualization."""
+    # pylint: disable=too-many-locals
+
     query = """
     MATCH (author:Author {id: $node_id})
     OPTIONAL MATCH (author)-[:AUTHORED]->(work:Work)
@@ -261,7 +272,9 @@ async def get_author_network(author_id: str):
                         "full_title": full_title,
                         "group": "work",
                         "color": "#4ecdc4",
-                        "year": formatted_year if formatted_year != "N/A" else (work.get("year") or "N/A"),
+                        "year": formatted_year
+                        if formatted_year != "N/A"
+                        else (str(work.get("year")) if work.get("year") else "N/A"),
                         "citations": work.get("citation_count", 0),
                         "abstract": work.get("abstract"),
                     }

@@ -113,14 +113,14 @@ def _distance_to_relevance(distance: float) -> float:
 DEFAULT_RECENCY_DECADES = 2.0  # Midpoint of the [0,4] range; used when recency data is unavailable.
 
 
-def _calculate_decades_since_most_recent_work(most_recent_work_year: int | None) -> float:
+def _calculate_decades_since_most_recent_work(most_recent_work_year: str | int | None) -> float:
     """Return decades in the past from today, capped to WolframAlpha's t-range [0,4]."""
     if most_recent_work_year is None:
         # Use midpoint (DEFAULT_RECENCY_DECADES) of the [0,4] range when recency data is unavailable
         # to avoid either penalizing or favoring missing-recency authors.
         return DEFAULT_RECENCY_DECADES
 
-    years_since = max(0, date.today().year - most_recent_work_year)
+    years_since = max(0, date.today().year - int(most_recent_work_year))
     return min(years_since / 10.0, 4.0)
 
 
@@ -156,7 +156,7 @@ async def _map_vector_results(vector_results: list) -> list[AuthorSearchResult]:
     for res in vector_results:
         try:
             distance = res.get("distance", 1.0)
-            citation_count = res.get("citation_count", 0) or 0
+            citation_count = int(res.get("citation_count", 0) or 0)
             vector_score = _distance_to_relevance(distance)
             author_id = res["author_id"]
             most_recent_work_year = await graph_client.get_most_recent_work_year(author_id)
