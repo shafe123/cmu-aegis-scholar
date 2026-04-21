@@ -42,7 +42,6 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       if (!response.ok) throw new Error("Graph API error");
       const data = await response.json();
 
-      // Send raw data back to App.jsx for the filter dropdowns
       if (onDataLoad) onDataLoad(data);
 
       if (!data.edges || data.edges.length === 0) {
@@ -50,7 +49,6 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       }
 
       if (data.nodes && data.nodes.length > 0) {
-        // Clear previous nodes to avoid ghost data when switching authors
         nodesRef.current.clear();
         nodesRef.current.update(
           data.nodes.map((n) => ({
@@ -91,27 +89,26 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     }
   }, [onDataLoad]);
 
+  // Main Initialization Effect
   useEffect(() => {
     const initGraph = async () => {
-      if (nodesRef.current && typeof nodesRef.current.clear === 'function') nodesRef.current.clear();
-      if (edgesRef.current && typeof edgesRef.current.clear === 'function') edgesRef.current.clear();
+      nodesRef.current.clear();
+      edgesRef.current.clear();
 
-      if (nodesRef.current && typeof nodesRef.current.add === 'function') {
-        nodesRef.current.add({
-          id: authorId,
-          label: selectedAuthorName || "Selected Entity",
-          group: "author",
-          shape: "dot",
-          size: 25,
-          font: { color: "#ffffff", size: 14, face: "Inter, sans-serif", bold: true },
-          borderWidth: 3,
-          color: {
-            border: "#4ecdc4",
-            background: "#0d1117",
-            highlight: { background: "#ffffff", border: "#4ecdc4" },
-          },
-        });
-      }
+      nodesRef.current.add({
+        id: authorId,
+        label: selectedAuthorName || "Selected Entity",
+        group: "author",
+        shape: "dot",
+        size: 25,
+        font: { color: "#ffffff", size: 14, face: "Inter, sans-serif", bold: true },
+        borderWidth: 3,
+        color: {
+          border: "#4ecdc4",
+          background: "#0d1117",
+          highlight: { background: "#ffffff", border: "#4ecdc4" },
+        },
+      });
 
       const options = {
         nodes: { widthConstraint: { maximum: 200 } },
@@ -137,55 +134,37 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     };
 
     initGraph();
-  }, [authorId, selectedAuthorName, onNodeSelect]);
+  }, [authorId, selectedAuthorName, onNodeSelect, loadNetworkData]); // Added loadNetworkData here
 
+  // Expand Trigger Effect
   useEffect(() => {
-    if (expandTrigger) loadNetworkData(expandTrigger);
-  }, [expandTrigger]);
+    if (expandTrigger) {
+      loadNetworkData(expandTrigger);
+    }
+  }, [expandTrigger, loadNetworkData]); // Added loadNetworkData here
 
-  // --- ADDED: Dynamic Filtering Logic ---
+  // Dynamic Filtering Logic
   useEffect(() => {
     if (!nodesRef.current || !activeFilters) return;
 
     const allNodes = nodesRef.current.get();
-
     const update = allNodes.map(node => {
       let hidden = false;
-
-      // Filter logic: Only hide Work or Organization nodes
       if (node.group === 'work') {
         if (activeFilters.year !== 'all' && node.year !== activeFilters.year) hidden = true;
       }
-
       if (node.group === 'organization') {
         if (activeFilters.organization !== 'all' && node.label !== activeFilters.organization) hidden = true;
       }
-
-      // Always show the central author
       if (node.id === authorId) hidden = false;
-
       return { id: node.id, hidden: hidden };
     });
 
     nodesRef.current.update(update);
-
-    // Adjust view after filtering
     if (networkRef.current) {
       networkRef.current.fit({ animation: { duration: 500 } });
     }
   }, [activeFilters, authorId]);
-
-  useEffect(() => {
-    if (authorId) {
-      loadNetworkData(authorId);
-    }
-  }, [authorId, loadNetworkData]);
-
-  useEffect(() => {
-    if (authorId && expandTrigger > 0) {
-      loadNetworkData(authorId);
-    }
-  }, [authorId, expandTrigger, loadNetworkData]);
 
   return (
     <div style={{ position: "relative", height: "100%", minHeight: "600px", width: "100%" }}>
