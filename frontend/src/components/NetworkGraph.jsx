@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { DataSet, Network } from "vis-network/standalone";
 import { Download, Loader2, AlertCircle } from "lucide-react";
 
@@ -34,20 +34,24 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     URL.revokeObjectURL(url);
   };
 
-  const loadNetworkData = async (id) => {
+  const loadNetworkData = useCallback(async (id) => {
     setIsLoading(true);
     setNoData(false);
     try {
       const response = await fetch(`http://localhost:8000/viz/author-network/${id}`);
       if (!response.ok) throw new Error("Graph API error");
       const data = await response.json();
-      if (onDataLoad) onDataLoad(data); // Send raw data back to App.jsx for the dropdowns
+
+      // Send raw data back to App.jsx for the filter dropdowns
+      if (onDataLoad) onDataLoad(data);
 
       if (!data.edges || data.edges.length === 0) {
         setNoData(true);
       }
 
       if (data.nodes && data.nodes.length > 0) {
+        // Clear previous nodes to avoid ghost data when switching authors
+        nodesRef.current.clear();
         nodesRef.current.update(
           data.nodes.map((n) => ({
             ...n,
@@ -66,6 +70,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       }
 
       if (data.edges && data.edges.length > 0) {
+        edgesRef.current.clear();
         edgesRef.current.update(
           data.edges.map((e) => ({
             ...e,
@@ -84,7 +89,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onDataLoad]);
 
   useEffect(() => {
     const initGraph = async () => {
@@ -169,6 +174,18 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       networkRef.current.fit({ animation: { duration: 500 } });
     }
   }, [activeFilters, authorId]);
+
+  useEffect(() => {
+    if (authorId) {
+      loadNetworkData(authorId);
+    }
+  }, [authorId, loadNetworkData]);
+
+  useEffect(() => {
+    if (authorId && expandTrigger > 0) {
+      loadNetworkData(authorId);
+    }
+  }, [authorId, expandTrigger, loadNetworkData]);
 
   return (
     <div style={{ position: "relative", height: "100%", minHeight: "600px", width: "100%" }}>
