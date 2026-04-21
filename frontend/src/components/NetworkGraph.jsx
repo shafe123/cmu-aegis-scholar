@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { DataSet, Network } from "vis-network/standalone";
 import { Download, Loader2, AlertCircle } from "lucide-react";
 
@@ -34,11 +35,14 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       const response = await fetch(`/api/viz/author-network/${id}`);
       if (!response.ok) throw new Error("Graph API error");
       const data = await response.json();
+
+      if (onDataLoad) onDataLoad(data);
       if (onDataLoad) onDataLoad(data);
 
       if (!data.edges || data.edges.length === 0) setNoData(true);
 
       if (data.nodes && data.nodes.length > 0) {
+        nodesRef.current.clear();
         nodesRef.current.clear();
         nodesRef.current.update(
           data.nodes.map((n) => {
@@ -63,6 +67,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       }
 
       if (data.edges && data.edges.length > 0) {
+        edgesRef.current.clear();
         edgesRef.current.clear();
         edgesRef.current.update(
           data.edges.map((e) => ({
@@ -89,6 +94,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     }
   }, [authorId, onDataLoad, onNodeSelect]);
 
+  // Main Initialization Effect
   useEffect(() => {
     const initGraph = async () => {
       if (!nodesRef.current || !edgesRef.current) return;
@@ -117,8 +123,10 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
 
       networkRef.current.on("selectNode", (params) => {
         const nodeId = params.nodes[0];
-        const nodeData = nodesRef.current.get(nodeId);
-        if (onNodeSelect) onNodeSelect(nodeData);
+        if (nodesRef.current && typeof nodesRef.current.get === 'function') {
+          const nodeData = nodesRef.current.get(nodeId);
+          if (onNodeSelect) onNodeSelect(nodeData);
+        }
       });
 
       await loadNetworkData(authorId);
@@ -126,6 +134,14 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     initGraph();
   }, [authorId, selectedAuthorName, onNodeSelect, loadNetworkData]);
 
+  // Expand Trigger Effect
+  useEffect(() => {
+    if (expandTrigger) {
+      loadNetworkData(expandTrigger);
+    }
+  }, [expandTrigger, loadNetworkData]); // Added loadNetworkData here
+
+  // Dynamic Filtering Logic
   useEffect(() => {
     if (expandTrigger) loadNetworkData(expandTrigger);
   }, [expandTrigger, loadNetworkData]);
