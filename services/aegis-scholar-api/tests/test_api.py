@@ -531,7 +531,7 @@ def test_graph_db_client_uses_configured_settings():
 
 async def test_map_vector_results_citation_count_as_string():
     """Regression: citation_count from vector DB may be a string; should be converted to int.
-    
+
     See: https://github.com/shafe123/cmu-aegis-scholar/issues/XX
     Vector DB returned citation_count as string instead of int, causing
     "unsupported operand type(s) for -: 'int' and 'str'" when calculating relevance.
@@ -578,16 +578,16 @@ async def test_map_vector_results_citation_count_edge_cases():
     from app.main import _map_vector_results
 
     test_cases = [
-        (0, 0),           # Zero int
-        ("0", 0),         # Zero string
+        (0, 0),  # Zero int
+        ("0", 0),  # Zero string
         (1000000, 1000000),  # Large int
         ("1000000", 1000000),  # Large string
     ]
-    
-    for input_val, expected in test_cases:
+
+    for i, (input_val, expected) in enumerate(test_cases):
         raw = [
             {
-                "author_id": f"author_{expected}",
+                "author_id": f"author_1a2b3c4d-1234-5678-abcd-123456789{i:03d}",
                 "author_name": f"Dr. Test {input_val}",
                 "num_abstracts": 1,
                 "citation_count": input_val,
@@ -644,7 +644,7 @@ def test_calculate_decades_since_most_recent_work_with_string():
 
 def test_calculate_decades_since_most_recent_work_with_none():
     """When year is None, should return default midpoint."""
-    from app.main import _calculate_decades_since_most_recent_work, DEFAULT_RECENCY_DECADES
-    
+    from app.main import DEFAULT_RECENCY_DECADES, _calculate_decades_since_most_recent_work
+
     decades = _calculate_decades_since_most_recent_work(None)
     assert decades == DEFAULT_RECENCY_DECADES

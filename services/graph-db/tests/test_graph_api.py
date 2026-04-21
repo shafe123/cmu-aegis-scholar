@@ -199,33 +199,35 @@ def test_link_work_topic_success(client, mock_neo4j_session):
 
 def test_viz_author_network_work_year_as_integer(client, mock_neo4j_session):
     """Regression: work.year may be an integer; should be converted to string in response.
-    
+
     See: https://github.com/shafe123/cmu-aegis-scholar/issues/XX
     Graph DB stored year as integer. FastAPI response validation expected string.
     This caused: "ResponseValidationError: Input should be a valid string, input: 2016"
     """
     from unittest.mock import MagicMock
-    
+
     mock_record = MagicMock()
-    mock_record.__getitem__ = MagicMock(side_effect=lambda key: {
-        "author": {"id": "auth_1", "name": "Test Author", "works_count": 1},
-        "work": {
-            "id": "work_1",
-            "title": "Great Research Paper",
-            "publication_date": None,  # No publication_date
-            "year": 2016,  # Integer year instead of string
-            "citation_count": 42,
-            "abstract": "Test abstract",
-        },
-        "coAuthor": None,
-        "org": None,
-    }[key])
+    mock_record.__getitem__ = MagicMock(
+        side_effect=lambda key: {
+            "author": {"id": "auth_1", "name": "Test Author", "works_count": 1},
+            "work": {
+                "id": "work_1",
+                "title": "Great Research Paper",
+                "publication_date": None,  # No publication_date
+                "year": 2016,  # Integer year instead of string
+                "citation_count": 42,
+                "abstract": "Test abstract",
+            },
+            "coAuthor": None,
+            "org": None,
+        }[key]
+    )
     mock_neo4j_session.run.return_value = [mock_record]
 
     response = client.get("/viz/author-network/auth_1")
     assert response.status_code == 200
     data = response.json()
-    
+
     work_node = next(n for n in data["nodes"] if n["group"] == "work")
     # The year should be converted to string "2016", not remain as int 2016
     assert work_node["year"] == "2016"
@@ -235,27 +237,29 @@ def test_viz_author_network_work_year_as_integer(client, mock_neo4j_session):
 def test_viz_author_network_work_year_as_string_from_publication_date(client, mock_neo4j_session):
     """Year should be extracted from publication_date when available."""
     from unittest.mock import MagicMock
-    
+
     mock_record = MagicMock()
-    mock_record.__getitem__ = MagicMock(side_effect=lambda key: {
-        "author": {"id": "auth_1", "name": "Test Author", "works_count": 1},
-        "work": {
-            "id": "work_1",
-            "title": "Great Research Paper",
-            "publication_date": "2024-05-12",  # Has publication_date
-            "year": 2024,  # Also has year as int
-            "citation_count": 42,
-            "abstract": "Test abstract",
-        },
-        "coAuthor": None,
-        "org": None,
-    }[key])
+    mock_record.__getitem__ = MagicMock(
+        side_effect=lambda key: {
+            "author": {"id": "auth_1", "name": "Test Author", "works_count": 1},
+            "work": {
+                "id": "work_1",
+                "title": "Great Research Paper",
+                "publication_date": "2024-05-12",  # Has publication_date
+                "year": 2024,  # Also has year as int
+                "citation_count": 42,
+                "abstract": "Test abstract",
+            },
+            "coAuthor": None,
+            "org": None,
+        }[key]
+    )
     mock_neo4j_session.run.return_value = [mock_record]
 
     response = client.get("/viz/author-network/auth_1")
     assert response.status_code == 200
     data = response.json()
-    
+
     work_node = next(n for n in data["nodes"] if n["group"] == "work")
     # Should extract year from publication_date
     assert work_node["year"] == "2024"
@@ -265,27 +269,29 @@ def test_viz_author_network_work_year_as_string_from_publication_date(client, mo
 def test_viz_author_network_work_year_edge_cases(client, mock_neo4j_session):
     """Year field should handle edge cases like missing both fields."""
     from unittest.mock import MagicMock
-    
+
     mock_record = MagicMock()
-    mock_record.__getitem__ = MagicMock(side_effect=lambda key: {
-        "author": {"id": "auth_1", "name": "Test Author", "works_count": 1},
-        "work": {
-            "id": "work_1",
-            "title": "Unknown Date Paper",
-            "publication_date": None,  # No publication_date
-            "year": None,  # No year
-            "citation_count": 42,
-            "abstract": "Test abstract",
-        },
-        "coAuthor": None,
-        "org": None,
-    }[key])
+    mock_record.__getitem__ = MagicMock(
+        side_effect=lambda key: {
+            "author": {"id": "auth_1", "name": "Test Author", "works_count": 1},
+            "work": {
+                "id": "work_1",
+                "title": "Unknown Date Paper",
+                "publication_date": None,  # No publication_date
+                "year": None,  # No year
+                "citation_count": 42,
+                "abstract": "Test abstract",
+            },
+            "coAuthor": None,
+            "org": None,
+        }[key]
+    )
     mock_neo4j_session.run.return_value = [mock_record]
 
     response = client.get("/viz/author-network/auth_1")
     assert response.status_code == 200
     data = response.json()
-    
+
     work_node = next(n for n in data["nodes"] if n["group"] == "work")
     # Should default to "N/A" when both are missing
     assert work_node["year"] == "N/A"
