@@ -272,7 +272,9 @@ async def get_author_network(author_id: str) -> dict:
                         "full_title": full_title,
                         "group": "work",
                         "color": "#4ecdc4",
-                        "year": formatted_year if formatted_year != "N/A" else (str(work.get("year")) if work.get("year") else "N/A"),
+                        "year": formatted_year
+                        if formatted_year != "N/A"
+                        else (str(work.get("year")) if work.get("year") else "N/A"),
                         "citations": work.get("citation_count", 0),
                         "abstract": work.get("abstract"),
                     }

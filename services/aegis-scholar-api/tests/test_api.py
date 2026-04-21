@@ -522,3 +522,129 @@ def test_graph_db_client_uses_configured_settings():
     assert client.url == settings.graph_db_url
     assert client.timeout.connect == settings.graph_db_timeout
     assert client.timeout.read == settings.graph_db_timeout
+
+
+# ---------------------------------------------------------------------------
+# Regression tests for data type handling
+# ---------------------------------------------------------------------------
+
+
+async def test_map_vector_results_citation_count_as_string():
+    """Regression: citation_count from vector DB may be a string; should be converted to int.
+    
+    See: https://github.com/shafe123/cmu-aegis-scholar/issues/XX
+    Vector DB returned citation_count as string instead of int, causing
+    "unsupported operand type(s) for -: 'int' and 'str'" when calculating relevance.
+    """
+    from app.main import _map_vector_results
+
+    raw = [
+        {
+            "author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab",
+            "author_name": "Dr. Test String Citations",
+            "num_abstracts": 10,
+            "citation_count": "500",  # String instead of int
+            "distance": 0.3,
+        }
+    ]
+    results = await _map_vector_results(raw)
+    assert len(results) == 1
+    assert results[0].citation_count == 500
+    assert isinstance(results[0].citation_count, int)
+    assert 0 < results[0].relevance_score <= 1.0
+
+
+async def test_map_vector_results_citation_count_as_int():
+    """citation_count as integer should also work correctly."""
+    from app.main import _map_vector_results
+
+    raw = [
+        {
+            "author_id": "author_1a2b3c4d-1234-5678-abcd-1234567890ab",
+            "author_name": "Dr. Test Int Citations",
+            "num_abstracts": 10,
+            "citation_count": 500,  # Integer (normal case)
+            "distance": 0.3,
+        }
+    ]
+    results = await _map_vector_results(raw)
+    assert len(results) == 1
+    assert results[0].citation_count == 500
+    assert isinstance(results[0].citation_count, int)
+
+
+async def test_map_vector_results_citation_count_edge_cases():
+    """citation_count conversion should handle edge cases like "0", None, etc."""
+    from app.main import _map_vector_results
+
+    test_cases = [
+        (0, 0),           # Zero int
+        ("0", 0),         # Zero string
+        (1000000, 1000000),  # Large int
+        ("1000000", 1000000),  # Large string
+    ]
+    
+    for input_val, expected in test_cases:
+        raw = [
+            {
+                "author_id": f"author_{expected}",
+                "author_name": f"Dr. Test {input_val}",
+                "num_abstracts": 1,
+                "citation_count": input_val,
+                "distance": 0.1,
+            }
+        ]
+        results = await _map_vector_results(raw)
+        assert len(results) == 1, f"Failed for input {input_val}"
+        assert results[0].citation_count == expected, f"Expected {expected}, got {results[0].citation_count}"
+
+
+def test_calculate_decades_since_most_recent_work_with_int():
+    """Most recent work year as integer should work correctly."""
+    from datetime import date
+    from unittest.mock import patch
+
+    from app.main import _calculate_decades_since_most_recent_work
+
+    # Mock date.today() to return a fixed date for deterministic testing
+    mock_today = date(2026, 1, 1)
+    with patch("app.main.date") as mock_date:
+        mock_date.today.return_value = mock_today
+        mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)
+
+        # Recent work (2024) - 0.2 decades ago
+        decades = _calculate_decades_since_most_recent_work(2024)
+        assert 0.1 < decades < 0.3, f"Expected ~0.2 decades, got {decades}"
+
+        # Older work (2000) - ~2.6 decades ago
+        decades = _calculate_decades_since_most_recent_work(2000)
+        assert 2.5 < decades < 2.7, f"Expected ~2.6 decades, got {decades}"
+
+
+def test_calculate_decades_since_most_recent_work_with_string():
+    """Regression: most recent work year as string should be converted to int."""
+    from datetime import date
+    from unittest.mock import patch
+
+    from app.main import _calculate_decades_since_most_recent_work
+
+    # Mock date.today() to return a fixed date for deterministic testing
+    mock_today = date(2026, 1, 1)
+    with patch("app.main.date") as mock_date:
+        mock_date.today.return_value = mock_today
+        mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)
+
+        # Test string year - should convert to int and calculate correctly
+        decades = _calculate_decades_since_most_recent_work("2024")
+        assert 0.1 < decades < 0.3, f"Expected ~0.2 decades from string '2024', got {decades}"
+
+        decades = _calculate_decades_since_most_recent_work("2000")
+        assert 2.5 < decades < 2.7, f"Expected ~2.6 decades from string '2000', got {decades}"
+
+
+def test_calculate_decades_since_most_recent_work_with_none():
+    """When year is None, should return default midpoint."""
+    from app.main import _calculate_decades_since_most_recent_work, DEFAULT_RECENCY_DECADES
+    
+    decades = _calculate_decades_since_most_recent_work(None)
+    assert decades == DEFAULT_RECENCY_DECADES

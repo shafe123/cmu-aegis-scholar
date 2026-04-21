@@ -1,6 +1,6 @@
 """Pydantic models for Graph DB API request and response validation."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Source(BaseModel):
@@ -118,16 +118,11 @@ class GraphNodeViz(BaseModel):
 class GraphEdgeViz(BaseModel):
     """Properties of an edge linking two nodes."""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     source: str = Field(..., alias="from", examples=["author_123"])
     to: str = Field(..., examples=["work_456"])
     label: str = Field(..., examples=["AUTHORED"])
-
-    class Config:
-        """Pydantic config to allow aliasing 'from' keyword."""
-
-        # pylint: disable=too-few-public-methods
-
-        populate_by_name = True
 
 
 class VizResponse(BaseModel):
