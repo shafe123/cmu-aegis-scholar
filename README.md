@@ -117,3 +117,42 @@ docker compose -f dev/docker-compose.yml up --build -d example-service
 ```
 
 This will build and start the example service defined in `dev/docker-compose.yml`.
+
+## Switching Dev Data Sets
+
+The dev Compose stack defaults to the small linked test subset in `tests/dtic_test_subset`. The simplest way to switch between that and the full compressed DTIC export is to keep two env files and pick one with `--env-file`.
+
+```sh
+cp dev/.env.example.subset dev/.env.subset
+cp dev/.env.example.full dev/.env.full
+```
+
+The checked-in templates are:
+
+```text
+dev/.env.example.subset
+dev/.env.example.full
+```
+
+Use `dev/.env.subset` for the small linked dataset:
+
+```dotenv
+DTIC_DATASET_DIR=../tests/dtic_test_subset
+IDENTITY_AUTH_JSONL_FILE=dtic_authors_50.jsonl.gz
+IDENTITY_ORG_JSONL_FILE=dtic_orgs_50.jsonl.gz
+```
+
+Use `dev/.env.full` for the full compressed dataset:
+
+```dotenv
+DTIC_DATASET_DIR=../data/dtic_compressed
+IDENTITY_AUTH_JSONL_FILE=dtic_authors_001.jsonl.gz
+IDENTITY_ORG_JSONL_FILE=dtic_orgs_001.jsonl.gz
+```
+
+Then start whichever version you want:
+
+```sh
+docker compose --env-file dev/.env.subset -f dev/docker-compose.yml up --build
+docker compose --env-file dev/.env.full -f dev/docker-compose.yml up --build
+```

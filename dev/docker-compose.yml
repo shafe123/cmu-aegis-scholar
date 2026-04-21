@@ -109,8 +109,7 @@ services:
       - MIN_ENTITIES_THRESHOLD=100
       - LOG_LEVEL=INFO
     volumes:
-    # ... changed source to point to test subset ...
-      - ../tests/dtic_test_subset:/data/dtic_compressed
+      - ${DTIC_DATASET_DIR:-../tests/dtic_test_subset}:/data/dtic_compressed
       - model-cache:/app/.cache
     depends_on:
       vector-db:
@@ -171,8 +170,7 @@ services:
       - SKIP_IF_LOADED=true
       - MIN_ENTITIES_THRESHOLD=100
     volumes:
-      # ... changed source to point to test subset ...
-      - ../tests/dtic_test_subset:/data/dtic_compressed
+      - ${DTIC_DATASET_DIR:-../tests/dtic_test_subset}:/data/dtic_compressed
     depends_on:
       graph-db:
         condition: service_healthy
@@ -259,12 +257,10 @@ services:
       - LDAP_ADMIN_DN=cn=admin,dc=example,dc=org
       - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD}
       - LDAP_BASE_DN=dc=example,dc=org
-      # ... updated filenames to match test subset ...
-      - AUTH_JSONL_FILE_PATH=/data/dtic_authors_50.jsonl.gz
-      - ORG_JSONL_FILE_PATH=/data/dtic_orgs_50.jsonl.gz
+      - AUTH_JSONL_FILE_PATH=/data/${IDENTITY_AUTH_JSONL_FILE:-dtic_authors_50.jsonl.gz}
+      - ORG_JSONL_FILE_PATH=/data/${IDENTITY_ORG_JSONL_FILE:-dtic_orgs_50.jsonl.gz}
     volumes:
-    # ... changed source to point to test subset ...
-      - ../tests/dtic_test_subset:/data
+      - ${DTIC_DATASET_DIR:-../tests/dtic_test_subset}:/data
     ports:
       - "8005:8000"
     depends_on:

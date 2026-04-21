@@ -275,6 +275,8 @@ data/
 *.txt
 *.env
 .env
+.env.*
+!.env.example.*
 secrets/
 secrets.yaml
 
