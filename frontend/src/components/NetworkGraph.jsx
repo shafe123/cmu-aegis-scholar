@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { DataSet, Network } from "vis-network/standalone";
 import { Download, Loader2, AlertCircle } from "lucide-react";
 
-const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorName }) => {
+const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorName, activeFilters, onDataLoad }) => {
   const containerRef = useRef(null);
   const networkRef = useRef(null);
 
@@ -41,6 +41,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       const response = await fetch(`http://localhost:8000/viz/author-network/${id}`);
       if (!response.ok) throw new Error("Graph API error");
       const data = await response.json();
+      if (onDataLoad) onDataLoad(data); // Send raw data back to App.jsx for the dropdowns
 
       if (!data.edges || data.edges.length === 0) {
         setNoData(true);
@@ -136,6 +137,38 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
   useEffect(() => {
     if (expandTrigger) loadNetworkData(expandTrigger);
   }, [expandTrigger]);
+
+  // --- ADDED: Dynamic Filtering Logic ---
+  useEffect(() => {
+    if (!nodesRef.current || !activeFilters) return;
+
+    const allNodes = nodesRef.current.get();
+
+    const update = allNodes.map(node => {
+      let hidden = false;
+
+      // Filter logic: Only hide Work or Organization nodes
+      if (node.group === 'work') {
+        if (activeFilters.year !== 'all' && node.year !== activeFilters.year) hidden = true;
+      }
+
+      if (node.group === 'organization') {
+        if (activeFilters.organization !== 'all' && node.label !== activeFilters.organization) hidden = true;
+      }
+
+      // Always show the central author
+      if (node.id === authorId) hidden = false;
+
+      return { id: node.id, hidden: hidden };
+    });
+
+    nodesRef.current.update(update);
+
+    // Adjust view after filtering
+    if (networkRef.current) {
+      networkRef.current.fit({ animation: { duration: 500 } });
+    }
+  }, [activeFilters, authorId]);
 
   return (
     <div style={{ position: "relative", height: "100%", minHeight: "600px", width: "100%" }}>
