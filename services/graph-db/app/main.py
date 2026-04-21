@@ -134,10 +134,14 @@ async def upsert_author(author: AuthorNode) -> dict[str, str]:
 
 @app.post("/works", tags=["Ingestion"], response_model=StatusResponse)
 async def upsert_work(work: WorkNode) -> dict[str, str]:
-    """Upserts a Work node into the graph."""
+    """Upserts a Work node into the graph, including the abstract."""
     query = """
     MERGE (w:Work {id: $id})
-    SET w.title = $title, w.year = $year, w.citation_count = $citation_count
+    SET w.title = $title, 
+        w.year = $year, 
+        w.citation_count = $citation_count,
+        w.abstract = $abstract,
+        w.publication_date = $publication_date
     RETURN w.id
     """
     with get_driver().session() as session:
@@ -224,7 +228,7 @@ async def get_author_network(author_id: str) -> dict:
     OPTIONAL MATCH (author)-[:AUTHORED]->(work:Work)
     OPTIONAL MATCH (work)<-[:AUTHORED]-(coAuthor:Author)
     OPTIONAL MATCH (author)-[:AFFILIATED_WITH]->(org:Organization)
-    RETURN author, work, coAuthor, org
+    RETURN author, work {.*} as work, coAuthor, org
     LIMIT 100
     """
 
