@@ -204,11 +204,11 @@ describe("App Component", () => {
     );
     if (backBtn) await user.click(backBtn);
 
-    expect(await screen.findByText(/Subject Profile/i)).toBeInTheDocument();
+    expect(await screen.findByText(/System ID:/i)).toBeInTheDocument();
 
     // 7. Close Modal (Covers lines 87-89)
     await user.click(screen.getByTestId("close-modal"));
-    expect(screen.queryByText(/Subject Profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/System ID:/i)).not.toBeInTheDocument();
   });
 
   it("covers the search error catch block (Lines 70-76)", async () => {

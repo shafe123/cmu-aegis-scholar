@@ -92,23 +92,31 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
   // Main Initialization Effect
   useEffect(() => {
     const initGraph = async () => {
-      nodesRef.current.clear();
-      edgesRef.current.clear();
+      if (!nodesRef.current || !edgesRef.current) return;
 
-      nodesRef.current.add({
-        id: authorId,
-        label: selectedAuthorName || "Selected Entity",
-        group: "author",
-        shape: "dot",
-        size: 25,
-        font: { color: "#ffffff", size: 14, face: "Inter, sans-serif", bold: true },
-        borderWidth: 3,
-        color: {
-          border: "#4ecdc4",
-          background: "#0d1117",
-          highlight: { background: "#ffffff", border: "#4ecdc4" },
-        },
-      });
+      if (typeof nodesRef.current.clear === 'function') {
+        nodesRef.current.clear();
+      }
+      if (typeof edgesRef.current.clear === 'function') {
+        edgesRef.current.clear();
+      }
+
+      if (typeof nodesRef.current.add === 'function') {
+        nodesRef.current.add({
+          id: authorId,
+          label: selectedAuthorName || "Selected Entity",
+          group: "author",
+          shape: "dot",
+          size: 25,
+          font: { color: "#ffffff", size: 14, face: "Inter, sans-serif", bold: true },
+          borderWidth: 3,
+          color: {
+            border: "#4ecdc4",
+            background: "#0d1117",
+            highlight: { background: "#ffffff", border: "#4ecdc4" },
+          },
+        });
+      }
 
       const options = {
         nodes: { widthConstraint: { maximum: 200 } },
@@ -122,19 +130,25 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       };
 
       if (networkRef.current) networkRef.current.destroy();
-      networkRef.current = new Network(containerRef.current, { nodes: nodesRef.current, edges: edgesRef.current }, options);
+      networkRef.current = new Network(
+        containerRef.current,
+        { nodes: nodesRef.current, edges: edgesRef.current },
+        options
+      );
 
       networkRef.current.on("selectNode", (params) => {
         const nodeId = params.nodes[0];
-        const nodeData = nodesRef.current.get(nodeId);
-        if (onNodeSelect) onNodeSelect(nodeData);
+        if (nodesRef.current && typeof nodesRef.current.get === 'function') {
+          const nodeData = nodesRef.current.get(nodeId);
+          if (onNodeSelect) onNodeSelect(nodeData);
+        }
       });
 
       await loadNetworkData(authorId);
     };
 
     initGraph();
-  }, [authorId, selectedAuthorName, onNodeSelect, loadNetworkData]); // Added loadNetworkData here
+  }, [authorId, selectedAuthorName, onNodeSelect, loadNetworkData]);
 
   // Expand Trigger Effect
   useEffect(() => {
