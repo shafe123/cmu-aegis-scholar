@@ -658,13 +658,14 @@ def test_calculate_decades_since_most_recent_work_with_none():
 @pytest.mark.asyncio
 async def test_get_most_recent_work_year_converts_strings_to_int():
     """Regression: get_most_recent_work_year should convert string years to int for numeric comparison.
-    
+
     Previously, the code extracted years as strings and passed them to max(),
     which resulted in lexicographic comparison instead of numeric comparison.
     For example, max(["1973", "2020", "1999"]) would incorrectly return "2020"
     as a string. This test ensures the method converts to integers first.
     """
     from unittest.mock import AsyncMock, MagicMock, patch
+
     from app.services.graph_db import GraphDBClient
 
     # Create a fresh instance for testing
@@ -701,6 +702,7 @@ async def test_get_most_recent_work_year_converts_strings_to_int():
 async def test_get_most_recent_work_year_with_missing_years():
     """get_most_recent_work_year should return None when no work years are available."""
     from unittest.mock import AsyncMock, MagicMock, patch
+
     from app.services.graph_db import GraphDBClient
 
     # Create a fresh instance for testing
