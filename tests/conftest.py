@@ -1,6 +1,6 @@
 """Integration test configuration and shared fixtures."""
+
 import pytest
-from unittest.mock import Mock, AsyncMock
 import httpx
 
 
