@@ -44,6 +44,7 @@ from app.schemas import (
     TopicSearchResponse,
     Work,
     WorkSearchResponse,
+    LookupResponse,
 )
 from app.services import vector_db
 from app.services.graph_db import graph_client
@@ -218,6 +219,7 @@ async def root():
             "search_orgs": "/search/orgs",
             "search_topics": "/search/topics",
             "search_works": "/search/works",
+            "identity_lookup": "/identity/lookup"
         },
     }
 
@@ -505,6 +507,47 @@ async def get_author_network_viz(author_id: str):
         logger.error("Error communicating with Graph DB for viz: %s", e)
         raise HTTPException(status_code=503, detail="Graph visualization service unavailable.") from e
 
+
+# ---------------------------------------------------------------------------
+# IDENTITY ENDPOINTS
+# ---------------------------------------------------------------------------
+
+@app.get("/identity/lookup", response_model=LookupResponse)
+async def lookup_identity(
+    name: str = Query(..., description="Name of the author/user to lookup in the directory")
+):
+    """
+    Proxy endpoint to fetch exact and fuzzy-matched identity records 
+    from the downstream Identity API.
+    """
+    logger.info("GET /identity/lookup  name=%r", name)
+    
+    identity_service_url = getattr(settings, "identity_api_url", "http://identity-api:8005")
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{identity_service_url}/lookup",
+                params={"name": name},
+                timeout=10.0
+            )
+            
+        response.raise_for_status()
+        return response.json()
+
+    except httpx.HTTPStatusError as e:
+        logger.error("Identity API returned error: %s %s", e.response.status_code, e.response.text)
+        raise HTTPException(
+            status_code=e.response.status_code, 
+            detail="Upstream identity service returned an error."
+        ) from e
+    except httpx.RequestError as e:
+        logger.error("Error communicating with Identity API: %s", e)
+        raise HTTPException(
+            status_code=503, 
+            detail="Identity service is currently unavailable."
+        ) from e
+    
 
 # ---------------------------------------------------------------------------
 # Entrypoint for local development
