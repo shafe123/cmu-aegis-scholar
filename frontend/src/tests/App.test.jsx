@@ -144,9 +144,6 @@ describe("App Component", () => {
     await user.type(screen.getByPlaceholderText(/search/i), "Test");
     await user.click(screen.getByRole("button", { name: /SEARCH/i }));
     await user.click(await screen.findByText("Test"));
-    await user.click(
-      screen.getByRole("button", { name: /Explore Connections/i }),
-    );
 
     // Click our new ghost work node
     await user.click(screen.getByText("Select Ghost Work"));
@@ -181,10 +178,6 @@ describe("App Component", () => {
     const authorLink = await screen.findByText("Dr. Jane Smith");
     await user.click(authorLink);
 
-    // 3. Switch to Graph View
-    await user.click(
-      screen.getByRole("button", { name: /Explore Connections/i }),
-    );
     expect(screen.getByTestId("mock-graph")).toBeInTheDocument();
 
     // 4. Test Inspector Fallbacks (Covers lines 215-217)
