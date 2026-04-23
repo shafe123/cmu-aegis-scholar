@@ -17,6 +17,7 @@ class GraphDBClient:
         self.timeout = httpx.Timeout(settings.graph_db_timeout)
 
     async def get_author_details(self, author_id: str):
+        """Fetch details for a given author ID from the Graph DB."""
         async with httpx.AsyncClient(base_url=self.url, timeout=self.timeout) as client:
             response = await client.get(f"/authors/{author_id}")
             response.raise_for_status()
@@ -51,8 +52,9 @@ class GraphDBClient:
             years = [
                 int(node["year"])
                 for node in data.get("nodes", [])
-                if node.get("group") == "work" and node.get("year") is not None
-                and str(node.get("year")).isdigit() # Safety check or that 500 ERROR
+                if node.get("group") == "work"
+                and node.get("year") is not None
+                and str(node.get("year")).isdigit()  # Safety check or that 500 ERROR
             ]
             return max(years) if years else None
         except (httpx.HTTPError, httpx.RequestError) as exc:

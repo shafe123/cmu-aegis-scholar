@@ -1,4 +1,5 @@
 """Pydantic models for API request and response validation."""
+# pylint: disable=too-few-public-methods
 
 from datetime import date, datetime
 from typing import Any, Literal

@@ -463,7 +463,7 @@ async def get_author_by_id(author_id: str):
 
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
-            raise HTTPException(status_code=404, detail="Author not found")
+            raise HTTPException(status_code=404, detail="Author not found") from e
         raise HTTPException(status_code=502, detail="Upstream Graph DB error") from e
     except (httpx.RequestError, httpx.HTTPError) as e:
         logger.error("Error communicating with Graph DB: %s", e)
@@ -499,7 +499,7 @@ async def get_author_network_viz(author_id: str):
         return await graph_client.get_viz_data(author_id)
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
-            raise HTTPException(status_code=404, detail="Visualization data not found")
+            raise HTTPException(status_code=404, detail="Visualization data not found") from e
         raise HTTPException(status_code=503, detail="Graph visualization service unavailable.") from e
     except (httpx.RequestError, httpx.HTTPError) as e:
         logger.error("Error communicating with Graph DB for viz: %s", e)
