@@ -32,8 +32,8 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     setIsLoading(true);
     setNoData(false);
     try {
-      const response = await fetch(`http://localhost:8000/viz/author-network/${id}`);
-      if (!response || !response.ok) throw new Error("Graph API error");
+      const response = await fetch(`/api/viz/author-network/${id}`);
+      if (!response.ok) throw new Error("Graph API error");
       const data = await response.json();
       if (onDataLoad) onDataLoad(data);
       if (onDataLoad) onDataLoad(data);
