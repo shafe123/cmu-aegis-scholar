@@ -36,7 +36,8 @@ testcontainers-neo4j = "^0.0.1rc1"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+pythonpath = ["../services/aegis-scholar-api"]
+testpaths = ["."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
