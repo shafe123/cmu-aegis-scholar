@@ -203,6 +203,21 @@ async def link_work_topic(rel: WorkTopicRel) -> dict[str, str]:
 
 # --- 7. Search & Analysis Endpoints ---
 
+# Main API calls http://graph-db:8003/authors/{author_id} - added missing route.
+@app.get("/authors/{author_id}", tags=["Analysis"])
+async def get_author_detail(author_id: str):
+    """Returns detailed profile for a specific author."""
+    query = """
+    MATCH (a:Author {id: $id})
+    OPTIONAL MATCH (a)-[:AFFILIATED_WITH]->(o:Organization)
+    RETURN a {.*}, collect(o { .id, .name }) as organizations
+    """
+    with get_driver().session() as session:
+        result = session.run(query, id=author_id)
+        record = result.single()
+        if not record:
+            raise HTTPException(status_code=404, detail="Author not found")
+        return record.data()
 
 @app.get("/authors/{author_id}/collaborators", tags=["Analysis"], response_model=list[CollaboratorResponse])
 async def get_collaborators(author_id: str) -> list[dict]:
@@ -267,7 +282,8 @@ async def get_author_network(author_id: str) -> dict:
 
                 # Extract year from publication_date (e.g., "2023-05-12" -> "2023")
                 raw_date = work.get("publication_date")
-                formatted_year = str(raw_date)[:4] if raw_date else "N/A"
+                # FIX: 500 ERROR: This ensures 'year' is either an int or None, never "N/A"
+                formatted_year = int(str(raw_date)[:4]) if raw_date else work.get("year")
 
                 nodes.append(
                     {
