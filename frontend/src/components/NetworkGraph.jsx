@@ -32,10 +32,9 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     setIsLoading(true);
     setNoData(false);
     try {
-      const response = await fetch(`/api/viz/author-network/${id}`);
-      if (!response.ok) throw new Error("Graph API error");
+      const response = await fetch(`http://localhost:8000/viz/author-network/${id}`);
+      if (!response || !response.ok) throw new Error("Graph API error");
       const data = await response.json();
-
       if (onDataLoad) onDataLoad(data);
       if (onDataLoad) onDataLoad(data);
 
@@ -94,7 +93,6 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     }
   }, [authorId, onDataLoad, onNodeSelect]);
 
-  // Main Initialization Effect
   useEffect(() => {
     const initGraph = async () => {
       if (!nodesRef.current || !edgesRef.current) return;
@@ -123,10 +121,8 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
 
       networkRef.current.on("selectNode", (params) => {
         const nodeId = params.nodes[0];
-        if (nodesRef.current && typeof nodesRef.current.get === 'function') {
-          const nodeData = nodesRef.current.get(nodeId);
-          if (onNodeSelect) onNodeSelect(nodeData);
-        }
+        const nodeData = nodesRef.current.get(nodeId);
+        if (onNodeSelect) onNodeSelect(nodeData);
       });
 
       await loadNetworkData(authorId);
@@ -134,14 +130,6 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     initGraph();
   }, [authorId, selectedAuthorName, onNodeSelect, loadNetworkData]);
 
-  // Expand Trigger Effect
-  useEffect(() => {
-    if (expandTrigger) {
-      loadNetworkData(expandTrigger);
-    }
-  }, [expandTrigger, loadNetworkData]); // Added loadNetworkData here
-
-  // Dynamic Filtering Logic
   useEffect(() => {
     if (expandTrigger) loadNetworkData(expandTrigger);
   }, [expandTrigger, loadNetworkData]);
