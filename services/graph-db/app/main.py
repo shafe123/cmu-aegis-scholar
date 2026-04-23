@@ -295,16 +295,18 @@ async def get_author_network(author_id: str) -> dict:
                 else:
                     formatted_year = "N/A"
 
-                nodes.append({
-                    "id": work["id"],
-                    "label": short_label,
-                    "full_title": full_title,
-                    "group": "work",
-                    "color": "#4ecdc4",
-                    "year": formatted_year, # Guaranteed to be a string now
-                    "citations": work.get("citation_count", 0),
-                    "abstract": work.get("abstract"),
-                })
+                nodes.append(
+                    {
+                        "id": work["id"],
+                        "label": short_label,
+                        "full_title": full_title,
+                        "group": "work",
+                        "color": "#4ecdc4",
+                        "year": formatted_year,  # Guaranteed to be a string now
+                        "citations": work.get("citation_count", 0),
+                        "abstract": work.get("abstract"),
+                    }
+                )
                 node_ids.add(work["id"])
                 edges.append({"from": author["id"], "to": work["id"], "label": "AUTHORED"})
 
