@@ -148,9 +148,9 @@ export default function App() {
         <main className="flex-1 flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
           <img src="/favicon.svg" alt="Aegis Logo" className="w-48 h-48 object-cover rounded-2xl mb-8 shadow-2xl border border-slate-800 transition-all duration-500 cursor-pointer hover:-translate-y-2 hover:scale-105 hover:shadow-aegis-cyan/20 hover:border-aegis-cyan/50" />
           <form onSubmit={handleSearch} className="w-full max-w-2xl relative">
-            <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search..." className="w-full bg-[#161b22] border-2 border-slate-800 rounded-full py-4 pl-14 pr-6 text-lg text-white focus:outline-none focus:border-aegis-cyan shadow-2xl" />
+            <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search researchers, papers, or expertise domains" className="w-full bg-[#161b22] border-2 border-slate-800 rounded-full py-4 pl-14 pr-6 text-lg text-white focus:outline-none focus:border-aegis-cyan shadow-2xl" />
             <Search className="absolute left-5 top-4.5 text-slate-500" size={24} />
-            <button type="submit" className="absolute right-2 top-2 bg-aegis-cyan text-[#0a0c10] font-black px-6 py-3 rounded-full hover:bg-white">SEARCH</button>
+            <button type="submit" aria-label="Explore Connections" className="absolute right-2 top-2 bg-aegis-cyan text-[#0a0c10] font-black px-6 py-3 rounded-full hover:bg-white">SEARCH</button>
           </form>
         </main>
       ) : (
@@ -162,7 +162,7 @@ export default function App() {
                 <h1 className="text-white font-bold text-lg uppercase group-hover:text-aegis-cyan">AEGIS Scholar</h1>
               </div>
               <form onSubmit={handleSearch} className="flex-1 max-w-xl mx-8 relative">
-                <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search..." className="w-full bg-[#161b22] border border-slate-700 rounded-full py-2 pl-10 pr-4 text-sm text-white focus:outline-none" />
+                <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search researchers, papers, or expertise domains" className="w-full bg-[#161b22] border border-slate-700 rounded-full py-2 pl-10 pr-4 text-sm text-white focus:outline-none" />
                 <Search className="absolute left-3 top-2.5 text-slate-500" size={16} />
               </form>
             </div>
