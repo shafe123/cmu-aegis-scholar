@@ -44,7 +44,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
           data.nodes.map((n) => {
             const isAuthor = n.id === authorId || n.group === "author";
             const isWork = n.group === "work";
-            
+
             return {
               ...n,
               label: n.full_title || n.label,
@@ -108,6 +108,12 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
 
       if (networkRef.current) networkRef.current.destroy();
       networkRef.current = new Network(containerRef.current, { nodes: nodesRef.current, edges: edgesRef.current }, options);
+
+      networkRef.current.on("stabilizationIterationsDone", () => {
+        if (networkRef.current) {
+          networkRef.current.setOptions({ physics: { enabled: false } });
+        }
+      });
 
       networkRef.current.on("selectNode", (params) => {
         const nodeId = params.nodes[0];

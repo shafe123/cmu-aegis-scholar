@@ -90,7 +90,7 @@ export default function App() {
         specialization: "Identity Retrieval in Progress..."
       });
     }
-  }, []);
+  }, [selectedAuthor]);
 
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
@@ -291,24 +291,20 @@ export default function App() {
                     ) : inspectedNode.group === "organization" ? (
                       <>
                         <div className="flex items-center gap-4 text-sm text-slate-300">
-                          <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan">
+                          {/* 1. Added shrink-0 to prevent the icon from squishing */}
+                          <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan shrink-0">
                             <Mail size={20} />
                           </div>
-                          <div>
+                          {/* 2. Added min-w-0 and flex-1 to allow the container to contain the text */}
+                          <div className="min-w-0 flex-1">
                             <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Contact</p>
-                            <p className="font-mono text-white text-[13px]">
+                            {/* 3. Added break-all to force the long email to wrap */}
+                            <p className="font-mono text-white text-[13px] break-all">
                               {`contact@${(inspectedNode.label || "").toLowerCase().replace(/[^a-z0-9]/g, "")}.org`}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-slate-300 mt-4">
-                          <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-aegis-cyan">
-                            <Database size={20} />
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Total Works</p>
-                            <p className="font-mono text-white text-lg">{inspectedNode.works_count || 0}</p>
-                          </div>
                         </div>
                       </>
                     ) : (
