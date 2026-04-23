@@ -237,7 +237,7 @@ export default function App() {
                   <span className="block text-[10px] text-slate-500 font-mono mt-0.5 opacity-70">System ID: {selectedAuthor.id}</span>
                 </span>
               </h2>
-              <button onClick={closeModal} className="text-slate-500 hover:text-white bg-slate-800/50 p-2 rounded-full"><X size={20} /></button>
+              <button onClick={closeModal} data-testid="close-modal" className="text-slate-500 hover:text-white bg-slate-800/50 p-2 rounded-full"><X size={20} /></button>
             </div>
 
             <div className="flex-1 flex overflow-hidden">
