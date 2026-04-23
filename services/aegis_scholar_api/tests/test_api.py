@@ -648,3 +648,86 @@ def test_calculate_decades_since_most_recent_work_with_none():
 
     decades = _calculate_decades_since_most_recent_work(None)
     assert decades == DEFAULT_RECENCY_DECADES
+
+
+# ---------------------------------------------------------------------------
+# Regression tests for graph_db service
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_get_most_recent_work_year_converts_strings_to_int():
+    """Regression: get_most_recent_work_year should convert string years to int for numeric comparison.
+
+    Previously, the code extracted years as strings and passed them to max(),
+    which resulted in lexicographic comparison instead of numeric comparison.
+    For example, max(["1973", "2020", "1999"]) would incorrectly return "2020"
+    as a string. This test ensures the method converts to integers first.
+    """
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from app.services.graph_db import GraphDBClient
+
+    # Create a fresh instance for testing
+    client = GraphDBClient()
+
+    # Mock response from /viz/author-network with year values as strings
+    mock_response = {
+        "nodes": [
+            {"id": "work_1", "group": "work", "year": "1973"},
+            {"id": "work_2", "group": "work", "year": "2020"},
+            {"id": "work_3", "group": "work", "year": "1999"},
+            {"id": "author_1", "group": "author", "year": None},
+        ],
+        "edges": [],
+    }
+
+    # Create proper async mock for the response
+    mock_response_obj = MagicMock()
+    mock_response_obj.json.return_value = mock_response
+    mock_response_obj.raise_for_status.return_value = None
+
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response_obj
+    mock_client.__aenter__.return_value = mock_client
+    mock_client.__aexit__.return_value = None
+
+    # Patch AsyncClient in the graph_db module
+    with patch("app.services.graph_db.httpx.AsyncClient", return_value=mock_client):
+        result = await client.get_most_recent_work_year("author_test_id")
+        assert result == 2020, f"Expected 2020 but got {result}"
+
+
+@pytest.mark.asyncio
+async def test_get_most_recent_work_year_with_missing_years():
+    """get_most_recent_work_year should return None when no work years are available."""
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from app.services.graph_db import GraphDBClient
+
+    # Create a fresh instance for testing
+    client = GraphDBClient()
+
+    # Mock response with no work nodes that have years
+    mock_response = {
+        "nodes": [
+            {"id": "author_1", "group": "author", "year": None},
+            {"id": "org_1", "group": "organization", "year": None},
+        ],
+        "edges": [],
+    }
+
+    # Create proper async mock for the response
+    mock_response_obj = MagicMock()
+    mock_response_obj.json.return_value = mock_response
+    mock_response_obj.raise_for_status.return_value = None
+
+    mock_client = AsyncMock()
+    mock_client.get.return_value = mock_response_obj
+    mock_client.__aenter__.return_value = mock_client
+    mock_client.__aexit__.return_value = None
+
+    # Patch AsyncClient in the graph_db module
+    with patch("app.services.graph_db.httpx.AsyncClient", return_value=mock_client):
+        result = await client.get_most_recent_work_year("author_test_id")
+        assert result is None, f"Expected None but got {result}"

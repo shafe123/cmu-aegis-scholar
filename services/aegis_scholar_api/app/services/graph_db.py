@@ -43,7 +43,7 @@ class GraphDBClient:
                 response.raise_for_status()
                 data = response.json()
             years = [
-                node["year"]
+                int(node["year"])
                 for node in data.get("nodes", [])
                 if node.get("group") == "work" and node.get("year") is not None
             ]
