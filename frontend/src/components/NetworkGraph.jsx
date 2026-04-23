@@ -32,7 +32,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     setNoData(false);
     try {
       const response = await fetch(`http://localhost:8000/viz/author-network/${id}`);
-      if (!response.ok) throw new Error("Graph API error");
+      if (!response || !response.ok) throw new Error("Graph API error");
       const data = await response.json();
       if (onDataLoad) onDataLoad(data);
 
@@ -77,7 +77,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
 
       if (networkRef.current) {
         networkRef.current.fit({ animation: true });
-        networkRef.current.selectNodes([authorId]);
+        networkRef.current?.selectNodes?.([authorId]);
         const centralNode = nodesRef.current.get(authorId);
         if (onNodeSelect) onNodeSelect(centralNode);
       }
@@ -167,7 +167,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
           <Download size={14} /> Export JSON
         </button>
       </div>
-      <div ref={containerRef} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} className="bg-[#0a0c10] cursor-grab active:cursor-grabbing" />
+      <div ref={containerRef} data-testid="network-container" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} className="bg-[#0a0c10] cursor-grab active:cursor-grabbing" />
     </div>
   );
 };
