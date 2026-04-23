@@ -279,7 +279,7 @@ export default function App() {
                 <div className="w-80 bg-[#1a1d21] border-l border-slate-800 p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-white font-bold flex items-center gap-2"><Activity size={18} className="text-aegis-cyan" />Inspector</h3>
-                    <button onClick={() => setInspectedNode(null)} className="text-slate-500 hover:text-white p-1"><X size={16} /></button>
+                    <button onClick={() => setInspectedNode(null)} data-testid="close-inspector" className="text-slate-500 hover:text-white p-1"><X size={16} /></button>
                   </div>
 
                   <div className="space-y-6">
