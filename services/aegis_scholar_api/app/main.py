@@ -447,8 +447,12 @@ async def get_author_by_id(author_id: str):
     logger.info("GET /search/authors/%s", author_id)
 
     try:
-        # Replaces the hardcoded http://graph-db:8003
         graph_data = await graph_client.get_author_details(author_id)
+
+        # FIX: Check if the response is empty or missing the 'id'
+        if not graph_data or "id" not in graph_data:
+            logger.warning("Graph DB returned empty data for author: %s", author_id)
+            raise HTTPException(status_code=404, detail="Author not found")
 
         org_ids = [org["id"] for org in graph_data.get("organizations", [])]
 
@@ -462,6 +466,7 @@ async def get_author_by_id(author_id: str):
         }
 
     except httpx.HTTPStatusError as e:
+        # This only triggers if the service returns 4xx or 5xx
         if e.response.status_code == 404:
             raise HTTPException(status_code=404, detail="Author not found") from e
         raise HTTPException(status_code=502, detail="Upstream Graph DB error") from e
@@ -495,8 +500,13 @@ async def get_author_network_viz(author_id: str):
     """Proxy endpoint to fetch graph visualization data for an author."""
     logger.info("GET /viz/author-network/%s", author_id)
     try:
-        # Use graph_client: it respects settings and handles the async client lifecycle
-        return await graph_client.get_viz_data(author_id)
+        data = await graph_client.get_viz_data(author_id)
+
+        # FIX: If the graph is empty, return 404 instead of an empty 200
+        if not data or not data.get("nodes"):
+            raise HTTPException(status_code=404, detail="Visualization data not found")
+
+        return data
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
             raise HTTPException(status_code=404, detail="Visualization data not found") from e

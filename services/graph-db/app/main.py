@@ -205,19 +205,30 @@ async def link_work_topic(rel: WorkTopicRel) -> dict[str, str]:
 
 
 # Main API calls http://graph-db:8003/authors/{author_id} - added missing route.
+# In dev-graph-db/app/main.py
+
+
 @app.get("/authors/{author_id}", tags=["Analysis"])
 async def get_author_detail(author_id: str):
-    """Returns detailed profile for a specific author."""
+    """Retrieves author details."""
+    # Explicitly naming the fields ensures the driver maps them correctly to a dict
     query = """
     MATCH (a:Author {id: $id})
     OPTIONAL MATCH (a)-[:AFFILIATED_WITH]->(o:Organization)
-    RETURN a {.*}, collect(o { .id, .name }) as organizations
+    RETURN 
+        a.id as id, 
+        a.name as name, 
+        a.h_index as h_index, 
+        a.works_count as works_count,
+        collect(o { .id, .name }) as organizations
     """
     with get_driver().session() as session:
         result = session.run(query, id=author_id)
         record = result.single()
+
         if not record:
             raise HTTPException(status_code=404, detail="Author not found")
+
         return record.data()
 
 
@@ -340,5 +351,7 @@ async def get_author_network(author_id: str) -> dict:
                 )
                 node_ids.add(org["id"])
                 edges.append({"from": author["id"], "to": org["id"], "label": "AFFILIATED_WITH"})
+        if not nodes:
+            raise HTTPException(status_code=404, detail="Author not found for visualization")
 
         return {"nodes": nodes, "edges": edges}
