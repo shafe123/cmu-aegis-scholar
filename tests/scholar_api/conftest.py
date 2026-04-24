@@ -7,6 +7,7 @@ import os
 import gzip
 import json
 import sys
+import time
 from pathlib import Path
 import pytest
 from neo4j import GraphDatabase
@@ -62,6 +63,8 @@ def ensure_test_data(neo4j_driver):
     """
     Automatically loads the GZipped subset if the database is empty.
     """
+    time.sleep(5)
+
     # Use an ID you know exists in dtic_authors_50.jsonl.gz
     canary_id = "author_6671149b-381b-573b-bb3d-81d86a789471"
 
