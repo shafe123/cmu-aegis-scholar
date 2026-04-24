@@ -38,13 +38,13 @@ from app.schemas import (
     Author,
     AuthorSearchResponse,
     AuthorSearchResult,
+    LookupResponse,
     Organization,
     OrgSearchResponse,
     Topic,
     TopicSearchResponse,
     Work,
     WorkSearchResponse,
-    LookupResponse,
 )
 from app.services import vector_db
 from app.services.graph_db import graph_client
