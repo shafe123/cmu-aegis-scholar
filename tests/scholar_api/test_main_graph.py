@@ -1,5 +1,10 @@
+"""
+Configuration and fixtures for the Aegis Scholar API integration tests.
+"""
+
 import pytest
 from httpx import AsyncClient, ASGITransport
+
 
 @pytest.mark.asyncio
 async def test_author_details_integration(app_client):
@@ -9,7 +14,7 @@ async def test_author_details_integration(app_client):
     """
     # Using a known ID from the dtic_authors_50.jsonl.gz subset
     test_author_id = "author_6671149b-381b-573b-bb3d-81d86a789471"
-    
+
     transport = ASGITransport(app=app_client)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get(f"/search/authors/{test_author_id}")
@@ -17,7 +22,7 @@ async def test_author_details_integration(app_client):
     # Validation
     assert response.status_code == 200, f"Failed to fetch author: {response.text}"
     data = response.json()
-    
+
     # Check that the data returned matches our expected subset schema
     assert data["id"] == test_author_id
     assert "display_name" in data or "name" in data
@@ -28,11 +33,11 @@ async def test_author_details_integration(app_client):
 async def test_viz_endpoint_integration(app_client):
     """
     Validates the /viz endpoint (Network Explorer).
-    Tests the API's ability to traverse the graph and return a 
+    Tests the API's ability to traverse the graph and return a
     D3/NetworkGraph.jsx compatible structure (nodes and links).
     """
     test_author_id = "author_6671149b-381b-573b-bb3d-81d86a789471"
-    
+
     transport = ASGITransport(app=app_client)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         # Testing depth=1 ensures we get the author and their immediate works
@@ -52,8 +57,10 @@ async def test_viz_endpoint_integration(app_client):
     # If the subset is loaded, we expect at least the author node and work nodes
     nodes = data["nodes"]
     links = data[links_key]
-    
-    assert len(nodes) >= 2, "Graph should contain the root author and at least one connected Work"
+
+    assert len(nodes) >= 2, (
+        "Graph should contain the root author and at least one connected Work"
+    )
     assert len(links) >= 1, "Graph should contain at least one :AUTHORED relationship"
 
     # 4. Node Schema Check (Crucial for Inspector Sidebar)
@@ -61,8 +68,10 @@ async def test_viz_endpoint_integration(app_client):
     for node in nodes:
         assert "id" in node
         # The frontend uses 'type' or 'label' to toggle layout (Author vs Work)
-        assert any(k in node for k in ["type", "label", "group"]), "Node missing type identifier"
-        
+        assert any(k in node for k in ["type", "label", "group"]), (
+            "Node missing type identifier"
+        )
+
         if node.get("type") == "Work" or node.get("label") == "Work":
             # Ensure the inspector can actually show the abstract/title
             assert "title" in node
@@ -76,7 +85,7 @@ async def test_viz_expansion_logic(app_client):
     """
     # Using the ID we confirmed exists in your Neo4j instance
     test_author_id = "author_6671149b-381b-573b-bb3d-81d86a789471"
-    
+
     transport = ASGITransport(app=app_client)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         # Depth 1: Initial load
@@ -90,10 +99,6 @@ async def test_viz_expansion_logic(app_client):
         assert res_d2.status_code == 200, f"D2 failed: {res_d2.text}"
         d2_data = res_d2.json()
 
-        # Debugging and Assertions
-        print(f"DEBUG D1 Nodes: {len(d1_data.get('nodes', []))}")
-        print(f"DEBUG D2 Nodes: {len(d2_data.get('nodes', []))}") 
-
         assert "nodes" in d2_data, f"Expected 'nodes' in response, got: {d2_data}"
         # In a real expansion, D2 should be >= D1
         assert len(d2_data["nodes"]) >= len(d1_data["nodes"])
@@ -105,7 +110,7 @@ async def test_graph_error_handling(app_client):
     transport = ASGITransport(app=app_client)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/viz/author-network/this_is_not_a_real_id")
-    
+
     # This should stay 404 to pass!
     assert response.status_code == 404
     assert "detail" in response.json()
