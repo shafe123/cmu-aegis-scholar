@@ -173,4 +173,3 @@ class LookupResponse(BaseModel):
     exact_match: UserRecord | None = None
     similar_records: list[SimilarMatch] | None = None
     message: str
-
