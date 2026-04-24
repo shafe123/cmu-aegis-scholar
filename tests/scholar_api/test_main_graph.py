@@ -7,6 +7,7 @@ from httpx import AsyncClient, ASGITransport
 
 
 @pytest.mark.asyncio
+@pytest.mark.requires_docker
 async def test_author_details_integration(app_client):
     """
     Validates the interaction for the /authors/{author_id} endpoint.
@@ -30,6 +31,7 @@ async def test_author_details_integration(app_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.requires_docker
 async def test_viz_endpoint_integration(app_client):
     """
     Validates the /viz endpoint (Network Explorer).
@@ -78,6 +80,7 @@ async def test_viz_endpoint_integration(app_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.requires_docker
 async def test_viz_expansion_logic(app_client):
     """
     Simulates the "Expansion" flow mentioned in the Frontend summary.
