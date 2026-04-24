@@ -144,7 +144,8 @@ async def get_stats() -> dict[str, int]:
 
 
 @app.post("/sync-file", responses=SYNC_FILE_RESPONSES)
-async def trigger_sync(background_tasks: BackgroundTasks, force: bool = Query(False)) -> dict[str, str]:
+async def trigger_sync(background_tasks: BackgroundTasks,
+                       force: bool = Query(False)) -> dict[str, str]:
     """Queue a background synchronization job for the author source file."""
     background_tasks.add_task(process_and_sync_file, force=force)
     return {"message": "Sync started. Check docker logs for progress."}
@@ -162,7 +163,9 @@ def _build_ldap_attributes(name: str, org: str, email: str | None) -> dict[str, 
     return attrs
 
 
-def _sync_author_record(conn: Connection, author_data: dict[str, Any], org_names: list[str]) -> bool:
+def _sync_author_record(conn: Connection,
+                        author_data: dict[str, Any],
+                        org_names: list[str]) -> bool:
     """Create or skip a single LDAP author record and return whether it was added."""
     name = author_data.get("name", "")
     if not name:

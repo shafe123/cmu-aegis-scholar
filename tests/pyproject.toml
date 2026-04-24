@@ -16,6 +16,7 @@ pytest-mock = "^3.12"
 httpx = "^0.26.0"
 # For running services in tests
 testcontainers = "^3.7.0"
+pylint = "^4.0.5"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

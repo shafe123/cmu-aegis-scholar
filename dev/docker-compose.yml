@@ -179,7 +179,7 @@ services:
       - aegisnet
 
   aegis-scholar-api:
-    build: ../services/aegis-scholar-api
+    build: ../services/aegis_scholar_api
     ports:
       - 8000:8000
     environment:

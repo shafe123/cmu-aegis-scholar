@@ -23,7 +23,7 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - service: services/aegis-scholar-api
+                    - service: services/aegis_scholar_api
                       name: aegis-scholar-api
                     - service: services/graph-db
                       name: graph-db
@@ -81,7 +81,7 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - service: services/aegis-scholar-api
+                    - service: services/aegis_scholar_api
                       name: aegis-scholar-api
                     - service: services/graph-db
                       name: graph-db
@@ -145,7 +145,7 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - service: services/aegis-scholar-api
+                    - service: services/aegis_scholar_api
                       name: aegis-scholar-api
                     - service: services/graph-db
                       name: graph-db
@@ -251,7 +251,7 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - service: services/aegis-scholar-api
+                    - service: services/aegis_scholar_api
                       image: aegis-scholar-api
                     - service: services/graph-db
                       image: graph-db

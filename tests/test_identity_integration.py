@@ -1,3 +1,4 @@
+""" Integration test for aegis_scholar_api <-> identiy_api"""
 import os
 import time
 import socket
@@ -7,7 +8,7 @@ import httpx
 import sys
 from ldap3 import Server, Connection, ALL
 
-# Import testcontainers - reverting to wait_for_logs to avoid the import error
+# Import testcontainers 
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.waiting_utils import wait_for_logs
 
@@ -37,7 +38,7 @@ def ldap_container():
             .with_env("LDAP_ORGANIZATION", "Example") \
             .with_env("LDAP_DOMAIN", "example.org") \
             .with_env("LDAP_ADMIN_PASSWORD", "admin") as container:
-        
+
         wait_for_logs(container, "slapd starting", timeout=30)
         time.sleep(2)
         yield container
@@ -48,7 +49,7 @@ def seeded_ldap(ldap_container):
     host = ldap_container.get_container_host_ip()
     port = ldap_container.get_exposed_port(389)
     ldap_url = f"ldap://{host}:{port}"
-    
+
     ldap_user = "cn=admin,dc=example,dc=org"
     ldap_pass = "admin"
 
@@ -72,7 +73,7 @@ def seeded_ldap(ldap_container):
 def identity_server(seeded_ldap):
     """Runs the Identity FastAPI app in an ISOLATED background subprocess with logging."""
     port = get_free_port()
-    
+
     env = os.environ.copy()
     env["LDAP_SERVER"] = seeded_ldap
     env["LDAP_USER"] = "cn=admin,dc=example,dc=org"
@@ -81,23 +82,28 @@ def identity_server(seeded_ldap):
 
     # Capture stdout and stderr to see EXACTLY why it crashes
     process = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", str(port)],
+        [sys.executable,
+         "-m", "uvicorn",
+         "app.main:app",
+         "--host", "127.0.0.1",
+         "--port", str(port)],
         cwd=IDENTITY_DIR,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True
     )
-    
+
     identity_url = f"http://127.0.0.1:{port}"
-    
+
     # Poll until uvicorn is ready
     for _ in range(100):  # 10 seconds total
         try:
             # Check if the process crashed prematurely
             if process.poll() is not None:
                 out, err = process.communicate()
-                raise RuntimeError(f"Identity Server Subprocess Crashed!\nSTDOUT:\n{out}\nSTDERR:\n{err}")
+                raise RuntimeError(
+                    f"Identity Server Subprocess Crashed!\nSTDOUT:\n{out}\nSTDERR:\n{err}")
 
             if httpx.get(f"{identity_url}/docs").status_code == 200:
                 break
@@ -107,10 +113,10 @@ def identity_server(seeded_ldap):
         process.terminate()
         out, err = process.communicate()
         raise RuntimeError(f"Identity Server Subprocess Timed Out.\nSTDOUT:\n{out}\nSTDERR:\n{err}")
-        
+
     settings.identity_api_url = identity_url
     yield identity_url
-    
+
     process.terminate()
     process.wait()
 
@@ -124,13 +130,13 @@ async def test_full_identity_lookup_flow(identity_server):
     transport = httpx.ASGITransport(app=main_api.app)
     async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
 
-        
+
         # 1. Lookup the seeded user
         response = await client.get("/identity/lookup", params={"name": "Jane Smith"})
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # 2. Assert exact match logic
         assert "exact_match" in data
         exact = data["exact_match"]
