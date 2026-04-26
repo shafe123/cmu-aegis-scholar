@@ -16,7 +16,7 @@ from testcontainers.core.waiting_utils import wait_for_logs
 # Container configuration
 # ---------------------------------------------------------------------------
 
-MILVUS_IMAGE = "milvusdb/milvus:v2.6.13"
+MILVUS_IMAGE = "milvusdb/milvus:v2.4.4"
 VECTOR_DB_IMAGE = "aegis-vector-db-test:latest"
 VECTOR_DB_PORT = 8002
 NETWORK_NAME = "aegis-vector-test-net"
@@ -63,7 +63,7 @@ def vector_db_container(milvus_container, docker_network):
         .with_kwargs(network=NETWORK_NAME)
     )
     with container:
-        wait_for_logs(container, "Waiting for application startup", timeout=180)
+        wait_for_logs(container, "Application startup complete.", timeout=180)
         yield container
 
 
@@ -137,10 +137,11 @@ def test_create_author_embedding_via_api(vector_api_url, sample_authors, sample_
 @pytest.mark.requires_docker
 def test_text_search_returns_results(vector_api_url, sample_authors, sample_works):
     """POST /search/text should return ranked results after embeddings are loaded."""
+    import time
     author = sample_authors[0]
     abstracts = ["Defense research in advanced materials and hypersonic systems."]
 
-    httpx.post(
+    response = httpx.post(
         f"{vector_api_url}/authors/embeddings",
         json={
             "author_id": author["id"],
@@ -149,6 +150,10 @@ def test_text_search_returns_results(vector_api_url, sample_authors, sample_work
         },
         timeout=60,
     )
+    assert response.status_code == 200
+
+    # Give Milvus a moment to index the newly inserted embedding
+    time.sleep(3)
 
     response = httpx.post(
         f"{vector_api_url}/search/text",

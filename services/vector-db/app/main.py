@@ -185,12 +185,6 @@ def initialize_default_collection():
                 collection_name,
                 embedding_dim,
             )
-            collection.create_index(field_name="embedding", index_params=index_params)
-            logger.info(
-                "Created collection '%s' with index (dim=%d)",
-                collection_name,
-                embedding_dim,
-            )
         else:
             logger.info("Collection '%s' already exists", collection_name)
     except Exception as e:  # pylint: disable=broad-exception-caught
