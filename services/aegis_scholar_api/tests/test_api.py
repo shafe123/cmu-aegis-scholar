@@ -734,3 +734,38 @@ async def test_get_most_recent_work_year_with_missing_years():
     with patch("app.services.graph_db.httpx.AsyncClient", return_value=mock_client):
         result = await client.get_most_recent_work_year("author_test_id")
         assert result is None, f"Expected None but got {result}"
+
+
+# ---------------------------------------------------------------------------
+# graph_db.py — get_most_recent_work_year error paths (lines 51-56)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_get_most_recent_work_year_http_error():
+    """HTTPError from graph DB should return None gracefully."""
+    from app.services.graph_db import GraphDBClient
+    client = GraphDBClient()
+    with patch("httpx.AsyncClient") as mock_client_class:
+        mock_instance = AsyncMock()
+        mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
+        mock_instance.__aexit__ = AsyncMock(return_value=False)
+        mock_instance.get.side_effect = httpx.RequestError("connection refused")
+        mock_client_class.return_value = mock_instance
+        result = await client.get_most_recent_work_year("author_1a2b3c4d-1234-5678-abcd-1234567890ab")
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_get_most_recent_work_year_unexpected_error():
+    """Unexpected exception from graph DB should return None gracefully."""
+    from app.services.graph_db import GraphDBClient
+    client = GraphDBClient()
+    with patch("httpx.AsyncClient") as mock_client_class:
+        mock_instance = AsyncMock()
+        mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
+        mock_instance.__aexit__ = AsyncMock(return_value=False)
+        mock_instance.get.side_effect = RuntimeError("unexpected")
+        mock_client_class.return_value = mock_instance
+        result = await client.get_most_recent_work_year("author_1a2b3c4d-1234-5678-abcd-1234567890ab")
+    assert result is None
