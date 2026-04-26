@@ -8,7 +8,7 @@ from httpx import AsyncClient, ASGITransport
 
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_author_details_integration(app_client):
+async def test_author_details_integration(graph_db_container, app_client):
     """
     Validates the interaction for the /authors/{author_id} endpoint.
     Ensures the API can fetch a specific author's metadata from the Graph DB.
@@ -32,7 +32,7 @@ async def test_author_details_integration(app_client):
 
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_viz_endpoint_integration(app_client):
+async def test_viz_endpoint_integration(graph_db_container, app_client):
     """
     Validates the /viz endpoint (Network Explorer).
     Tests the API's ability to traverse the graph and return a
@@ -81,7 +81,7 @@ async def test_viz_endpoint_integration(app_client):
 
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_viz_expansion_logic(app_client):
+async def test_viz_expansion_logic(graph_db_container, app_client):
     """
     Simulates the "Expansion" flow mentioned in the Frontend summary.
     Checks if a deeper graph traversal (depth=2) returns a larger dataset.
@@ -108,7 +108,8 @@ async def test_viz_expansion_logic(app_client):
 
 
 @pytest.mark.asyncio
-async def test_graph_error_handling(app_client):
+@pytest.mark.requires_docker
+async def test_graph_error_handling(graph_db_container, app_client):
     """Ensures the API returns a 404 for non-existent authors."""
     transport = ASGITransport(app=app_client)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
