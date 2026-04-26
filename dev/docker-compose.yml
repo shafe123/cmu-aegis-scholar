@@ -179,7 +179,7 @@ services:
       - aegisnet
 
   aegis-scholar-api:
-    build: ../services/aegis-scholar-api
+    build: ../services/aegis_scholar_api
     ports:
       - 8000:8000
     environment:
@@ -256,6 +256,7 @@ services:
       - LDAP_BASE_DN=dc=example,dc=org
       - AUTH_JSONL_FILE_PATH=/data/${IDENTITY_AUTH_JSONL_FILE:-dtic_authors_50.jsonl.gz}
       - ORG_JSONL_FILE_PATH=/data/${IDENTITY_ORG_JSONL_FILE:-dtic_orgs_50.jsonl.gz}
+      - IDENTITY_URL=http://identity-api:8005
     volumes:
       - ${DTIC_DATASET_DIR:-../tests/dtic_test_subset}:/data
     ports:

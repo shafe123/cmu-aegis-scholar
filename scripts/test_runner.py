@@ -14,7 +14,7 @@ from typing import List, Tuple
 # Component paths relative to repository root
 COMPONENTS = {
     "frontend": Path("frontend"),
-    "aegis-api": Path("services/aegis-scholar-api"),
+    "aegis-api": Path("services/aegis_scholar_api"),
     "graph-db": Path("services/graph-db"),
     "vector-db": Path("services/vector-db"),
     "vector-loader": Path("jobs/vector-loader"),
