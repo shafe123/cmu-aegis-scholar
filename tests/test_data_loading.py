@@ -5,7 +5,13 @@ import pytest
 
 @pytest.mark.integration
 def test_placeholder_data_loading():
-    """Placeholder - replace with actual integration tests."""
+    """Placeholder test to maintain test structure.
+    
+    TODO: Implement actual data loading integration tests:
+    - Vector loader to vector database
+    - Graph loader to Neo4j
+    - Complete data pipeline validation
+    """
     assert True
 
 

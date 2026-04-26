@@ -1,4 +1,12 @@
-"""Integration tests for API to database interactions."""
+"""Integration tests for API to database interactions.
+
+TODO: Uncomment and implement tests for:
+- Full author lookup integration with Graph DB
+- API request-response cycle validation
+- Microservice call mocking
+
+These tests were temporarily commented out pending service refactoring.
+"""
 
 # from unittest.mock import patch
 # import httpx

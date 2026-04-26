@@ -6,6 +6,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
 async def test_author_details_integration(graph_db_container, app_client):
@@ -30,6 +31,7 @@ async def test_author_details_integration(graph_db_container, app_client):
     assert "org_ids" in data
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
 async def test_viz_endpoint_integration(graph_db_container, app_client):
@@ -79,6 +81,7 @@ async def test_viz_endpoint_integration(graph_db_container, app_client):
             assert "title" in node
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
 async def test_viz_expansion_logic(graph_db_container, app_client):
@@ -107,6 +110,7 @@ async def test_viz_expansion_logic(graph_db_container, app_client):
         assert len(d2_data["nodes"]) >= len(d1_data["nodes"])
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
 async def test_graph_error_handling(graph_db_container, app_client):

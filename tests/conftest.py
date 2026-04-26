@@ -1,4 +1,30 @@
-"""Integration test configuration and shared fixtures."""
+"""Integration test configuration and shared fixtures.
+
+This module provides session-scoped fixtures for integration testing:
+
+Container Fixtures:
+- neo4j_container: Spins up a Neo4j testcontainer (session scope)
+- graph_db_container: Builds and starts Graph DB service container (session scope)
+
+URL Fixtures:
+- graph_db_url: Returns the Graph DB service URL from the container
+- vector_db_url: Returns the Vector DB service URL (defaults to localhost:8002)
+- base_api_url: Returns the main API URL (defaults to localhost:8000)
+
+Utility Fixtures:
+- http_client: Async HTTP client for API requests (function scope)
+- sample_integration_data: Sample data for cross-component testing
+
+Fixture Patterns:
+1. Container fixtures (*_container) return the DockerContainer object
+2. URL fixtures (*_url) return string URLs derived from containers or defaults
+3. Service fixtures that need containers should depend on *_container fixtures
+4. Tests making HTTP calls should use *_url fixtures
+
+Note: The neo4j_container and graph_db_container are session-scoped to avoid
+slow container startup between tests. They are automatically torn down after
+all tests complete.
+"""
 
 import os
 import time
@@ -171,16 +197,22 @@ def base_api_url():
     return API_DEFAULT_URL
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 async def http_client():
-    """Async HTTP client for making API requests in tests."""
+    """Async HTTP client for making API requests in tests.
+    
+    Scope: Function (new client for each test to avoid state leakage)
+    """
     async with httpx.AsyncClient() as client:
         yield client
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def sample_integration_data():
-    """Sample data for integration testing across components."""
+    """Sample data for integration testing across components.
+    
+    Scope: Function (fresh data for each test)
+    """
     return {
         "authors": [
             {
@@ -212,9 +244,12 @@ def sample_integration_data():
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def sample_search_query():
-    """Sample search query for end-to-end tests."""
+    """Sample search query for end-to-end tests.
+    
+    Scope: Function (fresh query for each test)
+    """
     return {
         "query": "machine learning artificial intelligence",
         "filters": {

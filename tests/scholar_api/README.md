@@ -38,14 +38,14 @@ poetry run pylint scholar_api/
 Tests are run against a live Dockerized Neo4j instance. Our tests cover author details, network visualization logic, and error handling.
 
 Bash
-# Run all integration tests
-poetry run pytest scholar_api/test_main_graph.py -v
+# Run all integration tests (from project root)
+cd tests && poetry run pytest scholar_api/test_main_graph.py -v
 3. Coverage Reporting
 We track code execution to ensure the most critical logic paths are verified.
 
 Bash
-# Generate terminal coverage report
-poetry run pytest --cov=scholar_api scholar_api/test_main_graph.py --cov-report=term-missing
+# Generate terminal coverage report (from tests directory)
+cd tests && poetry run pytest --cov=scholar_api scholar_api/test_main_graph.py --cov-report=term-missing
 🛰 API Endpoints
 Author Analytics
 GET /authors/{author_id}: Returns detailed metadata for a specific author, including H-index and organizational affiliations.
@@ -57,7 +57,7 @@ Logic: Supports expansion flows where depth-traversal can be increased to explor
 
 ⚠️ Troubleshooting
 Auth Errors:
-If you see neo4j.exceptions.AuthError, verify that the NEO4J_PASSWORD in your .env matches the password used in scholar_api/conftest.py.
+If you see neo4j.exceptions.AuthError, verify that the NEO4J_PASSWORD in your .env matches the password used in tests/scholar_api/conftest.py and tests/conftest.py.
 
 Port Conflicts:
 If the stack fails to start due to "Address already in use," clear port 8080 (SeaweedFS) or 7687 (Neo4j Bolt):

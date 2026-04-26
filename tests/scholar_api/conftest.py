@@ -24,21 +24,25 @@ load_dotenv()
 # Suppress Neo4j notification warnings
 logging.getLogger("neo4j.notifications").setLevel(logging.ERROR)
 
-# Import shared test configuration from parent conftest
+# --- Path Configuration ---
+# Add parent directory to path to import shared conftest fixtures
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from conftest import NEO4J_USER, NEO4J_PASSWORD, VECTOR_DB_DEFAULT_URL
+from conftest import NEO4J_USER, NEO4J_PASSWORD, VECTOR_DB_DEFAULT_URL  # pylint: disable=wrong-import-position
 
 # --- Service Configuration ---
+# Add aegis_scholar_api to path for importing app modules
 service_root = Path(__file__).resolve().parents[2] / "services" / "aegis_scholar_api"
 if str(service_root) not in sys.path:
     sys.path.insert(0, str(service_root))
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def app_client(monkeypatch, graph_db_container):
     """
     FastAPI test client with dynamically configured environment.
 
+    Scope: Function (recreated for each test to ensure clean environment)
+    
     Sets GRAPH_DB_URL and VECTOR_DB_URL to match testcontainer instances.
     Forces module reimport to ensure settings are initialized with updated env vars.
     """

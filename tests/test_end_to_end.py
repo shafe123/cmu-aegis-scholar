@@ -5,7 +5,14 @@ import pytest
 
 @pytest.mark.integration
 def test_placeholder_e2e():
-    """Placeholder - replace with actual E2E tests."""
+    """Placeholder test to maintain test structure.
+    
+    TODO: Implement end-to-end user workflow tests:
+    - Search to detail view workflow
+    - Filtered search workflow
+    - Author collaboration network exploration
+    - Topic-based exploration workflow
+    """
     assert True
 
 

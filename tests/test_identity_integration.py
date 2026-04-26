@@ -1,4 +1,4 @@
-"""Integration test for aegis_scholar_api <-> identiy_api"""
+"""Integration test for aegis_scholar_api <-> identity_api"""
 
 import os
 import re
@@ -13,17 +13,19 @@ from ldap3 import Server, Connection, ALL
 # Import testcontainers
 from testcontainers.core.container import DockerContainer, LogMessageWaitStrategy
 
-# =====================================================================
-# PATH FIX: We ONLY add Aegis to sys.path to prevent 'app' collisions
-# =====================================================================
+# --- Path Configuration ---
+# Add aegis_scholar_api to sys.path to import app.main and app.config.
+# We only add Aegis to prevent 'app' module naming collisions between
+# aegis_scholar_api and identity service (both have 'app' packages).
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 AEGIS_DIR = os.path.join(PROJECT_ROOT, "services", "aegis_scholar_api")
 IDENTITY_DIR = os.path.join(PROJECT_ROOT, "services", "identity")
 
 sys.path.insert(0, AEGIS_DIR)
 
-import app.main as main_api
-from app.config import settings
+# Imports must follow sys.path manipulation
+import app.main as main_api  # noqa: E402
+from app.config import settings  # noqa: E402
 
 
 def get_free_port():
@@ -141,6 +143,7 @@ def identity_server(seeded_ldap):
     process.wait()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_full_identity_lookup_flow(identity_server):
     """
