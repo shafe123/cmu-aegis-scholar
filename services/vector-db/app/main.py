@@ -6,8 +6,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from app.schema_def import AUTHOR_FIELDS, INDEX_PARAMS
-
 import numpy as np
 from fastapi import FastAPI, HTTPException, status
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
@@ -17,13 +15,12 @@ from fastembed import TextEmbedding
 from pymilvus import (
     Collection,
     CollectionSchema,
-    DataType,
-    FieldSchema,
     connections,
     utility,
 )
 
 from app.config import AVAILABLE_MODELS, settings
+from app.schema_def import AUTHOR_FIELDS, INDEX_PARAMS
 from app.schemas import (
     CollectionInfo,
     CreateAuthorEmbeddingRequest,
