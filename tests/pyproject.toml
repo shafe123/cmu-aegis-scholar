@@ -25,11 +25,12 @@ ldap3 = "^2.9.1"
 orjson = ">=3.11.8,<4.0.0"
 rapidfuzz = ">=3.14.5,<4.0.0"
 testcontainers-neo4j = "^0.0.1rc1"
+docker = "^7.0.0"
 
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+testpaths = ["."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -42,6 +43,9 @@ addopts = [
     "-v",
     "--tb=short",
     "--import-mode=importlib",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:ldap3.utils.asn1",
 ]
 
 [build-system]

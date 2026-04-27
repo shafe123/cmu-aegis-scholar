@@ -3,6 +3,7 @@
 This module provides session-scoped fixtures for integration testing:
 
 Container Fixtures:
+- docker_network: Shared Docker network for inter-container communication
 - neo4j_container: Spins up a Neo4j testcontainer (session scope)
 - graph_db_container: Builds and starts Graph DB service container (session scope)
 
@@ -20,6 +21,12 @@ Fixture Patterns:
 2. URL fixtures (*_url) return string URLs derived from containers or defaults
 3. Service fixtures that need containers should depend on *_container fixtures
 4. Tests making HTTP calls should use *_url fixtures
+
+Docker Networking:
+All testcontainers are connected to a shared Docker bridge network to enable
+inter-container communication. This is critical for the Graph DB service to
+connect to Neo4j in CI environments. Containers use their container names
+(e.g., "neo4j-test") for DNS resolution within the network.
 
 Note: The neo4j_container and graph_db_container are session-scoped to avoid
 slow container startup between tests. They are automatically torn down after
@@ -76,7 +83,31 @@ API_DEFAULT_URL = f"http://localhost:{API_PORT}"
 
 
 @pytest.fixture(scope="session")
-def neo4j_container():
+def docker_network():
+    """Creates a shared Docker network for testcontainers to communicate.
+    
+    This enables inter-container communication in CI environments where
+    containers can't reach each other via host networking.
+    """
+    import docker
+    
+    client = docker.from_env()
+    network_name = "aegis-test-network"
+    
+    # Create network
+    network = client.networks.create(network_name, driver="bridge")
+    
+    yield network_name
+    
+    # Cleanup
+    try:
+        network.remove()
+    except Exception:
+        pass  # Network may already be removed
+
+
+@pytest.fixture(scope="session")
+def neo4j_container(docker_network):
     """
     Starts a Neo4j container for integration tests.
 
@@ -87,7 +118,11 @@ def neo4j_container():
         DockerContainer("neo4j:latest")
         .with_exposed_ports(NEO4J_BOLT_PORT, NEO4J_HTTP_PORT)
         .with_env("NEO4J_AUTH", f"{NEO4J_USER}/{NEO4J_PASSWORD}")
+        .with_name("neo4j-test")
     )
+    
+    # Connect to the shared network
+    container._kwargs["network"] = docker_network
 
     with container:
         # Wait for Neo4j to be fully ready by verifying Bolt connectivity
@@ -115,29 +150,24 @@ def neo4j_container():
 
 
 @pytest.fixture(scope="session")
-def graph_db_container(neo4j_container):
+def graph_db_container(neo4j_container, docker_network):
     """
     Starts a Graph DB container that connects to the Neo4j testcontainer.
 
     - Builds the Docker image using subprocess with BuildKit enabled
     - Configures Neo4j connection via environment variables
-    - Waits for HTTP readiness before yielding the container URL
+    - Uses Docker network for inter-container communication
+    - Waits for HTTP readiness AND Neo4j connectivity before yielding
     """
     # Give Neo4j a moment to fully stabilize
-    time.sleep(2)
+    time.sleep(3)
 
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     graph_db_path = os.path.join(project_root, "services", "graph-db")
 
-    neo4j_host = neo4j_container.get_container_host_ip()
-    neo4j_port = neo4j_container.get_exposed_port(NEO4J_BOLT_PORT)
-
-    # For Docker Desktop (localhost), use host.docker.internal for inter-container communication
-    # For Linux/CI, use the actual host IP address
-    if neo4j_host in ("localhost", "127.0.0.1"):
-        neo4j_uri = f"bolt://host.docker.internal:{neo4j_port}"
-    else:
-        neo4j_uri = f"bolt://{neo4j_host}:{neo4j_port}"
+    # Use the container name for inter-container communication
+    # This works in both local and CI environments when on same network
+    neo4j_uri = f"bolt://neo4j-test:{NEO4J_BOLT_PORT}"
 
     # Build the Docker image with BuildKit support for cache mount directives
     env = os.environ.copy()
@@ -150,7 +180,7 @@ def graph_db_container(neo4j_container):
         capture_output=True,
     )
 
-    # Start the Graph DB service container
+    # Start the Graph DB service container on the same network
     container = (
         DockerContainer("graph-db:test")
         .with_exposed_ports(GRAPH_DB_PORT)
@@ -158,6 +188,9 @@ def graph_db_container(neo4j_container):
         .with_env("NEO4J_USER", NEO4J_USER)
         .with_env("NEO4J_PASSWORD", NEO4J_PASSWORD)
     )
+    
+    # Connect to the shared network
+    container._kwargs["network"] = docker_network
 
     with container:
         # Wait for the Graph DB service to be ready
@@ -166,22 +199,44 @@ def graph_db_container(neo4j_container):
         graph_db_url = f"http://{host}:{port}"
 
         # Poll until service responds to /docs endpoint
-        time.sleep(2)  # Initial delay for service startup
-        for attempt in range(150):  # 15 seconds total polling
+        time.sleep(3)  # Initial delay for service startup
+        for attempt in range(200):  # 20 seconds total polling (more time in CI)
             try:
-                response = httpx.get(f"{graph_db_url}/docs", timeout=2.0)
+                response = httpx.get(f"{graph_db_url}/docs", timeout=3.0)
                 if response.status_code == 200:
                     break
             except (httpx.RequestError, httpx.TimeoutException):
                 pass
 
-            if attempt < 149:
+            if attempt < 199:
                 time.sleep(0.1)
         else:
             raise RuntimeError(
                 f"Graph DB service at {graph_db_url} failed to start. "
                 f"Neo4j URI was configured as: {neo4j_uri}"
             )
+
+        # Additional health check: verify Graph DB can actually connect to Neo4j
+        time.sleep(2)
+        for attempt in range(30):  # 15 seconds for Neo4j connectivity
+            try:
+                health_response = httpx.get(f"{graph_db_url}/health", timeout=3.0)
+                if health_response.status_code == 200:
+                    health_data = health_response.json()
+                    if health_data.get("status") == "healthy":
+                        break
+            except Exception:
+                pass
+            
+            if attempt < 29:
+                time.sleep(0.5)
+        else:
+            # Log the last health check for debugging
+            try:
+                health_response = httpx.get(f"{graph_db_url}/health", timeout=3.0)
+                print(f"\n[Warning] Graph DB health check status: {health_response.json()}")
+            except Exception as e:
+                print(f"\n[Warning] Could not check Graph DB health: {e}")
 
         yield graph_db_url
 
