@@ -34,7 +34,6 @@ all tests complete.
 """
 
 import os
-import sys
 import gzip
 import json
 import time
@@ -183,6 +182,7 @@ def graph_db_container(neo4j_container, docker_network):
     # Start the Graph DB service container on the same network
     container = (
         DockerContainer("graph-db:test")
+        .with_name("graph-db-test")  # Named container for DNS resolution
         .with_exposed_ports(GRAPH_DB_PORT)
         .with_env("NEO4J_URI", neo4j_uri)
         .with_env("NEO4J_USER", NEO4J_USER)
@@ -239,6 +239,113 @@ def graph_db_container(neo4j_container, docker_network):
                 print(f"\n[Warning] Could not check Graph DB health: {e}")
 
         yield graph_db_url
+
+
+@pytest.fixture(scope="session")
+def aegis_scholar_api_container(docker_network, graph_db_container):
+    """Builds and starts the main Aegis Scholar API as a Docker container.
+    
+    Returns the API base URL for making HTTP requests.
+    
+    This container:
+    - Builds from services/aegis_scholar_api/Dockerfile
+    - Connects to the shared Docker network
+    - Configures GRAPH_DB_URL to use container name (graph-db-test)
+    - Exposes port 8000 for API requests
+    """
+    # Get the absolute path to the aegis_scholar_api service
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    api_service_path = os.path.join(project_root, "services", "aegis_scholar_api")
+    
+    # Build the Docker image with BuildKit support
+    env = os.environ.copy()
+    env["DOCKER_BUILDKIT"] = "1"
+    
+    subprocess.run(
+        ["docker", "build", "-t", "aegis-scholar-api:test", api_service_path],
+        check=True,
+        env=env,
+        capture_output=True,
+    )
+    
+    # Graph DB URL for inter-container communication
+    graph_db_internal_url = "http://graph-db-test:8003"
+    
+    # Build and configure the container
+    container = (
+        DockerContainer("aegis-scholar-api:test")
+        .with_name("aegis-api-test")
+        .with_exposed_ports(8000)
+        .with_env("GRAPH_DB_URL", graph_db_internal_url)
+        .with_env("VECTOR_DB_URL", VECTOR_DB_DEFAULT_URL)
+        .with_env("LOG_LEVEL", "DEBUG")
+    )
+    
+    # Connect to shared network
+    container._kwargs["network"] = docker_network
+    
+    with container:
+        # Wait for API to be ready
+        host = container.get_container_host_ip()
+        port = container.get_exposed_port(8000)
+        api_url = f"http://{host}:{port}"
+        
+        # Step 1: Wait for API server to start responding to /docs
+        time.sleep(3)
+        for attempt in range(200):  # 20 seconds
+            try:
+                response = httpx.get(f"{api_url}/docs", timeout=5.0)
+                if response.status_code == 200:
+                    break
+            except (httpx.RequestError, httpx.TimeoutException):
+                pass
+            
+            if attempt < 199:
+                time.sleep(0.1)
+        else:
+            raise RuntimeError(
+                f"Aegis Scholar API at {api_url} failed to start. "
+                f"Check container logs for details."
+            )
+        
+        # Step 2: Wait for API to successfully connect to dependencies (Graph DB)
+        # The /health endpoint checks downstream services
+        print(f"\n[Setup] Aegis Scholar API started at {api_url}, waiting for Graph DB connectivity...")
+        for attempt in range(100):  # 10 seconds
+            try:
+                health_response = httpx.get(f"{api_url}/health", timeout=5.0)
+                if health_response.status_code == 200:
+                    health_data = health_response.json()
+                    # Check if dependencies are initialized (even if unreachable, API should respond)
+                    if "dependencies" in health_data or health_data.get("status") == "healthy":
+                        print(f"[Setup] API health check passed: {health_data}")
+                        break
+            except Exception:
+                pass
+            
+            if attempt < 99:
+                time.sleep(0.1)
+        else:
+            print("[Warning] API /health endpoint did not stabilize, but proceeding...")
+        
+        # Step 3: Warm up the connection with a real request to ensure Graph DB is accessible
+        print("[Setup] Warming up API -> Graph DB connection...")
+        for attempt in range(30):  # 15 seconds
+            try:
+                # Try the root endpoint of the API which should be fast
+                warmup_response = httpx.get(f"{api_url}/", timeout=10.0)
+                if warmup_response.status_code == 200:
+                    print("[Setup] Warmup successful, API is ready for tests")
+                    break
+            except Exception as e:
+                if attempt == 29:
+                    print(f"[Warning] Warmup request failed: {e}, proceeding anyway...")
+                pass
+            
+            if attempt < 29:
+                time.sleep(0.5)
+        
+        yield api_url
 
 
 @pytest.fixture(scope="session")
@@ -485,31 +592,16 @@ def load_gz_jsonl(session, file_path, label):
 # --- Application Client Fixtures ---
 
 
-@pytest.fixture(scope="function")
-def app_client(monkeypatch, graph_db_container):
-    """FastAPI test client for aegis_scholar_api with dynamically configured environment.
+@pytest.fixture(scope="session")
+def app_client(aegis_scholar_api_container):
+    """Returns the URL for the containerized Aegis Scholar API.
     
-    Scope: Function (recreated for each test to ensure clean environment)
+    Scope: Session (same as the underlying container)
     
-    Sets GRAPH_DB_URL and VECTOR_DB_URL to match testcontainer instances.
-    Forces module reimport to ensure Pydantic Settings are initialized with updated env vars.
+    This fixture provides the base URL for the main API running in a Docker container.
+    Tests should use httpx.AsyncClient to make HTTP requests to this URL.
     
-    Note: This requires aegis_scholar_api to be in the Python path. Tests using this
-    fixture should configure sys.path appropriately in their module or conftest.
+    The API container is configured to communicate with the Graph DB container
+    via Docker network using container names.
     """
-    # Configure environment with testcontainer URLs
-    monkeypatch.setenv("GRAPH_DB_URL", graph_db_container)
-    monkeypatch.setenv("VECTOR_DB_URL", VECTOR_DB_DEFAULT_URL)
-
-    # Force reimport of app modules to pick up updated environment variables.
-    # The Pydantic Settings object initializes at module import time, so we must
-    # reload the modules after setting environment variables.
-    for module_name in ("app.config", "app.services.graph_db", "app.main"):
-        if module_name in sys.modules:
-            del sys.modules[module_name]
-
-    # Import after path manipulation and module cleanup
-    # pylint: disable=import-outside-toplevel
-    from app.main import app
-    
-    return app
+    return aegis_scholar_api_container

@@ -1,24 +1,21 @@
-"""
-Configuration and fixtures for the Aegis Scholar API integration tests.
-"""
+"""Integration tests for Aegis Scholar API container interaction with Graph DB container."""
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import AsyncClient
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_author_details_integration(graph_db_container, app_client):
+async def test_author_details_integration(app_client):
     """
-    Validates the interaction for the /authors/{author_id} endpoint.
-    Ensures the API can fetch a specific author's metadata from the Graph DB.
+    Validates the containerized API's interaction with the Graph DB container.
+    Tests the /authors/{author_id} endpoint fetching author metadata.
     """
     # Using a known ID from the dtic_authors_50.jsonl.gz subset
     test_author_id = "author_6671149b-381b-573b-bb3d-81d86a789471"
 
-    transport = ASGITransport(app=app_client)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    async with AsyncClient(base_url=app_client) as ac:
         response = await ac.get(f"/search/authors/{test_author_id}")
 
     # Validation
@@ -34,16 +31,15 @@ async def test_author_details_integration(graph_db_container, app_client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_viz_endpoint_integration(graph_db_container, app_client):
+async def test_viz_endpoint_integration(app_client):
     """
-    Validates the /viz endpoint (Network Explorer).
-    Tests the API's ability to traverse the graph and return a
-    D3/NetworkGraph.jsx compatible structure (nodes and links).
+    Validates the containerized API's /viz endpoint (Network Explorer).
+    Tests container-to-container communication: API → Graph DB.
+    Verifies D3/NetworkGraph.jsx compatible structure (nodes and links).
     """
     test_author_id = "author_6671149b-381b-573b-bb3d-81d86a789471"
 
-    transport = ASGITransport(app=app_client)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    async with AsyncClient(base_url=app_client) as ac:
         # Testing depth=1 ensures we get the author and their immediate works
         response = await ac.get(f"/viz/author-network/{test_author_id}")
 
@@ -84,16 +80,15 @@ async def test_viz_endpoint_integration(graph_db_container, app_client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_viz_expansion_logic(graph_db_container, app_client):
+async def test_viz_expansion_logic(app_client):
     """
-    Simulates the "Expansion" flow mentioned in the Frontend summary.
-    Checks if a deeper graph traversal (depth=2) returns a larger dataset.
+    Tests the containerized API's graph expansion logic.
+    Simulates the "Expansion" flow for deeper graph traversal.
     """
     # Using the ID we confirmed exists in your Neo4j instance
     test_author_id = "author_6671149b-381b-573b-bb3d-81d86a789471"
 
-    transport = ASGITransport(app=app_client)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    async with AsyncClient(base_url=app_client) as ac:
         # Depth 1: Initial load
         res_d1 = await ac.get(f"/viz/author-network/{test_author_id}")
         assert res_d1.status_code == 200, f"D1 failed: {res_d1.text}"
@@ -113,12 +108,11 @@ async def test_viz_expansion_logic(graph_db_container, app_client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_graph_error_handling(graph_db_container, app_client):
-    """Ensures the API returns a 404 for non-existent authors."""
-    transport = ASGITransport(app=app_client)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+async def test_graph_error_handling(app_client):
+    """Tests the containerized API's error handling for non-existent authors."""
+    async with AsyncClient(base_url=app_client) as ac:
         response = await ac.get("/viz/author-network/this_is_not_a_real_id")
 
-    # Accespts both "Not Found" and "Service Unavailable"
+    # Accepts both "Not Found" and "Service Unavailable"
     assert response.status_code in [404, 503]
     assert "detail" in response.json()
