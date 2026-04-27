@@ -7,27 +7,25 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
+fastapi = "^0.136.0"  # Used by test_identity_integration (imports app.main)
+httpx = ">=0.26.0,<1.0.0"  # HTTP client for API requests
+pydantic-settings = "^2.14.0"  # Used by test_identity_integration (imports app.config)
+pydantic = "^2.13.3"  # Used by FastAPI apps imported in tests
+neo4j = "^6.1.0"  # Neo4j driver for conftest fixtures
+pytest = "^7.4.0"  # Test framework
+pytest-asyncio = "^0.23.0"  # Async test support
+testcontainers = ">=4.0.0"  # Docker container management
+ldap3 = "^2.9.1"  # LDAP testing in test_identity_integration
+docker = "^7.0.0"  # Docker network management in conftest
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
-pytest-asyncio = "^0.23.0"
-pytest-cov = "^4.1.0"
-pytest-mock = "^3.12"
-httpx = "^0.26.0"
-# For running services in tests
-testcontainers = "^3.7.0"
-pylint = "^4.0.5"
-ldap3 = "^2.9.1"
-fastapi = "^0.136.1"
-orjson = ">=3.11.8,<4.0.0"
-uvicorn = ">=0.44.0,<0.45.0"
-rapidfuzz = ">=3.14.5,<4.0.0"
-pydantic = ">=2.6.3,<3.0.0"
-pydantic-settings = "^2.14.0"
+# Optional: Coverage and linting (not runtime dependencies)
+pytest-cov = "^4.1.0"  # For coverage reports (optional)
+pylint = "^4.0.5"  # Linting tool (optional)
+
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+testpaths = ["."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -40,6 +38,9 @@ addopts = [
     "-v",
     "--tb=short",
     "--import-mode=importlib",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:ldap3.utils.asn1",
 ]
 
 [build-system]

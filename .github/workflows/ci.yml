@@ -197,13 +197,57 @@ jobs:
     # ---------------------------------------------------------------------------
     # INTEGRATION / E2E TESTS
     # ---------------------------------------------------------------------------
+    build-test-images:
+        name: "Build · test images"
+        runs-on: ubuntu-latest
+        needs: [ test-python ]
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - service: services/aegis_scholar_api
+                      image: aegis-scholar-api
+                    - service: services/graph-db
+                      image: graph-db
+        
+        steps:
+            - uses: actions/checkout@v6
+            
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
+            
+            - name: Build and cache image
+              uses: docker/build-push-action@v7
+              with:
+                  context: ${{ matrix.service }}
+                  tags: ${{ matrix.image }}:test
+                  cache-from: type=gha,scope=${{ matrix.image }}
+                  cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+                  # Don't push, just build and cache
+                  push: false
+    
     test-integration:
         name: "Tests · integration (root)"
         runs-on: ubuntu-latest
-        needs: [ test-python, lint-and-test-frontend ]
+        needs: [ build-test-images, lint-and-test-frontend ]
+        services:
+            neo4j:
+                image: neo4j:latest
+                ports:
+                    - 7687:7687
+                    - 7474:7474
+                env:
+                    NEO4J_AUTH: neo4j/neo4j_password
+                options: >-
+                    --health-cmd "cypher-shell -u neo4j -p neo4j_password
+                    'RETURN 1'" --health-interval 10s --health-timeout 5s
+                    --health-retries 5
         defaults:
             run:
                 working-directory: tests
+
+        env:
+            NEO4J_PASSWORD: neo4j_password
 
         steps:
             - uses: actions/checkout@v6
@@ -211,6 +255,9 @@ jobs:
             - uses: actions/setup-python@v6
               with:
                   python-version: "3.12"
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
 
             - name: Install Poetry
               run: pip install poetry --quiet
@@ -230,7 +277,7 @@ jobs:
               run: poetry install --no-interaction
 
             - name: Run integration tests
-              run: poetry run pytest . -v --tb=short -m "not requires_docker"
+              run: poetry run pytest . -v --tb=short
 
     # ---------------------------------------------------------------------------
     # DOCKER SCOUT — CVE scan, critical/high severity only

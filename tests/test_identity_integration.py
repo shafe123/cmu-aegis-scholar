@@ -1,5 +1,7 @@
-""" Integration test for aegis_scholar_api <-> identiy_api"""
+"""Integration test for aegis_scholar_api <-> identity_api"""
+
 import os
+import re
 import time
 import socket
 import subprocess
@@ -8,40 +10,54 @@ import httpx
 import sys
 from ldap3 import Server, Connection, ALL
 
-# Import testcontainers 
-from testcontainers.core.container import DockerContainer
-from testcontainers.core.waiting_utils import wait_for_logs
+# Import testcontainers
+from testcontainers.core.container import DockerContainer, LogMessageWaitStrategy
 
-# =====================================================================
-# PATH FIX: We ONLY add Aegis to sys.path to prevent 'app' collisions
-# =====================================================================
+# --- Path Configuration ---
+# Add aegis_scholar_api to sys.path to import app.main and app.config.
+# We only add Aegis to prevent 'app' module naming collisions between
+# aegis_scholar_api and identity service (both have 'app' packages).
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 AEGIS_DIR = os.path.join(PROJECT_ROOT, "services", "aegis_scholar_api")
 IDENTITY_DIR = os.path.join(PROJECT_ROOT, "services", "identity")
 
 sys.path.insert(0, AEGIS_DIR)
 
-import app.main as main_api
-from app.config import settings
+# Imports must follow sys.path manipulation
+import app.main as main_api  # noqa: E402
+from app.config import settings  # noqa: E402
+
 
 def get_free_port():
-    """Finds a free port on the host to run our Identity test server."""
+    """Finds a free port on the host to run our Identity test server.
+    
+    Note: This duplicates the utility function in conftest.py because
+    conftest modules cannot be directly imported. Consider using pytest
+    fixtures for shared utilities instead.
+    """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("", 0))
         return s.getsockname()[1]
 
+
 @pytest.fixture(scope="session")
 def ldap_container():
     """Spins up an ephemeral OpenLDAP server using Testcontainers."""
-    with DockerContainer("osixia/openldap:1.5.0") \
-            .with_exposed_ports(389) \
-            .with_env("LDAP_ORGANIZATION", "Example") \
-            .with_env("LDAP_DOMAIN", "example.org") \
-            .with_env("LDAP_ADMIN_PASSWORD", "admin") as container:
+    container = (
+        DockerContainer("osixia/openldap:1.5.0")
+        .with_exposed_ports(389)
+        .with_env("LDAP_ORGANIZATION", "Example")
+        .with_env("LDAP_DOMAIN", "example.org")
+        .with_env("LDAP_ADMIN_PASSWORD", "admin")
+        .waiting_for(
+            LogMessageWaitStrategy(re.compile(r"slapd starting", re.IGNORECASE))
+        )
+    )
 
-        wait_for_logs(container, "slapd starting", timeout=30)
+    with container:
         time.sleep(2)
         yield container
+
 
 @pytest.fixture(scope="session")
 def seeded_ldap(ldap_container):
@@ -56,7 +72,9 @@ def seeded_ldap(ldap_container):
     # Seed the LDAP database
     server = Server(ldap_url, get_info=ALL)
     with Connection(server, user=ldap_user, password=ldap_pass, auto_bind=True) as conn:
-        conn.add("ou=users,dc=example,dc=org", ["organizationalUnit", "top"], {"ou": "users"})
+        conn.add(
+            "ou=users,dc=example,dc=org", ["organizationalUnit", "top"], {"ou": "users"}
+        )
         conn.add(
             "uid=jsmith,ou=users,dc=example,dc=org",
             ["inetOrgPerson", "top"],
@@ -64,10 +82,11 @@ def seeded_ldap(ldap_container):
                 "sn": "Smith",
                 "cn": "Jane Smith",
                 "mail": "jane.smith@example.org",
-                "o": "Department of Defense"
-            }
+                "o": "Department of Defense",
+            },
         )
     return ldap_url
+
 
 @pytest.fixture(scope="session")
 def identity_server(seeded_ldap):
@@ -82,16 +101,21 @@ def identity_server(seeded_ldap):
 
     # Capture stdout and stderr to see EXACTLY why it crashes
     process = subprocess.Popen(
-        [sys.executable,
-         "-m", "uvicorn",
-         "app.main:app",
-         "--host", "127.0.0.1",
-         "--port", str(port)],
+        [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "app.main:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+        ],
         cwd=IDENTITY_DIR,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        text=True
+        text=True,
     )
 
     identity_url = f"http://127.0.0.1:{port}"
@@ -103,7 +127,8 @@ def identity_server(seeded_ldap):
             if process.poll() is not None:
                 out, err = process.communicate()
                 raise RuntimeError(
-                    f"Identity Server Subprocess Crashed!\nSTDOUT:\n{out}\nSTDERR:\n{err}")
+                    f"Identity Server Subprocess Crashed!\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+                )
 
             if httpx.get(f"{identity_url}/docs").status_code == 200:
                 break
@@ -112,7 +137,9 @@ def identity_server(seeded_ldap):
     else:
         process.terminate()
         out, err = process.communicate()
-        raise RuntimeError(f"Identity Server Subprocess Timed Out.\nSTDOUT:\n{out}\nSTDERR:\n{err}")
+        raise RuntimeError(
+            f"Identity Server Subprocess Timed Out.\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+        )
 
     settings.identity_api_url = identity_url
     yield identity_url
@@ -121,6 +148,7 @@ def identity_server(seeded_ldap):
     process.wait()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_full_identity_lookup_flow(identity_server):
     """
@@ -128,9 +156,9 @@ async def test_full_identity_lookup_flow(identity_server):
     AsyncClient -> Main API (/identity/lookup) -> Identity API (/lookup) -> LDAP (testcontainer)
     """
     transport = httpx.ASGITransport(app=main_api.app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
-
-
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://testserver"
+    ) as client:
         # 1. Lookup the seeded user
         response = await client.get("/identity/lookup", params={"name": "Jane Smith"})
 
@@ -145,6 +173,8 @@ async def test_full_identity_lookup_flow(identity_server):
         assert exact["email"] == "jane.smith@example.org"
 
         # 3. Assert a non-existent user returns 200 but with no exact match
-        response_missing = await client.get("/identity/lookup", params={"name": "Ghost User"})
+        response_missing = await client.get(
+            "/identity/lookup", params={"name": "Ghost User"}
+        )
         assert response_missing.status_code == 200
         assert response_missing.json().get("exact_match") is None

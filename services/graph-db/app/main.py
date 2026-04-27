@@ -204,6 +204,34 @@ async def link_work_topic(rel: WorkTopicRel) -> dict[str, str]:
 # --- 7. Search & Analysis Endpoints ---
 
 
+# Main API calls http://graph-db:8003/authors/{author_id} - added missing route.
+# In dev-graph-db/app/main.py
+
+
+@app.get("/authors/{author_id}", tags=["Analysis"])
+async def get_author_detail(author_id: str):
+    """Retrieves author details."""
+    # Explicitly naming the fields ensures the driver maps them correctly to a dict
+    query = """
+    MATCH (a:Author {id: $id})
+    OPTIONAL MATCH (a)-[:AFFILIATED_WITH]->(o:Organization)
+    RETURN 
+        a.id as id, 
+        a.name as name, 
+        a.h_index as h_index, 
+        a.works_count as works_count,
+        collect(o { .id, .name }) as organizations
+    """
+    with get_driver().session() as session:
+        result = session.run(query, id=author_id)
+        record = result.single()
+
+        if not record:
+            raise HTTPException(status_code=404, detail="Author not found")
+
+        return record.data()
+
+
 @app.get("/authors/{author_id}/collaborators", tags=["Analysis"], response_model=list[CollaboratorResponse])
 async def get_collaborators(author_id: str) -> list[dict]:
     """Finds researchers who have shared works with the given author."""
@@ -263,11 +291,20 @@ async def get_author_network(author_id: str) -> dict:
             # Add Work
             if work and work["id"] not in node_ids:
                 full_title = work.get("title", "Unknown Title")
-                short_label = full_title[:30] + "..." if len(full_title) > 30 else full_title
+                short_label = (full_title[:30] + "...") if len(full_title) > 30 else full_title
 
-                # Extract year from publication_date (e.g., "2023-05-12" -> "2023")
+                # 1. Try to get year from publication_date
                 raw_date = work.get("publication_date")
-                formatted_year = str(raw_date)[:4] if raw_date else "N/A"
+                # 2. Try to get year from the direct year field
+                raw_year = work.get("year")
+
+                # Logic: Extract from date first, then fallback to year, then default to "N/A"
+                if raw_date:
+                    formatted_year = str(raw_date)[:4]
+                elif raw_year:
+                    formatted_year = str(raw_year)
+                else:
+                    formatted_year = "N/A"
 
                 nodes.append(
                     {
@@ -276,9 +313,7 @@ async def get_author_network(author_id: str) -> dict:
                         "full_title": full_title,
                         "group": "work",
                         "color": "#4ecdc4",
-                        "year": formatted_year
-                        if formatted_year != "N/A"
-                        else (str(work.get("year")) if work.get("year") else "N/A"),
+                        "year": formatted_year,  # Guaranteed to be a string now
                         "citations": work.get("citation_count", 0),
                         "abstract": work.get("abstract"),
                     }
@@ -316,5 +351,7 @@ async def get_author_network(author_id: str) -> dict:
                 )
                 node_ids.add(org["id"])
                 edges.append({"from": author["id"], "to": org["id"], "label": "AFFILIATED_WITH"})
+        if not nodes:
+            raise HTTPException(status_code=404, detail="Author not found for visualization")
 
         return {"nodes": nodes, "edges": edges}

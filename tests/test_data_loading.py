@@ -1,10 +1,17 @@
 """Integration tests for data loading workflows."""
+
 import pytest
 
 
 @pytest.mark.integration
 def test_placeholder_data_loading():
-    """Placeholder - replace with actual integration tests."""
+    """Placeholder test to maintain test structure.
+    
+    TODO: Implement actual data loading integration tests:
+    - Vector loader to vector database
+    - Graph loader to Neo4j
+    - Complete data pipeline validation
+    """
     assert True
 
 
@@ -15,15 +22,15 @@ def test_placeholder_data_loading():
 # async def test_vector_loader_to_vector_db(sample_integration_data):
 #     """Test vector-loader successfully loads data into vector database."""
 #     from jobs.vector_loader.app.loader import VectorLoader
-#     
+#
 #     loader = VectorLoader()
-#     
+#
 #     # Load sample works into vector database
 #     result = await loader.load_works(sample_integration_data["works"])
-#     
+#
 #     assert result.success is True
 #     assert result.records_loaded == len(sample_integration_data["works"])
-#     
+#
 #     # Verify data is searchable
 #     search_result = await loader.search("AI Research")
 #     assert len(search_result) > 0
@@ -35,17 +42,17 @@ def test_placeholder_data_loading():
 # async def test_graph_loader_to_graph_db(sample_integration_data):
 #     """Test graph-loader successfully loads data into Neo4j."""
 #     from jobs.graph_loader.app.loader import GraphLoader
-#     
+#
 #     loader = GraphLoader()
-#     
+#
 #     # Load authors
 #     author_result = await loader.load_authors(sample_integration_data["authors"])
 #     assert author_result.success is True
-#     
+#
 #     # Load works
 #     works_result = await loader.load_works(sample_integration_data["works"])
 #     assert works_result.success is True
-#     
+#
 #     # Verify relationships were created
 #     relationships = await loader.get_author_works("A123456")
 #     assert len(relationships) > 0

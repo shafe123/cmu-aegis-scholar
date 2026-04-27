@@ -447,14 +447,12 @@ async def get_author_by_id(author_id: str):
     logger.info("GET /search/authors/%s", author_id)
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://graph-db:8003/authors/{author_id}", timeout=10.0)
+        graph_data = await graph_client.get_author_details(author_id)
 
-        if response.status_code == 404:
+        # FIX: Check if the response is empty or missing the 'id'
+        if not graph_data or "id" not in graph_data:
+            logger.warning("Graph DB returned empty data for author: %s", author_id)
             raise HTTPException(status_code=404, detail="Author not found")
-
-        response.raise_for_status()
-        graph_data = response.json()
 
         org_ids = [org["id"] for org in graph_data.get("organizations", [])]
 
@@ -467,7 +465,12 @@ async def get_author_by_id(author_id: str):
             "citation_count": 0,
         }
 
-    except httpx.RequestError as e:
+    except httpx.HTTPStatusError as e:
+        # This only triggers if the service returns 4xx or 5xx
+        if e.response.status_code == 404:
+            raise HTTPException(status_code=404, detail="Author not found") from e
+        raise HTTPException(status_code=502, detail="Upstream Graph DB error") from e
+    except (httpx.RequestError, httpx.HTTPError) as e:
         logger.error("Error communicating with Graph DB: %s", e)
         raise HTTPException(status_code=503, detail="Graph DB service is currently unavailable.") from e
 
@@ -497,13 +500,18 @@ async def get_author_network_viz(author_id: str):
     """Proxy endpoint to fetch graph visualization data for an author."""
     logger.info("GET /viz/author-network/%s", author_id)
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://graph-db:8003/viz/author-network/{author_id}", timeout=10.0)
+        data = await graph_client.get_viz_data(author_id)
 
-        response.raise_for_status()
-        return response.json()
+        # FIX: If the graph is empty, return 404 instead of an empty 200
+        if not data or not data.get("nodes"):
+            raise HTTPException(status_code=404, detail="Visualization data not found")
 
-    except httpx.RequestError as e:
+        return data
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            raise HTTPException(status_code=404, detail="Visualization data not found") from e
+        raise HTTPException(status_code=503, detail="Graph visualization service unavailable.") from e
+    except (httpx.RequestError, httpx.HTTPError) as e:
         logger.error("Error communicating with Graph DB for viz: %s", e)
         raise HTTPException(status_code=503, detail="Graph visualization service unavailable.") from e
 

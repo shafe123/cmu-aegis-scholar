@@ -1,67 +1,53 @@
-"""Integration tests for API to database interactions."""
-import pytest
+"""Integration tests for API to database interactions.
+
+TODO: Uncomment and implement tests for:
+- Full author lookup integration with Graph DB
+- API request-response cycle validation
+- Microservice call mocking
+
+These tests were temporarily commented out pending service refactoring.
+"""
+
+# from unittest.mock import patch
+# import httpx
+# import pytest
+# import respx
+# from httpx import ASGITransport
+
+# from app.main import app
 
 
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_placeholder_api_to_vector_db():
-    """Placeholder - replace with actual integration tests."""
-    assert True
-
-
-# Example integration tests:
-# @pytest.mark.integration
 # @pytest.mark.asyncio
-# async def test_search_api_queries_vector_db(http_client, base_api_url, sample_search_query):
-#     """Test that search API correctly queries vector database."""
-#     # Make search request to main API
-#     response = await http_client.post(
-#         f"{base_api_url}/api/v1/search",
-#         json=sample_search_query
-#     )
-#     
-#     assert response.status_code == 200
-#     data = response.json()
-#     assert "results" in data
-#     assert isinstance(data["results"], list)
-#
-#
-# @pytest.mark.integration
-# @pytest.mark.asyncio
-# async def test_api_retrieves_author_details_from_graph_db(http_client, base_api_url):
-#     """Test API retrieves author relationships from graph database."""
-#     author_id = "A123456"
-#     
-#     response = await http_client.get(
-#         f"{base_api_url}/api/v1/authors/{author_id}/relationships"
-#     )
-#     
-#     assert response.status_code == 200
-#     data = response.json()
-#     assert "collaborators" in data
-#     assert "works" in data
-#
-#
-# @pytest.mark.integration
-# @pytest.mark.asyncio
-# async def test_end_to_end_search_workflow(http_client, base_api_url, sample_search_query):
-#     """Test complete search workflow from API to databases."""
-#     # Perform semantic search
-#     search_response = await http_client.post(
-#         f"{base_api_url}/api/v1/search/works",
-#         json=sample_search_query
-#     )
-#     assert search_response.status_code == 200
-#     works = search_response.json()["results"]
-#     
-#     # Get detailed information for first result
-#     if len(works) > 0:
-#         work_id = works[0]["id"]
-#         detail_response = await http_client.get(
-#             f"{base_api_url}/api/v1/works/{work_id}"
+# async def test_full_author_lookup_integration():
+#     """
+#     Test the full request-response cycle for author lookup.
+
+#     Verifies that the API correctly calls the Graph DB service,
+#     validates the UUID schema, and returns the expected JSON.
+#     """
+#     # Valid UUID-based ID to satisfy Pydantic
+#     author_id = "author_550e8400-e29b-41d4-a716-446655440000"
+
+#     mock_graph_response = {"id": author_id, "name": "Integration Tester", "h_index": 10}
+
+#     target_url = "http://localhost:8003"
+
+#     # Mock the outbound microservice call
+#     with respx.mock(base_url=target_url) as respx_mock:
+#         respx_mock.get(f"/authors/{author_id}").mock(
+#             return_value=httpx.Response(200, json=mock_graph_response)
 #         )
-#         assert detail_response.status_code == 200
-#         
-#         work_detail = detail_response.json()
-#         assert "authors" in work_detail
-#         assert "topics" in work_detail
+
+#         # Patch the internal client URL to match our mock
+#         with patch("app.main.graph_client.url", target_url):
+#             transport = ASGITransport(app=app)
+#             async with httpx.AsyncClient(
+#                 transport=transport, base_url="http://test"
+#             ) as ac:
+#                 response = await ac.get(f"/search/authors/{author_id}")
+
+#     # Final assertions
+#     assert response.status_code == 200
+#     data = response.json()
+#     assert data["name"] == "Integration Tester"
+#     assert data["id"] == author_id

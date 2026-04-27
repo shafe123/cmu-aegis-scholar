@@ -1,4 +1,5 @@
 """Pydantic models for Graph DB API request and response validation."""
+# pylint: disable=too-few-public-methods
 
 from pydantic import BaseModel, ConfigDict, Field
 

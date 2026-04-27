@@ -413,19 +413,22 @@ async def test_get_author_by_id_success(async_client):
     assert response.json()["name"] == "Dr. Jane Smith"
 
 
-@pytest.mark.asyncio
 async def test_get_author_by_id_not_found(async_client):
     """Graph DB returning 404 should bubble up as 404."""
-    with patch("httpx.AsyncClient") as mock_client_class:
-        mock_instance = AsyncMock()
-        mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
-        mock_instance.__aexit__ = AsyncMock(return_value=False)
-        mock_response = MagicMock()
-        mock_response.status_code = 404
-        mock_instance.get.return_value = mock_response
-        mock_client_class.return_value = mock_instance
+    # Patch the specific method on the instance used in main.py
+    with patch("app.main.graph_client.get_author_details", new_callable=AsyncMock) as mock_get:
+        # Create a mock response that looks like a 404
+        mock_resp = MagicMock(spec=httpx.Response)
+        mock_resp.status_code = 404
+        mock_resp.request = MagicMock(spec=httpx.Request)
+
+        # Make the mock raise the error FastAPI expects to catch
+        mock_get.side_effect = httpx.HTTPStatusError(message="Not Found", request=mock_resp.request, response=mock_resp)
+
         response = await async_client.get("/search/authors/author_1a2b3c4d-1234-5678-abcd-1234567890ab")
-    assert response.status_code == 404
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Author not found"
 
 
 @pytest.mark.asyncio
