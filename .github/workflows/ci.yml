@@ -343,6 +343,8 @@ jobs:
                       image: vector-db
                     - service: services/identity
                       image: identity
+                    - service: frontend
+                      image: frontend
 
         steps:
             - uses: actions/checkout@v6
