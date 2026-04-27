@@ -36,12 +36,12 @@ npm run test:integration   # Cross-component tests
 
 ## Frameworks
 
-| Component | Framework | Commands |
-|-----------|-----------|----------|
-| Frontend | Vitest + React Testing Library | `cd frontend && npm test` |
-| Services | pytest + pytest-asyncio | `cd services/[name] && poetry run pytest` |
-| Jobs | pytest | `cd jobs/[name] && poetry run pytest` |
-| Integration | pytest + httpx | `cd tests && poetry run pytest` |
+| Component   | Framework                      | Commands                                  |
+| ----------- | ------------------------------ | ----------------------------------------- |
+| Frontend    | Vitest + React Testing Library | `cd frontend && npm test`                 |
+| Services    | pytest + pytest-asyncio        | `cd services/[name] && poetry run pytest` |
+| Jobs        | pytest                         | `cd jobs/[name] && poetry run pytest`     |
+| Integration | pytest + httpx                 | `cd tests && poetry run pytest`           |
 
 ## Setup
 
@@ -202,19 +202,24 @@ pytest -m "integration and not requires_docker"  # Combine markers
 
 ## Available Fixtures
 
-### Session Fixtures
+### Session Fixtures (Shared Across All Tests)
+- `neo4j_container`: Neo4j testcontainer (Docker)
+- `graph_db_container`: Graph DB service testcontainer (Docker)
+- `neo4j_driver`: Direct Neo4j database connection
+- `ensure_test_data`: Auto-loads DTIC test data into Neo4j (autouse)
 - `base_api_url`: Main API URL (default: http://localhost:8000)
 - `vector_db_url`: Vector DB service URL
 - `graph_db_url`: Graph DB service URL
 
-### Function Fixtures
+### Function Fixtures (Recreated Per Test)
 - `http_client`: Async HTTP client (httpx)
+- `app_client`: FastAPI test client for aegis_scholar_api
 - `sample_integration_data`: Sample data for testing
 - `sample_search_query`: Sample search parameters
 
-### Container Fixtures (Optional)
-- `milvus_container`: Milvus testcontainer
-- `neo4j_container`: Neo4j testcontainer
+### Utility Functions
+- `get_free_port()`: Find available port for test services
+- `load_gz_jsonl()`: Load gzipped JSONL data into Neo4j
 
 See `conftest.py` for complete list and implementation.
 

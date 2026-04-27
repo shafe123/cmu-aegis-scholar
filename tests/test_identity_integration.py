@@ -29,7 +29,12 @@ from app.config import settings  # noqa: E402
 
 
 def get_free_port():
-    """Finds a free port on the host to run our Identity test server."""
+    """Finds a free port on the host to run our Identity test server.
+    
+    Note: This duplicates the utility function in conftest.py because
+    conftest modules cannot be directly imported. Consider using pytest
+    fixtures for shared utilities instead.
+    """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("", 0))
         return s.getsockname()[1]
