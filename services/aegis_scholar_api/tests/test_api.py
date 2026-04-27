@@ -745,6 +745,7 @@ async def test_get_most_recent_work_year_with_missing_years():
 async def test_get_most_recent_work_year_http_error():
     """HTTPError from graph DB should return None gracefully."""
     from app.services.graph_db import GraphDBClient
+
     client = GraphDBClient()
     with patch("httpx.AsyncClient") as mock_client_class:
         mock_instance = AsyncMock()
@@ -760,6 +761,7 @@ async def test_get_most_recent_work_year_http_error():
 async def test_get_most_recent_work_year_unexpected_error():
     """Unexpected exception from graph DB should return None gracefully."""
     from app.services.graph_db import GraphDBClient
+
     client = GraphDBClient()
     with patch("httpx.AsyncClient") as mock_client_class:
         mock_instance = AsyncMock()

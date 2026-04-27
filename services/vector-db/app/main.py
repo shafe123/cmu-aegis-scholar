@@ -169,8 +169,8 @@ def initialize_default_collection():
                 )
                 logger.warning("Skipping collection initialization.")
                 return
-            
-# Use shared schema definition — single source of truth with tests
+
+            # Use shared schema definition — single source of truth with tests
             schema = CollectionSchema(
                 fields=AUTHOR_FIELDS,
                 description="Author embeddings from averaged paper abstracts",
