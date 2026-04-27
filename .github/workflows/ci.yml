@@ -265,7 +265,7 @@ jobs:
     test-integration:
         name: "Tests · integration (root)"
         runs-on: ubuntu-latest
-        needs: [ build-images, lint-and-test-frontend ]
+        needs: [ build-images, lint-and-test-frontend, test-python ]
         services:
             neo4j:
                 image: neo4j:latest
