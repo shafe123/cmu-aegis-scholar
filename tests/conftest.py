@@ -172,8 +172,17 @@ def graph_db_container(neo4j_container, docker_network):
     env = os.environ.copy()
     env["DOCKER_BUILDKIT"] = "1"
 
+    # Use GitHub Actions cache if available (CI environment)
+    build_cmd = [
+        "docker", "build", 
+        "-t", "graph-db:test",
+        "--cache-from", "type=gha,scope=graph-db",
+        "--cache-to", "type=gha,mode=max,scope=graph-db",
+        graph_db_path
+    ]
+    
     subprocess.run(
-        ["docker", "build", "-t", "graph-db:test", graph_db_path],
+        build_cmd,
         check=True,
         env=env,
         capture_output=True,
@@ -257,12 +266,21 @@ def aegis_scholar_api_container(docker_network, graph_db_container):
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     api_service_path = os.path.join(project_root, "services", "aegis_scholar_api")
     
-    # Build the Docker image with BuildKit support
+    # Build the Docker image with BuildKit support and GitHub Actions cache
     env = os.environ.copy()
     env["DOCKER_BUILDKIT"] = "1"
     
+    # Use GitHub Actions cache if available (CI environment)
+    build_cmd = [
+        "docker", "build",
+        "-t", "aegis-scholar-api:test",
+        "--cache-from", "type=gha,scope=aegis-scholar-api",
+        "--cache-to", "type=gha,mode=max,scope=aegis-scholar-api",
+        api_service_path
+    ]
+    
     subprocess.run(
-        ["docker", "build", "-t", "aegis-scholar-api:test", api_service_path],
+        build_cmd,
         check=True,
         env=env,
         capture_output=True,
