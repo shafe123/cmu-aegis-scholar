@@ -807,6 +807,40 @@ def get_free_port():
         return s.getsockname()[1]
 
 
+def load_test_author(index=0):
+    """Load a specific author from dtic_test_subset.
+    
+    Args:
+        index: Zero-based index of the author to load
+        
+    Returns:
+        dict: Author data from dtic_test_subset
+    """
+    data_dir = Path(__file__).resolve().parent / "dtic_test_subset"
+    with gzip.open(data_dir / "dtic_authors_50.jsonl.gz", "rt", encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            if i == index:
+                return json.loads(line)
+    return None
+
+
+def load_test_work(index=0):
+    """Load a specific work from dtic_test_subset.
+    
+    Args:
+        index: Zero-based index of the work to load
+        
+    Returns:
+        dict: Work data from dtic_test_subset
+    """
+    data_dir = Path(__file__).resolve().parent / "dtic_test_subset"
+    with gzip.open(data_dir / "dtic_works_50.jsonl.gz", "rt", encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            if i == index:
+                return json.loads(line)
+    return None
+
+
 # --- Neo4j Database Fixtures ---
 
 
