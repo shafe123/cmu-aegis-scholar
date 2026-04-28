@@ -16,6 +16,7 @@ def check_selenium():
     print("\n1. Checking Selenium installation...")
     try:
         import selenium
+
         print(f"   ✓ Selenium {selenium.__version__} is installed")
         return True
     except ImportError:
@@ -30,17 +31,17 @@ def check_webdriver():
     try:
         from selenium import webdriver
         from selenium.webdriver.chrome.options import Options
-        
+
         options = Options()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
         driver = webdriver.Chrome(options=options)
-        print(f"   ✓ Chrome WebDriver initialized successfully")
+        print("   ✓ Chrome WebDriver initialized successfully")
         driver.quit()
         return True
-        
+
     except Exception as e:
         print(f"   ✗ Failed to initialize WebDriver: {e}")
         print("     Make sure Chrome or Chromium is installed")
@@ -57,45 +58,45 @@ def check_dtic_access():
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
-        
+
         options = Options()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
         driver = webdriver.Chrome(options=options)
-        
+
         print("   Navigating to DTIC...")
         driver.get("https://dtic.dimensions.ai/discover/publication")
-        
+
         # Wait for page to load
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
-        
+
         title = driver.title
         print(f"   ✓ Successfully loaded: {title}")
-        
+
         # Try to find some common elements
         print("\n   Checking page structure...")
-        
+
         # Get page source length as a simple check
         page_source = driver.page_source
         print(f"   Page source length: {len(page_source)} characters")
-        
+
         # Check for common patterns
         if "publication" in page_source.lower():
             print("   ✓ Found 'publication' in page content")
         else:
             print("   ⚠ 'publication' not found in page content")
-        
+
         # Try to find any links
         links = driver.find_elements(By.TAG_NAME, "a")
         print(f"   Found {len(links)} links on page")
-        
+
         driver.quit()
         return True
-        
+
     except Exception as e:
         print(f"   ✗ Error accessing DTIC: {e}")
         return False
@@ -106,14 +107,15 @@ def check_output_directory():
     print("\n4. Checking write permissions...")
     try:
         test_file = "test_write.tmp"
-        with open(test_file, 'w') as f:
+        with open(test_file, "w") as f:
             f.write("test")
-        
+
         import os
+
         os.remove(test_file)
         print("   ✓ Can write to current directory")
         return True
-        
+
     except Exception as e:
         print(f"   ✗ Cannot write to current directory: {e}")
         return False
@@ -124,14 +126,14 @@ def main():
     print("=" * 70)
     print("DTIC Scraper Environment Verification")
     print("=" * 70)
-    
+
     checks = [
         check_selenium,
         check_webdriver,
         check_dtic_access,
-        check_output_directory
+        check_output_directory,
     ]
-    
+
     results = []
     for check in checks:
         try:
@@ -140,11 +142,11 @@ def main():
         except Exception as e:
             print(f"   ✗ Unexpected error: {e}")
             results.append(False)
-    
+
     print("\n" + "=" * 70)
     print("Summary")
     print("=" * 70)
-    
+
     if all(results):
         print("\n✓ All checks passed! You're ready to start scraping.")
         print("\nTry running:")

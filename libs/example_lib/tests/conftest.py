@@ -1,15 +1,12 @@
 """Test configuration and shared fixtures for example_lib."""
+
 import pytest
 
 
 @pytest.fixture
 def sample_data():
     """Sample data for testing library functions."""
-    return {
-        "id": "123",
-        "name": "Test Item",
-        "value": 42
-    }
+    return {"id": "123", "name": "Test Item", "value": 42}
 
 
 @pytest.fixture

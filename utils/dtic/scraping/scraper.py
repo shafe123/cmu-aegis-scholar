@@ -22,9 +22,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (
-    TimeoutException, 
-    NoSuchElementException, 
-    StaleElementReferenceException
+    TimeoutException,
+    StaleElementReferenceException,
 )
 from selenium.webdriver.chrome.options import Options
 
@@ -34,7 +33,7 @@ def load_config(config_file: str = "config.json") -> Dict:
     config_path = Path(config_file)
     if config_path.exists():
         try:
-            with open(config_path, 'r', encoding='utf-8') as f:
+            with open(config_path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except json.JSONDecodeError as e:
             # Can't use logger here as it's not configured yet
@@ -49,14 +48,16 @@ _logs_dir.mkdir(exist_ok=True)
 _log_filename = _logs_dir / f"{_log_timestamp}_dtic_scraper.log"
 
 # Configure logging with UTF-8 encoding
-file_handler = logging.FileHandler(_log_filename, encoding='utf-8')
+file_handler = logging.FileHandler(_log_filename, encoding="utf-8")
 stream_handler = logging.StreamHandler(sys.stdout)
-stream_handler.stream = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
+stream_handler.stream = open(
+    sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1
+)
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[file_handler, stream_handler]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[file_handler, stream_handler],
 )
 logger = logging.getLogger(__name__)
 
@@ -66,25 +67,25 @@ def extract_grid_id_from_affiliation(affil: Dict) -> Optional[str]:
     if not isinstance(affil, dict):
         return None
 
-    for key in ('id', 'grid_id'):
+    for key in ("id", "grid_id"):
         value = affil.get(key)
-        if isinstance(value, str) and value.startswith('grid.'):
+        if isinstance(value, str) and value.startswith("grid."):
             return value
 
     candidate_values = []
-    for key in ('url', 'href', 'link'):
+    for key in ("url", "href", "link"):
         value = affil.get(key)
         if isinstance(value, str):
             candidate_values.append(value)
 
-    navigation = affil.get('navigation')
+    navigation = affil.get("navigation")
     if isinstance(navigation, dict):
         for value in navigation.values():
             if isinstance(value, str):
                 candidate_values.append(value)
 
     for value in candidate_values:
-        match = re.search(r'(grid\.[A-Za-z0-9.]+)', value)
+        match = re.search(r"(grid\.[A-Za-z0-9.]+)", value)
         if match:
             return match.group(1)
 
@@ -94,6 +95,7 @@ def extract_grid_id_from_affiliation(affil: Dict) -> Optional[str]:
 @dataclass
 class Author:
     """Represents a publication author."""
+
     name: str
     affiliations: List[str]
     researcher_id: Optional[str] = None
@@ -104,6 +106,7 @@ class Author:
 @dataclass
 class Organization:
     """Represents an organization."""
+
     name: str
     org_id: Optional[str] = None
     country: Optional[str] = None
@@ -113,6 +116,7 @@ class Organization:
 @dataclass
 class Publication:
     """Represents a publication or technical report."""
+
     publication_id: str
     title: str
     abstract: Optional[str]
@@ -125,7 +129,7 @@ class Publication:
     keywords: Optional[List[str]] = None
     citations_count: Optional[int] = None
     scraped_at: Optional[str] = None
-    
+
     def __post_init__(self):
         if self.scraped_at is None:
             self.scraped_at = datetime.now().isoformat()
@@ -135,86 +139,89 @@ class Publication:
 
 class StateManager:
     """Manages scraper state for resilient operation."""
-    
+
     def __init__(self, state_file: str = "scraper_state.json"):
         self.state_file = Path(state_file)
         self.state = self._load_state()
-    
+
     def _load_state(self) -> Dict:
         """Load state from file or create new state."""
         if self.state_file.exists():
             try:
-                with open(self.state_file, 'r', encoding='utf-8') as f:
+                with open(self.state_file, "r", encoding="utf-8") as f:
                     state = json.load(f)
-                    logger.info(f"Loaded state: {len(state.get('scraped_ids', []))} publications scraped")
+                    logger.info(
+                        f"Loaded state: {len(state.get('scraped_ids', []))} publications scraped"
+                    )
                     return state
             except json.JSONDecodeError:
                 logger.warning("Corrupted state file, starting fresh")
-        
+
         return {
-            'scraped_ids': [],
-            'failed_ids': [],
-            'last_page': 0,
-            'last_updated': None
+            "scraped_ids": [],
+            "failed_ids": [],
+            "last_page": 0,
+            "last_updated": None,
         }
-    
+
     def save_state(self):
         """Save current state to file."""
-        self.state['last_updated'] = datetime.now().isoformat()
-        with open(self.state_file, 'w', encoding='utf-8') as f:
+        self.state["last_updated"] = datetime.now().isoformat()
+        with open(self.state_file, "w", encoding="utf-8") as f:
             json.dump(self.state, f, indent=2)
         logger.debug("State saved")
-    
+
     def mark_scraped(self, publication_id: str):
         """Mark a publication as successfully scraped."""
-        if publication_id not in self.state['scraped_ids']:
-            self.state['scraped_ids'].append(publication_id)
+        if publication_id not in self.state["scraped_ids"]:
+            self.state["scraped_ids"].append(publication_id)
             self.save_state()
-    
+
     def mark_failed(self, publication_id: str):
         """Mark a publication as failed."""
-        if publication_id not in self.state['failed_ids']:
-            self.state['failed_ids'].append(publication_id)
+        if publication_id not in self.state["failed_ids"]:
+            self.state["failed_ids"].append(publication_id)
             self.save_state()
-    
+
     def is_scraped(self, publication_id: str) -> bool:
         """Check if publication has been scraped."""
-        return publication_id in self.state['scraped_ids']
-    
+        return publication_id in self.state["scraped_ids"]
+
     def update_page(self, page: int):
         """Update last processed page."""
-        self.state['last_page'] = page
+        self.state["last_page"] = page
         self.save_state()
 
 
 class RateLimiter:
     """Handles rate limiting with exponential backoff."""
-    
-    def __init__(self, 
-                 min_delay: float = 2.0, 
-                 max_delay: float = 10.0,
-                 base_backoff: float = 2.0):
+
+    def __init__(
+        self, min_delay: float = 2.0, max_delay: float = 10.0, base_backoff: float = 2.0
+    ):
         self.min_delay = min_delay
         self.max_delay = max_delay
         self.base_backoff = base_backoff
         self.consecutive_errors = 0
-    
+
     def wait(self):
         """Wait with random jitter to avoid detection."""
         delay = random.uniform(self.min_delay, self.max_delay)
         logger.debug(f"Rate limiting: waiting {delay:.2f} seconds")
         time.sleep(delay)
-    
+
     def backoff(self):
         """Exponential backoff after errors."""
         self.consecutive_errors += 1
         delay = min(
-            self.base_backoff ** self.consecutive_errors,
-            60  # Max 60 seconds
+            self.base_backoff**self.consecutive_errors,
+            60,  # Max 60 seconds
         )
-        logger.warning(f"Backing off for {delay:.2f} seconds (error #{self.consecutive_errors})")
+        logger.warning(
+            f"Backing off for {delay:.2f} seconds (error #{self.consecutive_errors})"
+        )
         time.sleep(delay)
-    
+
     def reset(self):
         """Reset error counter after successful operation."""
         self.consecutive_errors = 0
@@ -222,80 +229,86 @@ class RateLimiter:
 
 class DTICScraper:
     """Main scraper class for DTIC publications."""
-    
-    def __init__(self, 
-                 output_dir: str = "dtic_publications",
-                 headless: bool = True,
-                 state_file: str = "scraper_state.json",
-                 config_file: str = "config.json"):
+
+    def __init__(
+        self,
+        output_dir: str = "dtic_publications",
+        headless: bool = True,
+        state_file: str = "scraper_state.json",
+        config_file: str = "config.json",
+    ):
         # Load configuration
         self.config = load_config(config_file)
-        
+
         # Apply config or use defaults
         self.output_dir = Path(output_dir)
         # Create output directory if it doesn't exist
         self.output_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Output directory: {self.output_dir.absolute()}")
-        
-        self.headless = self.config.get('scraper', {}).get('headless', headless)
+
+        self.headless = self.config.get("scraper", {}).get("headless", headless)
         logger.info("Fast mode: enabled (JS extraction only)")
-        
+
         self.driver: Optional[webdriver.Chrome] = None
         self.state_manager = StateManager(state_file)
-        
+
         # Initialize rate limiter with config values
-        rate_config = self.config.get('rate_limiting', {})
+        rate_config = self.config.get("rate_limiting", {})
         self.rate_limiter = RateLimiter(
-            min_delay=rate_config.get('min_delay', 2.0),
-            max_delay=rate_config.get('max_delay', 10.0),
-            base_backoff=rate_config.get('base_backoff', 2.0)
+            min_delay=rate_config.get("min_delay", 2.0),
+            max_delay=rate_config.get("max_delay", 10.0),
+            base_backoff=rate_config.get("base_backoff", 2.0),
         )
-        
-        self.base_url = self.config.get('scraper', {}).get('base_url', 
-                                                             "https://dtic.dimensions.ai/discover/publication")
-        
+
+        self.base_url = self.config.get("scraper", {}).get(
+            "base_url", "https://dtic.dimensions.ai/discover/publication"
+        )
+
         # Get selectors from config
-        self.selectors = self.config.get('selectors', {})
-    
+        self.selectors = self.config.get("selectors", {})
+
     def _init_driver(self):
         """Initialize Selenium WebDriver with appropriate options."""
         chrome_options = Options()
-        
+
         if self.headless:
-            chrome_options.add_argument('--headless')
-        
+            chrome_options.add_argument("--headless")
+
         # Standard options for better stability
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option('useAutomationExtension', False)
-        
+        chrome_options.add_experimental_option("useAutomationExtension", False)
+
         # User agent to avoid detection
-        chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
-        
+        chrome_options.add_argument(
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+
         # Use 'eager' page load strategy - returns when DOM is loaded, not all resources
-        chrome_options.page_load_strategy = 'eager'
-        
+        chrome_options.page_load_strategy = "eager"
+
         # Disable images for faster loading
         prefs = {
             "profile.managed_default_content_settings.images": 2,
             "profile.default_content_setting_values.notifications": 2,
         }
         chrome_options.add_experimental_option("prefs", prefs)
-        
+
         self.driver = webdriver.Chrome(options=chrome_options)
-        
+
         # Set page load timeout
-        page_timeout = self.config.get('timeouts', {}).get('page_load', 10)
+        page_timeout = self.config.get("timeouts", {}).get("page_load", 10)
         self.driver.set_page_load_timeout(page_timeout)
-        
+
         # Minimal implicit wait
         self.driver.implicitly_wait(3)
         logger.info("WebDriver initialized (eager page loading, images disabled)")
 
-    
-    def _extract_javascript_data(self, script_pattern: str = "__NUXT__") -> Optional[Dict]:
+    def _extract_javascript_data(
+        self, script_pattern: str = "__NUXT__"
+    ) -> Optional[Dict]:
         """
         Extract data from JavaScript objects embedded in the page.
         Returns the publication data from config.details.document or similar objects.
@@ -342,46 +355,50 @@ class DTICScraper:
                 console.log('No JavaScript data found');
                 return null;
             """)
-            
+
             if data:
-                logger.debug(f"Extracted JavaScript data object with {len(str(data))} chars")
-                logger.debug(f"Data keys: {list(data.keys()) if isinstance(data, dict) else 'not a dict'}")
+                logger.debug(
+                    f"Extracted JavaScript data object with {len(str(data))} chars"
+                )
+                logger.debug(
+                    f"Data keys: {list(data.keys()) if isinstance(data, dict) else 'not a dict'}"
+                )
                 return data
-            
+
         except Exception as e:
             logger.warning(f"Could not extract JavaScript data: {e}")
-        
+
         return None
-    
+
     def _extract_publication_from_page(self, url: str) -> Optional[Publication]:
         """
         Extract publication data from a detailed publication page using JavaScript.
         Opens publication in a new tab to keep search results in main tab.
-        
+
         Args:
             url: Publication URL
         """
         try:
             # Rate limit before page load
             self.rate_limiter.wait()
-            
+
             # Open new tab using JavaScript
             self.driver.execute_script("window.open('about:blank', '_blank');")
-            
+
             # Switch to the new tab (it will be the last one in the list)
             all_windows = self.driver.window_handles
             new_tab = [w for w in all_windows if w != self.main_window][0]
             self.driver.switch_to.window(new_tab)
-            
+
             # Start loading page in new tab
             start_load = time.time()
             logger.info(f"Starting page load: {url}")
-            
+
             self.driver.get(url)
-            
+
             load_time = time.time() - start_load
             logger.info(f"Page loaded in {load_time:.2f}s")
-            
+
             # Wait for JavaScript to execute
             start_wait = time.time()
             WebDriverWait(self.driver, 3).until(
@@ -389,27 +406,27 @@ class DTICScraper:
             )
             wait_time = time.time() - start_wait
             logger.debug(f"JavaScript ready in {wait_time:.2f}s")
-            
+
             # Extract publication ID from URL (strip query parameters)
-            pub_id = url.split('/')[-1].split('?')[0]
-            
+            pub_id = url.split("/")[-1].split("?")[0]
+
             # Start extraction
             start_extract = time.time()
             logger.debug(f"Starting data extraction for {pub_id}")
-            
+
             result = self._extract_publication_from_js(url, pub_id)
-            
+
             extract_time = time.time() - start_extract
             logger.info(f"Data extraction completed in {extract_time:.2f}s")
-            
+
             # Close the new tab
             self.driver.close()
-            
+
             # Switch back to main window (search results)
             self.driver.switch_to.window(self.main_window)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Error extracting publication from {url}: {e}")
             # Make sure we're back on the main window even if there's an error
@@ -417,11 +434,13 @@ class DTICScraper:
                 if self.driver.current_window_handle != self.main_window:
                     self.driver.close()
                     self.driver.switch_to.window(self.main_window)
-            except:
+            except:  # noqa: E722
                 pass
             return None
-    
-    def _extract_publication_from_js(self, url: str, pub_id: str) -> Optional[Publication]:
+
+    def _extract_publication_from_js(
+        self, url: str, pub_id: str
+    ) -> Optional[Publication]:
         """
         Extract publication data from JavaScript objects only.
         No fallback to DOM scraping - if data isn't in JS, it's skipped.
@@ -429,143 +448,161 @@ class DTICScraper:
         try:
             # Get JavaScript data
             js_data = self._extract_javascript_data()
-            
+
             if not js_data:
                 logger.warning(f"No JS data found for {pub_id}")
                 return None
-            
+
             # Log available keys for debugging
             if isinstance(js_data, dict):
                 logger.debug(f"JS data top-level keys: {list(js_data.keys())}")
-            
+
             # Extract from DTIC structure: page_structure
-            page_structure = js_data.get('page_structure', {})
-            
+            page_structure = js_data.get("page_structure", {})
+
             # Title from publication-header
             title = None
-            pub_header = page_structure.get('publication-header', {}).get('data', {})
+            pub_header = page_structure.get("publication-header", {}).get("data", {})
             if pub_header:
-                title = pub_header.get('title')
-            
+                title = pub_header.get("title")
+
             # Abstract from abstract section (optional - may not exist)
             abstract = None
-            abstract_section = page_structure.get('abstract', {}).get('data', {})
+            abstract_section = page_structure.get("abstract", {}).get("data", {})
             if abstract_section:
-                abstract = abstract_section.get('abstract')
-            
+                abstract = abstract_section.get("abstract")
+
             # DOI from custom-meta
             doi = None
-            custom_meta = page_structure.get('custom-meta', {}).get('data', {})
+            custom_meta = page_structure.get("custom-meta", {}).get("data", {})
             if custom_meta:
-                doi = custom_meta.get('doi')
-            
+                doi = custom_meta.get("doi")
+
             # Document type from publication-header
             document_type = None
             if pub_header:
-                document_type = pub_header.get('pub_class') or pub_header.get('pub_class_id')
-            
+                document_type = pub_header.get("pub_class") or pub_header.get(
+                    "pub_class_id"
+                )
+
             # Publication date from metadata
             publication_date = None
-            metadata = pub_header.get('metadata', {}).get('data', {})
+            metadata = pub_header.get("metadata", {}).get("data", {})
             if metadata:
-                publication_date = metadata.get('pub_date')
-            
+                publication_date = metadata.get("pub_date")
+
             # Extract citations - default to 0
             citations_count = 0
-            
+
             # Extract keywords from Fields of Research (ANZSRC 2020)
             keywords = self._extract_fields_of_research(js_data)
-            
+
             # Extract authors from page_structure.authors.data.affiliations_details
             start_authors = time.time()
             authors = []
-            authors_section = page_structure.get('authors', {}).get('data', {})
+            authors_section = page_structure.get("authors", {}).get("data", {})
             if authors_section:
-                affiliations_details = authors_section.get('affiliations_details', [])
+                affiliations_details = authors_section.get("affiliations_details", [])
                 for author_data in affiliations_details:
                     if isinstance(author_data, dict):
-                        first_name = author_data.get('first_name', '')
-                        last_name = author_data.get('last_name', '')
+                        first_name = author_data.get("first_name", "")
+                        last_name = author_data.get("last_name", "")
                         name = f"{first_name} {last_name}".strip()
-                        
-                        researcher_id = author_data.get('researcher_id')
-                        orcid_list = author_data.get('orcid', [])
-                        if orcid_list and isinstance(orcid_list, list) and len(orcid_list) > 0:
+
+                        researcher_id = author_data.get("researcher_id")
+                        orcid_list = author_data.get("orcid", [])
+                        if (
+                            orcid_list
+                            and isinstance(orcid_list, list)
+                            and len(orcid_list) > 0
+                        ):
                             if not researcher_id:
                                 researcher_id = orcid_list[0]
-                        
+
                         # Extract affiliation names and GRID IDs for this author
                         affil_list = []
                         affil_details = []
                         author_org_ids = []
                         seen_author_org_ids = set()
-                        for affil in author_data.get('affiliations', []):
+                        for affil in author_data.get("affiliations", []):
                             if isinstance(affil, dict):
-                                affil_name = affil.get('name')
+                                affil_name = affil.get("name")
                                 grid_id = extract_grid_id_from_affiliation(affil)
-                                country = affil.get('country')
+                                country = affil.get("country")
                                 if affil_name:
                                     affil_list.append(affil_name)
-                                    affil_details.append({
-                                        'name': affil_name,
-                                        'org_id': grid_id,
-                                        'country': country
-                                    })
+                                    affil_details.append(
+                                        {
+                                            "name": affil_name,
+                                            "org_id": grid_id,
+                                            "country": country,
+                                        }
+                                    )
                                 if grid_id and grid_id not in seen_author_org_ids:
                                     author_org_ids.append(grid_id)
                                     seen_author_org_ids.add(grid_id)
-                        
+
                         if name:
-                            authors.append(Author(
-                                name=name,
-                                researcher_id=researcher_id,
-                                affiliations=affil_list,
-                                org_ids=author_org_ids,
-                                affiliation_details=affil_details
-                            ))
-            
+                            authors.append(
+                                Author(
+                                    name=name,
+                                    researcher_id=researcher_id,
+                                    affiliations=affil_list,
+                                    org_ids=author_org_ids,
+                                    affiliation_details=affil_details,
+                                )
+                            )
+
             authors_time = time.time() - start_authors
-            logger.debug(f"Extracted {len(authors)} authors from JS in {authors_time:.2f}s")
-            
+            logger.debug(
+                f"Extracted {len(authors)} authors from JS in {authors_time:.2f}s"
+            )
+
             # Extract organizations from author affiliations
             start_orgs = time.time()
             organizations = []
             if authors_section:
-                affiliations_details = authors_section.get('affiliations_details', [])
+                affiliations_details = authors_section.get("affiliations_details", [])
                 seen_orgs = set()
                 for author_data in affiliations_details:
                     if isinstance(author_data, dict):
-                        for affil in author_data.get('affiliations', []):
+                        for affil in author_data.get("affiliations", []):
                             if isinstance(affil, dict):
                                 org_id = extract_grid_id_from_affiliation(affil)
-                                org_name = affil.get('name')
+                                org_name = affil.get("name")
                                 if org_name and org_id and org_id not in seen_orgs:
-                                    organizations.append(Organization(
-                                        name=org_name,
-                                        org_id=org_id,
-                                        country=affil.get('country'),
-                                        type=None
-                                    ))
+                                    organizations.append(
+                                        Organization(
+                                            name=org_name,
+                                            org_id=org_id,
+                                            country=affil.get("country"),
+                                            type=None,
+                                        )
+                                    )
                                     seen_orgs.add(org_id)
                                 elif org_name and not org_id:
                                     # Organization without ID (raw affiliation)
                                     org_key = org_name.lower()
                                     if org_key not in seen_orgs:
-                                        organizations.append(Organization(
-                                            name=org_name,
-                                            org_id=None,
-                                            country=affil.get('country'),
-                                            type=None
-                                        ))
+                                        organizations.append(
+                                            Organization(
+                                                name=org_name,
+                                                org_id=None,
+                                                country=affil.get("country"),
+                                                type=None,
+                                            )
+                                        )
                                         seen_orgs.add(org_key)
-            
+
             orgs_time = time.time() - start_orgs
-            logger.debug(f"Extracted {len(organizations)} organizations from JS in {orgs_time:.2f}s")
-            
+            logger.debug(
+                f"Extracted {len(organizations)} organizations from JS in {orgs_time:.2f}s"
+            )
+
             # Parse publication date if needed
             if publication_date:
                 publication_date = self._parse_publication_date(str(publication_date))
-            
+
             publication = Publication(
                 publication_id=pub_id,
                 title=title or "Unknown Title",
@@ -577,162 +614,173 @@ class DTICScraper:
                 doi=doi,
                 document_type=document_type,
                 keywords=keywords,
-                citations_count=citations_count
+                citations_count=citations_count,
             )
-            
-            logger.info(f"[JS] Extracted publication: {title[:50] if title else pub_id}...")
+
+            logger.info(
+                f"[JS] Extracted publication: {title[:50] if title else pub_id}..."
+            )
             return publication
-            
+
         except Exception as e:
             logger.error(f"Error in JS extraction for {pub_id}: {e}")
             return None
-    
+
     def _extract_fields_of_research(self, js_data: Dict) -> List[str]:
         """
         Extract Fields of Research path from JavaScript data.
-        
+
         Args:
             js_data: The complete JavaScript data object
-            
+
         Returns:
             List containing the navigation path (if found)
         """
         keywords = []
-        
+
         try:
             # Get categories from page_structure
-            page_structure = js_data.get('page_structure', {})
-            categories = page_structure.get('categories', {})
-            
+            page_structure = js_data.get("page_structure", {})
+            categories = page_structure.get("categories", {})
+
             # Look for categories-for entity
-            entities = categories.get('entities', [])
-            
+            entities = categories.get("entities", [])
+
             for entity in entities:
-                if isinstance(entity, dict) and entity.get('key') == 'categories-for':
-                    navigation = entity.get('navigation', {})
-                    json_path = navigation.get('json')
+                if isinstance(entity, dict) and entity.get("key") == "categories-for":
+                    navigation = entity.get("navigation", {})
+                    json_path = navigation.get("json")
                     if json_path:
                         keywords.append(json_path)
                         logger.debug(f"Found Fields of Research path: {json_path}")
                     break
-        
+
         except Exception as e:
             logger.debug(f"Error extracting Fields of Research path: {e}")
-        
+
         return keywords
-    
+
     def _parse_publication_date(self, date_str: Optional[str]) -> Optional[str]:
         """Parse and normalize publication date."""
         if not date_str:
             return None
-        
+
         try:
             import re
+
             date_str = date_str.strip()
-            
+
             # Match "Month Year" format (e.g., "September 2026")
-            month_year_match = re.match(r'^([A-Za-z]+)\s+(\d{4})$', date_str)
+            month_year_match = re.match(r"^([A-Za-z]+)\s+(\d{4})$", date_str)
             if month_year_match:
                 month, year = month_year_match.groups()
                 return f"1 {month} {year}"
-            
+
             # Match "Day Month Year" format - return as is
-            day_month_year_match = re.match(r'^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$', date_str)
+            day_month_year_match = re.match(
+                r"^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$", date_str
+            )
             if day_month_year_match:
                 return date_str
-            
+
             # Match "YYYY-MM-DD" format
-            iso_match = re.match(r'^(\d{4})-(\d{2})-(\d{2})$', date_str)
+            iso_match = re.match(r"^(\d{4})-(\d{2})-(\d{2})$", date_str)
             if iso_match:
                 return date_str
-            
+
             # Return raw string if no pattern matches
             return date_str
-            
+
         except Exception as e:
             logger.debug(f"Error parsing date '{date_str}': {e}")
             return date_str
-    
+
     def _get_publication_links(self) -> List[str]:
         """Extract publication links from the current search results page."""
         links = []
-        
+
         try:
             # Get publication link selectors from config
-            pub_link_selectors = self.selectors.get('publication_links', [
-                "a[href*='/publication/']"
-            ])
-            
+            pub_link_selectors = self.selectors.get(
+                "publication_links", ["a[href*='/publication/']"]
+            )
+
             if isinstance(pub_link_selectors, str):
                 pub_link_selectors = [pub_link_selectors]
-            
+
             # Wait for results to load using first selector
             WebDriverWait(self.driver, 15).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, pub_link_selectors[0]))
             )
-            
+
             # Extract all publication links using all configured selectors
             for selector in pub_link_selectors:
                 link_elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
             # Extract all publication links using all configured selectors
             for selector in pub_link_selectors:
                 link_elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
-                
+
                 for elem in link_elements:
                     try:
-                        href = elem.get_attribute('href')
+                        href = elem.get_attribute("href")
                         if href and href not in links:
                             # Ensure it's a direct publication link
-                            if '/publication/pub.' in href or '/publication/' in href:
+                            if "/publication/pub." in href or "/publication/" in href:
                                 links.append(href)
                     except StaleElementReferenceException:
                         continue
-            
+
             logger.info(f"Found {len(links)} publication links on current page")
-            
+
         except TimeoutException:
             logger.warning("Timeout waiting for publication links")
         except Exception as e:
             logger.error(f"Error getting publication links: {e}")
-        
+
         return links
-    
+
     def _save_publication(self, publication: Publication):
         """Save publication to individual JSON file in output directory."""
         try:
             # Create filename from publication ID
             filename = f"{publication.publication_id}.json"
             filepath = self.output_dir / filename
-            
+
             # Save as formatted JSON
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(asdict(publication), f, indent=2, ensure_ascii=False)
-            
-            logger.debug(f"Saved publication: {publication.publication_id} to {filename}")
+
+            logger.debug(
+                f"Saved publication: {publication.publication_id} to {filename}"
+            )
         except Exception as e:
             logger.error(f"Error saving publication: {e}")
-    
+
     def _scroll_and_load_more(self) -> bool:
         """
         Scroll down to trigger infinite scroll and load more publications.
-        
+
         Returns:
             True if more content was loaded, False otherwise
         """
         try:
             # Get current page height
-            last_height = self.driver.execute_script("return document.body.scrollHeight")
-            
+            last_height = self.driver.execute_script(
+                "return document.body.scrollHeight"
+            )
+
             # Scroll to bottom
-            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            
+            self.driver.execute_script(
+                "window.scrollTo(0, document.body.scrollHeight);"
+            )
+
             # Wait for new content to load
             time.sleep(1)
             self.rate_limiter.wait()
-            
+
             # Get new page height
             new_height = self.driver.execute_script("return document.body.scrollHeight")
-            
+
             # Check if new content was loaded
             if new_height > last_height:
                 logger.info("Loaded more publications via infinite scroll")
@@ -740,15 +788,20 @@ class DTICScraper:
             else:
                 logger.info("Reached end of infinite scroll")
                 return False
-            
+
         except Exception as e:
             logger.error(f"Error during infinite scroll: {e}")
             return False
-    
-    def scrape(self, max_pages: Optional[int] = None, max_publications: Optional[int] = None, year: Optional[int] = None):
+
+    def scrape(
+        self,
+        max_pages: Optional[int] = None,
+        max_publications: Optional[int] = None,
+        year: Optional[int] = None,
+    ):
         """
         Main scraping method using infinite scroll.
-        
+
         Args:
             max_pages: Maximum number of scrolls/batches (None for unlimited)
             max_publications: Maximum number of publications to scrape (None for unlimited)
@@ -756,84 +809,104 @@ class DTICScraper:
         """
         try:
             self._init_driver()
-            
+
             # Build URL with year filter if specified
             url = self.base_url
             if year:
                 url = f"{self.base_url}?or_facet_year={year}"
                 logger.info(f"Scraping publications for year: {year}")
-            
+
             # Navigate to URL
             logger.info(f"Navigating to {url}")
             self.driver.get(url)
             self.rate_limiter.wait()
-            
+
             # Store the main window handle (search results page)
             self.main_window = self.driver.current_window_handle
-            
+
             # Track per-year progress if year is specified
-            year_processed_count = 0  # Total processed for this year (new + already scraped)
-            year_newly_scraped = 0    # Newly scraped for this year
+            year_processed_count = (
+                0  # Total processed for this year (new + already scraped)
+            )
+            year_newly_scraped = 0  # Newly scraped for this year
             scroll_count = 0
             seen_links = set()
-            
+
             logger.info("Starting interleaved scroll and scrape process...")
-            
+
             while True:
                 # Get publication links currently visible
                 pub_links = self._get_publication_links()
-                
+
                 if not pub_links:
                     logger.warning("No publication links found")
                     break
-                
+
                 # Find new links we haven't seen yet
                 new_links = [link for link in pub_links if link not in seen_links]
                 seen_links.update(new_links)
-                
+
                 if new_links:
-                    logger.info(f"Found {len(new_links)} new publication links (total seen: {len(seen_links)})")
-                
+                    logger.info(
+                        f"Found {len(new_links)} new publication links (total seen: {len(seen_links)})"
+                    )
+
                 # Process the new links
                 for link in new_links:
-                    pub_id = link.split('/')[-1].split('?')[0]
-                    
+                    pub_id = link.split("/")[-1].split("?")[0]
+
                     # Check if already scraped
                     already_scraped = self.state_manager.is_scraped(pub_id)
-                    
+
                     if already_scraped:
                         logger.debug(f"Skipping already scraped publication: {pub_id}")
                         # If filtering by year, count this towards the year's total
                         if year:
                             year_processed_count += 1
-                            logger.debug(f"Year {year}: {year_processed_count} processed ({year_newly_scraped} new)")
+                            logger.debug(
+                                f"Year {year}: {year_processed_count} processed ({year_newly_scraped} new)"
+                            )
                         continue
-                    
+
                     # For year filtering, check if we've hit the limit for this year
-                    if year and max_publications and year_processed_count >= max_publications:
-                        logger.info(f"Reached publication limit for year {year}: {max_publications}")
-                        logger.info(f"Year {year} complete: {year_newly_scraped} newly scraped, {year_processed_count - year_newly_scraped} already existed")
+                    if (
+                        year
+                        and max_publications
+                        and year_processed_count >= max_publications
+                    ):
+                        logger.info(
+                            f"Reached publication limit for year {year}: {max_publications}"
+                        )
+                        logger.info(
+                            f"Year {year} complete: {year_newly_scraped} newly scraped, {year_processed_count - year_newly_scraped} already existed"
+                        )
                         return
-                    
+
                     # For non-year filtering, use global count
                     if not year and max_publications:
-                        scraped_count = len(self.state_manager.state['scraped_ids'])
+                        scraped_count = len(self.state_manager.state["scraped_ids"])
                         if scraped_count >= max_publications:
-                            logger.info(f"Reached publication limit: {max_publications}")
-                            logger.info(f"Scraping completed. Total publications: {scraped_count}")
+                            logger.info(
+                                f"Reached publication limit: {max_publications}"
+                            )
+                            logger.info(
+                                f"Scraping completed. Total publications: {scraped_count}"
+                            )
                             return
-                    
+
                     try:
-                        logger.info(f"{'='*60}")
+                        logger.info(f"{'=' * 60}")
                         if year:
-                            logger.info(f"Processing publication {year_processed_count + 1}/{max_publications or 'ALL'} (Year {year}): {pub_id}")
+                            logger.info(
+                                f"Processing publication {year_processed_count + 1}/{max_publications or 'ALL'} (Year {year}): {pub_id}"
+                            )
                         else:
                             logger.info(f"Processing publication: {pub_id}")
-                        logger.info(f"{'='*60}")
-                        
+                        logger.info(f"{'=' * 60}")
+
                         # Extract publication data
                         publication = self._extract_publication_from_page(link)
-                        
+
                         if publication:
                             # Save publication
                             self._save_publication(publication)
@@ -842,39 +915,43 @@ class DTICScraper:
                                 year_processed_count += 1
                                 year_newly_scraped += 1
                             self.rate_limiter.reset()
-                            
+
                             if year:
-                                logger.info(f"[OK] Year {year}: {year_processed_count}/{max_publications or 'ALL'} processed ({year_newly_scraped} new)")
+                                logger.info(
+                                    f"[OK] Year {year}: {year_processed_count}/{max_publications or 'ALL'} processed ({year_newly_scraped} new)"
+                                )
                             else:
-                                logger.info(f"[OK] Successfully scraped publication")
+                                logger.info("[OK] Successfully scraped publication")
                         else:
                             self.state_manager.mark_failed(pub_id)
-                        
+
                     except Exception as e:
                         logger.error(f"Error processing publication {pub_id}: {e}")
                         self.state_manager.mark_failed(pub_id)
                         self.rate_limiter.backoff()
-                
+
                 # Check scroll limit
                 if max_pages and scroll_count >= max_pages:
                     logger.info(f"Reached maximum scroll limit: {max_pages}")
                     break
-                
+
                 # Try to load more content
                 if not self._scroll_and_load_more():
                     logger.info("Reached end of infinite scroll")
                     break
-                
+
                 scroll_count += 1
-            
+
             # Log completion
             if year:
-                logger.info(f"Year {year} complete: {year_newly_scraped} newly scraped, {year_processed_count - year_newly_scraped} already existed")
+                logger.info(
+                    f"Year {year} complete: {year_newly_scraped} newly scraped, {year_processed_count - year_newly_scraped} already existed"
+                )
                 logger.info(f"Total processed for year {year}: {year_processed_count}")
             else:
-                scraped_count = len(self.state_manager.state['scraped_ids'])
+                scraped_count = len(self.state_manager.state["scraped_ids"])
                 logger.info(f"Scraping completed. Total publications: {scraped_count}")
-            
+
         except KeyboardInterrupt:
             logger.info("Scraping interrupted by user")
         except Exception as e:
@@ -883,11 +960,17 @@ class DTICScraper:
             if self.driver:
                 self.driver.quit()
                 logger.info("WebDriver closed")
-    
-    def scrape_by_years(self, start_year: int, end_year: int, max_pages: Optional[int] = None, max_publications_per_year: Optional[int] = None):
+
+    def scrape_by_years(
+        self,
+        start_year: int,
+        end_year: int,
+        max_pages: Optional[int] = None,
+        max_publications_per_year: Optional[int] = None,
+    ):
         """
         Scrape publications by iterating through years.
-        
+
         Args:
             start_year: Starting year (inclusive)
             end_year: Ending year (inclusive)
@@ -896,30 +979,36 @@ class DTICScraper:
         """
         years = list(range(start_year, end_year + 1))
         logger.info(f"Scraping publications for years: {start_year} to {end_year}")
-        
+
         for year in years:
-            logger.info(f"{'='*80}")
+            logger.info(f"{'=' * 80}")
             logger.info(f"Starting scrape for year: {year}")
-            logger.info(f"{'='*80}")
-            
+            logger.info(f"{'=' * 80}")
+
             try:
-                self.scrape(max_pages=max_pages, max_publications=max_publications_per_year, year=year)
+                self.scrape(
+                    max_pages=max_pages,
+                    max_publications=max_publications_per_year,
+                    year=year,
+                )
             except Exception as e:
                 logger.error(f"Error scraping year {year}: {e}")
-                logger.info(f"Continuing to next year...")
-            
+                logger.info("Continuing to next year...")
+
             # Reinitialize driver for next year
             if self.driver:
                 try:
                     self.driver.quit()
                     logger.info("WebDriver closed for year transition")
-                except:
+                except:  # noqa: E722
                     pass
                 self.driver = None
-        
+
         logger.info(f"Completed scraping all years from {start_year} to {end_year}")
-    
-    def resume(self, max_pages: Optional[int] = None, max_publications: Optional[int] = None):
+
+    def resume(
+        self, max_pages: Optional[int] = None, max_publications: Optional[int] = None
+    ):
         """Resume scraping from last saved state."""
         logger.info("Resuming scraping from saved state")
         self.scrape(max_pages=max_pages, max_publications=max_publications)
@@ -928,52 +1017,92 @@ class DTICScraper:
 def main():
     """Main entry point for the scraper."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="DTIC Publication Scraper")
-    parser.add_argument('--output-dir', '-o', default='dtic_publications',
-                      help='Output directory path (default: dtic_publications)')
-    parser.add_argument('--state', '-s', default='scraper_state.json',
-                      help='State file path (default: scraper_state.json)')
-    parser.add_argument('--config', '-c', default='config.json',
-                      help='Config file path (default: config.json)')
-    parser.add_argument('--max-pages', '-p', type=int, default=None,
-                      help='Maximum number of pages to scrape')
-    parser.add_argument('--max-publications', '-n', type=int, default=None,
-                      help='Maximum number of publications to scrape')
-    parser.add_argument('--headless', action='store_true', default=True,
-                      help='Run browser in headless mode (default: True)')
-    parser.add_argument('--no-headless', action='store_false', dest='headless',
-                      help='Run browser with visible window')
-    parser.add_argument('--resume', '-r', action='store_true',
-                      help='Resume from last saved state')
-    parser.add_argument('--years', '-y', type=str, default=None,
-                      help='Year range to scrape (e.g., "2020-2026" or "2024")')
-    parser.add_argument('--max-per-year', type=int, default=None,
-                      help='Maximum publications per year (only used with --years)')
-    
+    parser.add_argument(
+        "--output-dir",
+        "-o",
+        default="dtic_publications",
+        help="Output directory path (default: dtic_publications)",
+    )
+    parser.add_argument(
+        "--state",
+        "-s",
+        default="scraper_state.json",
+        help="State file path (default: scraper_state.json)",
+    )
+    parser.add_argument(
+        "--config",
+        "-c",
+        default="config.json",
+        help="Config file path (default: config.json)",
+    )
+    parser.add_argument(
+        "--max-pages",
+        "-p",
+        type=int,
+        default=None,
+        help="Maximum number of pages to scrape",
+    )
+    parser.add_argument(
+        "--max-publications",
+        "-n",
+        type=int,
+        default=None,
+        help="Maximum number of publications to scrape",
+    )
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        default=True,
+        help="Run browser in headless mode (default: True)",
+    )
+    parser.add_argument(
+        "--no-headless",
+        action="store_false",
+        dest="headless",
+        help="Run browser with visible window",
+    )
+    parser.add_argument(
+        "--resume", "-r", action="store_true", help="Resume from last saved state"
+    )
+    parser.add_argument(
+        "--years",
+        "-y",
+        type=str,
+        default=None,
+        help='Year range to scrape (e.g., "2020-2026" or "2024")',
+    )
+    parser.add_argument(
+        "--max-per-year",
+        type=int,
+        default=None,
+        help="Maximum publications per year (only used with --years)",
+    )
+
     args = parser.parse_args()
-    
+
     scraper = DTICScraper(
         output_dir=args.output_dir,
         headless=args.headless,
         state_file=args.state,
-        config_file=args.config
+        config_file=args.config,
     )
-    
+
     if args.resume:
         scraper.resume(max_pages=args.max_pages, max_publications=args.max_publications)
     elif args.years:
         # Parse year range
-        if '-' in args.years:
-            start_year, end_year = map(int, args.years.split('-'))
+        if "-" in args.years:
+            start_year, end_year = map(int, args.years.split("-"))
         else:
             start_year = end_year = int(args.years)
-        
+
         scraper.scrape_by_years(
             start_year=start_year,
             end_year=end_year,
             max_pages=args.max_pages,
-            max_publications_per_year=args.max_per_year
+            max_publications_per_year=args.max_per_year,
         )
     else:
         scraper.scrape(max_pages=args.max_pages, max_publications=args.max_publications)

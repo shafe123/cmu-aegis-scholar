@@ -13,6 +13,7 @@ import httpx
 # Tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.integration
 @pytest.mark.requires_docker
 def test_identity_service_is_healthy(identity_api_url):

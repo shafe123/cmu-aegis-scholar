@@ -3,30 +3,24 @@ Service-layer integration tests for vector-db API against a live Milvus containe
 
 These tests spin up both our vector-db service container and a Milvus container,
 then validate that our API correctly stores and retrieves vector embeddings.
+
+Uses actual data from dtic_test_subset for realistic testing.
 """
 
 import pytest
 import httpx
-
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-@pytest.fixture(scope="module")
-def vector_api_url(vector_db_url):
-    """Return the base URL for the vector-db service container from conftest."""
-    return vector_db_url
-
+from conftest import load_test_author, load_test_work
 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.integration
 @pytest.mark.requires_docker
-def test_vector_db_service_is_healthy(vector_api_url):
+def test_vector_db_service_is_healthy(vector_db_url):
     """Our vector-db service should report healthy when Milvus is available."""
-    response = httpx.get(f"{vector_api_url}/health", timeout=30)
+    response = httpx.get(f"{vector_db_url}/health", timeout=30)
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
@@ -35,9 +29,9 @@ def test_vector_db_service_is_healthy(vector_api_url):
 
 @pytest.mark.integration
 @pytest.mark.requires_docker
-def test_default_collection_created(vector_api_url):
+def test_default_collection_created(vector_db_url):
     """The default aegis_vectors collection should be created on startup."""
-    response = httpx.get(f"{vector_api_url}/collections", timeout=30)
+    response = httpx.get(f"{vector_db_url}/collections", timeout=30)
     assert response.status_code == 200
     collections = response.json()
     names = [c["name"] for c in collections]
@@ -46,18 +40,17 @@ def test_default_collection_created(vector_api_url):
 
 @pytest.mark.integration
 @pytest.mark.requires_docker
-def test_create_author_embedding_via_api(vector_api_url, sample_authors, sample_works):
+def test_create_author_embedding_via_api(vector_db_url):
     """POST /authors/embeddings should create an embedding from abstracts."""
-    author = sample_authors[0]
-    # sample_works has "authors": ["A123456", "A234567"] format
-    works_for_author = [
-        w for w in sample_works
-        if author["id"] in w.get("authors", [])
-    ]
-    abstracts = [w.get("abstract", "") for w in works_for_author if w.get("abstract")]
+    author = load_test_author(0)
+    work = load_test_work(0)
 
-    if not abstracts:
-        abstracts = ["Defense research in advanced materials and systems."]
+    # Use the actual abstract from the work
+    abstracts = (
+        [work.get("abstract", "")]
+        if work.get("abstract")
+        else ["Research in advanced materials and systems."]
+    )
 
     payload = {
         "author_id": author["id"],
@@ -66,7 +59,7 @@ def test_create_author_embedding_via_api(vector_api_url, sample_authors, sample_
         "citation_count": author.get("citation_count", 0),
     }
     response = httpx.post(
-        f"{vector_api_url}/authors/embeddings",
+        f"{vector_db_url}/authors/embeddings",
         json=payload,
         timeout=60,
     )
@@ -79,14 +72,19 @@ def test_create_author_embedding_via_api(vector_api_url, sample_authors, sample_
 
 @pytest.mark.integration
 @pytest.mark.requires_docker
-def test_text_search_returns_results(vector_api_url, sample_authors, sample_works):
+def test_text_search_returns_results(vector_db_url):
     """POST /search/text should return ranked results after embeddings are loaded."""
     import time
-    author = sample_authors[0]
-    abstracts = ["Defense research in advanced materials and hypersonic systems."]
+
+    author = load_test_author(0)
+    work = load_test_work(0)
+
+    # Use the actual abstract or a default
+    abstract = work.get("abstract", "Research in carbon dioxide adsorption on ice.")
+    abstracts = [abstract]
 
     response = httpx.post(
-        f"{vector_api_url}/authors/embeddings",
+        f"{vector_db_url}/authors/embeddings",
         json={
             "author_id": author["id"],
             "author_name": author["name"],
@@ -99,9 +97,10 @@ def test_text_search_returns_results(vector_api_url, sample_authors, sample_work
     # Give Milvus a moment to index the newly inserted embedding
     time.sleep(3)
 
+    # Search for keywords from the abstract
     response = httpx.post(
-        f"{vector_api_url}/search/text",
-        json={"query_text": "defense materials research", "limit": 5},
+        f"{vector_db_url}/search/text",
+        json={"query_text": "carbon dioxide ice adsorption", "limit": 5},
         timeout=30,
     )
     assert response.status_code == 200
@@ -112,9 +111,9 @@ def test_text_search_returns_results(vector_api_url, sample_authors, sample_work
 
 @pytest.mark.integration
 @pytest.mark.requires_docker
-def test_models_endpoint(vector_api_url):
+def test_models_endpoint(vector_db_url):
     """GET /models should return available embedding models."""
-    response = httpx.get(f"{vector_api_url}/models", timeout=30)
+    response = httpx.get(f"{vector_db_url}/models", timeout=30)
     assert response.status_code == 200
     data = response.json()
     assert "models" in data

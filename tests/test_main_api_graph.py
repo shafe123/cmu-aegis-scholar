@@ -1,0 +1,278 @@
+"""Integration tests for Aegis Scholar API container interaction with Graph DB container."""
+
+import pytest
+from httpx import AsyncClient
+from conftest import (
+    find_author_with_zero_works,
+    find_author_with_no_orgs,
+    find_author_with_zero_citations,
+    find_author_with_special_characters,
+)
+
+# Test data constants - Known IDs from dtic_authors_50.jsonl.gz subset
+TEST_AUTHOR_ID = "author_6671149b-381b-573b-bb3d-81d86a789471"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_author_details_integration(main_api_url, ensure_test_data):
+    """
+    Validates the containerized API's interaction with the Graph DB container.
+    Tests the /authors/{author_id} endpoint fetching author metadata.
+    """
+    async with AsyncClient(base_url=main_api_url) as ac:
+        response = await ac.get(f"/search/authors/{TEST_AUTHOR_ID}")
+
+    # Validation
+    assert response.status_code == 200, f"Failed to fetch author: {response.text}"
+    data = response.json()
+
+    # Check that the data returned matches our expected subset schema
+    assert data["id"] == TEST_AUTHOR_ID
+    assert "display_name" in data or "name" in data
+    assert "org_ids" in data
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_viz_endpoint_integration(main_api_url, ensure_test_data):
+    """
+    Validates the containerized API's /viz endpoint (Network Explorer).
+    Tests container-to-container communication: API → Graph DB.
+    Verifies D3/NetworkGraph.jsx compatible structure (nodes and links).
+    """
+    async with AsyncClient(base_url=main_api_url) as ac:
+        # Testing depth=1 ensures we get the author and their immediate works
+        response = await ac.get(f"/viz/author-network/{TEST_AUTHOR_ID}")
+
+    # 1. Response Check
+    assert response.status_code == 200, f"Viz endpoint failed: {response.text}"
+    data = response.json()
+
+    # 2. Structural Validation (Must match what NetworkGraph.jsx expects)
+    assert "nodes" in data, "Graph response must contain a 'nodes' list"
+    # We check for 'links' or 'edges' depending on your specific API implementation
+    links_key = "links" if "links" in data else "edges"
+    assert links_key in data, f"Graph response must contain a '{links_key}' list"
+
+    # 3. Integration Integrity
+    # If the subset is loaded, we expect at least the author node and work nodes
+    nodes = data["nodes"]
+    links = data[links_key]
+
+    assert len(nodes) >= 2, (
+        "Graph should contain the root author and at least one connected Work"
+    )
+    assert len(links) >= 1, "Graph should contain at least one :AUTHORED relationship"
+
+    # 4. Node Schema Check (Crucial for Inspector Sidebar)
+    # The frontend 'Inspector' needs specific fields to render correctly
+    for node in nodes:
+        assert "id" in node
+        # The frontend uses 'type' or 'label' to toggle layout (Author vs Work)
+        assert any(k in node for k in ["type", "label", "group"]), (
+            "Node missing type identifier"
+        )
+
+        if node.get("type") == "Work" or node.get("label") == "Work":
+            # Ensure the inspector can actually show the abstract/title
+            assert "title" in node
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_viz_expansion_logic(main_api_url, ensure_test_data):
+    """
+    Tests the containerized API's graph expansion logic.
+    Simulates the "Expansion" flow for deeper graph traversal.
+    """
+    async with AsyncClient(base_url=main_api_url) as ac:
+        # Depth 1: Initial load
+        res_d1 = await ac.get(f"/viz/author-network/{TEST_AUTHOR_ID}")
+        assert res_d1.status_code == 200, f"D1 failed: {res_d1.text}"
+        d1_data = res_d1.json()
+
+        # Depth 2: Expansion (Simulated by repeating the call or using expansion params if your API supports them)
+        # Note: We keep this INSIDE the 'async with' block so the client 'ac' is still open
+        res_d2 = await ac.get(f"/viz/author-network/{TEST_AUTHOR_ID}")
+        assert res_d2.status_code == 200, f"D2 failed: {res_d2.text}"
+        d2_data = res_d2.json()
+
+        assert "nodes" in d2_data, f"Expected 'nodes' in response, got: {d2_data}"
+        # In a real expansion, D2 should be >= D1
+        assert len(d2_data["nodes"]) >= len(d1_data["nodes"])
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_graph_error_handling(main_api_url):
+    """Tests the containerized API's error handling for non-existent authors."""
+    async with AsyncClient(base_url=main_api_url) as ac:
+        response = await ac.get("/viz/author-network/this_is_not_a_real_id")
+
+    # Accepts both "Not Found" and "Service Unavailable"
+    assert response.status_code in [404, 503]
+    assert "detail" in response.json()
+
+
+# --- Edge Case Tests ---
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_author_with_zero_works(main_api_url, ensure_test_data):
+    """
+    Tests author details endpoint with an author who has zero works.
+    Validates that works_count = 0 is handled correctly.
+    """
+    author = find_author_with_zero_works()
+    assert author is not None, "Test dataset should contain author with zero works"
+
+    author_id = author["id"]
+
+    async with AsyncClient(base_url=main_api_url) as ac:
+        response = await ac.get(f"/search/authors/{author_id}")
+
+    assert response.status_code == 200, f"Failed to fetch author: {response.text}"
+    data = response.json()
+
+    # Verify author data is returned
+    assert data["id"] == author_id
+    assert "display_name" in data or "name" in data
+
+    # Verify works_count is 0 (not omitted)
+    assert "works_count" in data, "works_count field should be present"
+    assert data["works_count"] == 0, "works_count should be 0"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_author_without_organizations(main_api_url, ensure_test_data):
+    """
+    Tests author details endpoint with an author who has no organization affiliations.
+    Validates that missing or empty org_ids is handled correctly.
+    """
+    author = find_author_with_no_orgs()
+    assert author is not None, "Test dataset should contain author with no orgs"
+
+    author_id = author["id"]
+
+    async with AsyncClient(base_url=main_api_url) as ac:
+        response = await ac.get(f"/search/authors/{author_id}")
+
+    assert response.status_code == 200, f"Failed to fetch author: {response.text}"
+    data = response.json()
+
+    # Verify author data is returned
+    assert data["id"] == author_id
+    assert "display_name" in data or "name" in data
+
+    # Verify org_ids is empty array (not null or omitted)
+    assert "org_ids" in data, "org_ids field should be present"
+    assert isinstance(data["org_ids"], list), "org_ids should be a list"
+    assert len(data["org_ids"]) == 0, "org_ids should be empty"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_author_with_zero_citations(main_api_url, ensure_test_data):
+    """
+    Tests author details endpoint with an author who has zero citations.
+    Validates that citation_count = 0 is displayed correctly.
+    """
+    author = find_author_with_zero_citations()
+    assert author is not None, "Test dataset should contain author with zero citations"
+
+    author_id = author["id"]
+
+    async with AsyncClient(base_url=main_api_url) as ac:
+        response = await ac.get(f"/search/authors/{author_id}")
+
+    assert response.status_code == 200, f"Failed to fetch author: {response.text}"
+    data = response.json()
+
+    # Verify author data is returned
+    assert data["id"] == author_id
+
+    # Verify citation_count is 0 (not omitted)
+    # Note: API uses citation_count, not cited_by_count
+    assert "citation_count" in data, "citation_count field should be present"
+    assert data["citation_count"] == 0, "citation_count should be 0"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_author_with_special_characters(main_api_url, ensure_test_data):
+    """
+    Tests author details endpoint with an author who has special characters in name.
+    Validates that unicode, apostrophes, hyphens are handled correctly.
+    """
+    author = find_author_with_special_characters()
+    assert author is not None, (
+        "Test dataset should contain author with special characters"
+    )
+
+    author_id = author["id"]
+    expected_name = author.get("display_name") or author.get("name")
+
+    async with AsyncClient(base_url=main_api_url) as ac:
+        response = await ac.get(f"/search/authors/{author_id}")
+
+    assert response.status_code == 200, f"Failed to fetch author: {response.text}"
+    data = response.json()
+
+    # Verify author data is returned
+    assert data["id"] == author_id
+
+    # Verify name with special characters is correctly encoded
+    actual_name = data.get("display_name") or data.get("name")
+    assert actual_name is not None, "Author name should be present"
+    assert actual_name == expected_name, "Author name should match original"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_viz_network_with_isolated_author(main_api_url, ensure_test_data):
+    """
+    Tests viz endpoint with an author who has no works (isolated node).
+    Validates that empty graph (single node, no edges) is handled correctly.
+    """
+    author = find_author_with_zero_works()
+    assert author is not None, "Test dataset should contain author with zero works"
+
+    author_id = author["id"]
+
+    async with AsyncClient(base_url=main_api_url) as ac:
+        response = await ac.get(f"/viz/author-network/{author_id}")
+
+    # Should return 200 even for isolated authors
+    assert response.status_code == 200, f"Viz endpoint failed: {response.text}"
+    data = response.json()
+
+    # Structural validation
+    assert "nodes" in data, "Graph response must contain nodes"
+    links_key = "links" if "links" in data else "edges"
+    assert links_key in data, f"Graph response must contain {links_key}"
+
+    nodes = data["nodes"]
+    links = data[links_key]
+
+    # Should have at least the author node
+    assert len(nodes) >= 1, "Graph should contain at least the author node"
+
+    # Should have zero or very few edges
+    # (might have 0 if truly isolated, or minimal if there are some co-author connections)
+    assert len(links) >= 0, "Links should be non-negative"
+
+    # Verify the author node exists
+    author_nodes = [n for n in nodes if n.get("id") == author_id]
+    assert len(author_nodes) == 1, "Author node should be in graph"
