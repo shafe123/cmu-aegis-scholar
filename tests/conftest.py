@@ -10,7 +10,7 @@ Container Fixtures:
 URL Fixtures:
 - graph_db_url: Returns the Graph DB service URL from the container
 - vector_db_url: Returns the Vector DB service URL (defaults to localhost:8002)
-- base_api_url: Returns the main API URL (defaults to localhost:8000)
+- main_api_url: Returns the main API URL (defaults to localhost:8000)
 
 Utility Fixtures:
 - http_client: Async HTTP client for API requests (function scope)
@@ -79,6 +79,11 @@ VECTOR_DB_DEFAULT_URL = f"http://localhost:{VECTOR_DB_PORT}"
 
 API_PORT = 8000
 API_DEFAULT_URL = f"http://localhost:{API_PORT}"
+
+LDAP_IMAGE = "symas/openldap:latest"
+LDAP_PORT = int(os.getenv("LDAP_PORT", "1389"))
+LDAP_BASE_DN = os.getenv("LDAP_BASE_DN", "dc=example,dc=org")
+LDAP_ADMIN_PASSWORD = os.getenv("LDAP_ADMIN_PASSWORD", "testpassword")
 
 
 @pytest.fixture(scope="session")
@@ -367,21 +372,286 @@ def aegis_scholar_api_container(docker_network, graph_db_container):
 
 
 @pytest.fixture(scope="session")
+def identity_container(docker_network):
+    """
+    Starts an Identity Service container with OpenLDAP backend.
+    
+    - Builds the identity service Docker image
+    - Starts OpenLDAP container for testing
+    - Configures identity service to connect to LDAP
+    - Returns the identity service URL
+    """
+    # Start OpenLDAP container first
+    ldap_container = (
+        DockerContainer(LDAP_IMAGE)
+        .with_exposed_ports(LDAP_PORT)
+        .with_env("LDAP_ROOT", LDAP_BASE_DN)
+        .with_env("LDAP_ADMIN_USERNAME", "admin")
+        .with_env("LDAP_ADMIN_PASSWORD", LDAP_ADMIN_PASSWORD)
+        .with_env("LDAP_PORT_NUMBER", str(LDAP_PORT))
+        .with_kwargs(hostname="ldap-server")
+    )
+    
+    ldap_container._kwargs["network"] = docker_network
+    ldap_container.start()
+    
+    try:
+        # Wait for LDAP to be ready - verify it's accepting connections via ldapsearch
+        # Initial delay for container startup
+        time.sleep(3)
+        
+        max_attempts = 60  # 60 seconds total
+        for attempt in range(max_attempts):
+            try:
+                result = ldap_container.exec(
+                    f"ldapsearch -x -H ldap://127.0.0.1:{LDAP_PORT} "
+                    f"-D 'cn=admin,{LDAP_BASE_DN}' -w '{LDAP_ADMIN_PASSWORD}' "
+                    f"-b '{LDAP_BASE_DN}' -s base"
+                )
+                if result[0] == 0:  # Success
+                    break
+            except Exception:
+                pass
+            
+            if attempt < max_attempts - 1:
+                time.sleep(1)
+        else:
+            raise RuntimeError(
+                f"LDAP server failed to become ready after {max_attempts} seconds"
+            )
+        
+        # Build identity service Docker image
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        identity_path = os.path.join(project_root, "services", "identity")
+        
+        env = os.environ.copy()
+        env["DOCKER_BUILDKIT"] = "1"
+        
+        build_cmd = [
+            "docker", "build",
+            "-t", "identity:test",
+            "--cache-from", "type=gha,scope=identity",
+            "--cache-to", "type=gha,mode=max,scope=identity",
+            identity_path
+        ]
+        
+        subprocess.run(build_cmd, check=True, env=env, capture_output=True)
+        
+        # Create a temporary directory for identity data volume
+        import tempfile
+        temp_data_dir = tempfile.mkdtemp(prefix="identity_test_data_")
+        
+        # Start identity service container
+        identity_container = (
+            DockerContainer("identity:test")
+            .with_name("identity-test")
+            .with_exposed_ports(8000)
+            .with_env("LDAP_SERVER", f"ldap://ldap-server:{LDAP_PORT}")
+            .with_env("LDAP_ADMIN_DN", f"cn=admin,{LDAP_BASE_DN}")
+            .with_env("LDAP_ADMIN_PASSWORD", LDAP_ADMIN_PASSWORD)
+            .with_env("LDAP_BASE_DN", LDAP_BASE_DN)
+            .with_volume_mapping(temp_data_dir, "/data", "rw")
+        )
+        
+        identity_container._kwargs["network"] = docker_network
+        identity_container.start()
+        
+        try:
+            # Wait for service to start (look for any FastAPI startup message)
+            time.sleep(3)
+            
+            host = identity_container.get_container_host_ip()
+            port = identity_container.get_exposed_port(8000)
+            identity_url = f"http://{host}:{port}"
+            
+            # Poll /docs endpoint first (FastAPI auto-generated docs)
+            docs_ready = False
+            for attempt in range(60):  # 30 seconds
+                try:
+                    response = httpx.get(f"{identity_url}/docs", timeout=3.0)
+                    if response.status_code == 200:
+                        docs_ready = True
+                        break
+                except Exception:
+                    pass
+                
+                if attempt < 59:
+                    time.sleep(0.5)
+            
+            # Then verify /health endpoint is responding
+            health_ready = False
+            for attempt in range(30):  # 15 seconds
+                try:
+                    response = httpx.get(f"{identity_url}/health", timeout=3.0)
+                    if response.status_code == 200:
+                        health_ready = True
+                        break
+                except Exception as e:
+                    if attempt == 29:
+                        print(f"Health check attempt {attempt + 1} failed: {e}")
+                
+                if attempt < 29:
+                    time.sleep(0.5)
+            
+            if not health_ready:
+                raise RuntimeError(
+                    f"Identity service health check failed after 45 seconds. "
+                    f"Docs ready: {docs_ready}, Health ready: {health_ready}"
+                )
+            
+            yield identity_url
+            
+        finally:
+            identity_container.stop()
+            # Clean up temp directory
+            import shutil
+            try:
+                shutil.rmtree(temp_data_dir)
+            except Exception:
+                pass
+    finally:
+        ldap_container.stop()
+
+
+@pytest.fixture(scope="session")
+def vector_db_container(docker_network):
+    """
+    Starts a Vector DB service container with Milvus backend.
+    
+    - Builds the vector-db service Docker image
+    - Starts Milvus container for vector storage
+    - Configures vector-db service to connect to Milvus
+    - Returns the vector-db service URL
+    """
+    from testcontainers.milvus import MilvusContainer
+
+    MILVUS_IMAGE = "milvusdb/milvus:v2.4.4"
+    
+    # Start Milvus container first
+    milvus_container = MilvusContainer(image=MILVUS_IMAGE)
+    milvus_container.with_kwargs(hostname="milvus-standalone")
+    milvus_container._kwargs["network"] = docker_network
+    milvus_container.start()
+    
+    try:
+        # Build vector-db service Docker image
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        vector_db_path = os.path.join(project_root, "services", "vector-db")
+        
+        env = os.environ.copy()
+        env["DOCKER_BUILDKIT"] = "1"
+        
+        build_cmd = [
+            "docker", "build",
+            "-t", "vector-db:test",
+            "--cache-from", "type=gha,scope=vector-db",
+            "--cache-to", "type=gha,mode=max,scope=vector-db",
+            vector_db_path
+        ]
+        
+        subprocess.run(build_cmd, check=True, env=env, capture_output=True)
+        
+        # Start vector-db service container
+        model_cache = os.path.expanduser("~/.cache/aegis-model-cache")
+        os.makedirs(model_cache, exist_ok=True)
+        
+        vector_container = (
+            DockerContainer("vector-db:test")
+            .with_name("vector-db-test")
+            .with_exposed_ports(8002)
+            .with_env("MILVUS_HOST", "milvus-standalone")
+            .with_env("MILVUS_PORT", "19530")
+            .with_env("DEFAULT_COLLECTION", "aegis_vectors")
+            .with_volume_mapping(model_cache, "/app/.cache", "rw")
+        )
+        
+        vector_container._kwargs["network"] = docker_network
+        vector_container.start()
+        
+        try:
+            # Wait for service to start
+            time.sleep(5)
+            
+            host = vector_container.get_container_host_ip()
+            port = vector_container.get_exposed_port(8002)
+            vector_url = f"http://{host}:{port}"
+            
+            # Poll /docs endpoint first (FastAPI auto-generated docs)
+            # Vector service may take longer due to model loading
+            docs_ready = False
+            for attempt in range(120):  # 60 seconds
+                try:
+                    response = httpx.get(f"{vector_url}/docs", timeout=3.0)
+                    if response.status_code == 200:
+                        docs_ready = True
+                        break
+                except Exception:
+                    pass
+                
+                if attempt < 119:
+                    time.sleep(0.5)
+            
+            # Then verify /health endpoint is responding
+            health_ready = False
+            for attempt in range(60):  # 30 seconds
+                try:
+                    response = httpx.get(f"{vector_url}/health", timeout=3.0)
+                    if response.status_code == 200:
+                        health_ready = True
+                        break
+                except Exception as e:
+                    if attempt == 59:
+                        print(f"Vector DB health check attempt {attempt + 1} failed: {e}")
+                
+                if attempt < 59:
+                    time.sleep(0.5)
+            
+            if not health_ready:
+                raise RuntimeError(
+                    f"Vector DB service health check failed after 90 seconds. "
+                    f"Docs ready: {docs_ready}, Health ready: {health_ready}"
+                )
+            
+            yield vector_url
+            
+        finally:
+            vector_container.stop()
+    finally:
+        milvus_container.stop()
+
+
+@pytest.fixture(scope="session")
 def graph_db_url(graph_db_container):
     """Provides the Graph DB service URL from the testcontainer."""
     return graph_db_container
 
 
-@pytest.fixture(scope="session")
-def vector_db_url():
-    """Provides the Vector DB service URL (default: localhost:8002)."""
-    return VECTOR_DB_DEFAULT_URL
+@pytest.fixture(scope="module")
+def identity_api_url(identity_container):
+    """Return the base URL for the identity service container from conftest."""
+    return identity_container
 
 
 @pytest.fixture(scope="session")
-def base_api_url():
-    """Provides the base API URL (default: localhost:8000)."""
-    return API_DEFAULT_URL
+def vector_db_url(vector_db_container):
+    """Provides the Vector DB service URL from the testcontainer."""
+    return vector_db_container
+
+
+@pytest.fixture(scope="session")
+def main_api_url(aegis_scholar_api_container):
+    """Returns the URL for the containerized Aegis Scholar API.
+    
+    Scope: Session (same as the underlying container)
+    
+    This fixture provides the base URL for the main API running in a Docker container.
+    Tests should use httpx.AsyncClient to make HTTP requests to this URL.
+    
+    The API container is configured to communicate with the Graph DB container
+    via Docker network using container names.
+    """
+    return aegis_scholar_api_container
+
 
 
 @pytest.fixture(scope="function")
@@ -448,6 +718,30 @@ def sample_search_query():
     }
 
 
+@pytest.fixture(scope="function")
+def sample_authors(sample_integration_data):
+    """Extract authors from sample_integration_data for Milvus tests.
+    
+    Scope: Function (fresh data for each test)
+    
+    Returns list of dicts with 'id' and 'name' keys, where 'name' comes from
+    'display_name' in the integration data to match the expected schema.
+    """
+    return [
+        {"id": author["id"], "name": author["display_name"]}
+        for author in sample_integration_data["authors"]
+    ]
+
+
+@pytest.fixture(scope="function")
+def sample_works(sample_integration_data):
+    """Extract works from sample_integration_data for Neo4j tests.
+    
+    Scope: Function (fresh data for each test)
+    """
+    return sample_integration_data["works"]
+
+
 # --- Utility Functions ---
 
 
@@ -486,18 +780,19 @@ def neo4j_driver(neo4j_container):
     driver.close()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def ensure_test_data(neo4j_driver):
-    """Automatically loads DTIC test data into Neo4j if the database is empty.
+    """Loads DTIC test data into Neo4j if the database is empty.
     
-    Scope: Session (runs once, autouse=True)
+    Scope: Session (runs once when explicitly requested)
     
     Checks for a canary author ID. If not found, loads:
     - Authors from dtic_authors_50.jsonl.gz
     - Topics from dtic_topics_50.jsonl.gz
     - Works from dtic_works_50.jsonl.gz with relationships
     
-    This fixture ensures a consistent test dataset across all integration tests.
+    This fixture ensures a consistent test dataset. Tests that need this data
+    should explicitly declare it as a dependency.
     """
     time.sleep(2)
 
@@ -606,20 +901,3 @@ def load_gz_jsonl(session, file_path, label):
 
     print(f"[Setup] Loaded {label} from {file_path.name}")
 
-
-# --- Application Client Fixtures ---
-
-
-@pytest.fixture(scope="session")
-def app_client(aegis_scholar_api_container):
-    """Returns the URL for the containerized Aegis Scholar API.
-    
-    Scope: Session (same as the underlying container)
-    
-    This fixture provides the base URL for the main API running in a Docker container.
-    Tests should use httpx.AsyncClient to make HTTP requests to this URL.
-    
-    The API container is configured to communicate with the Graph DB container
-    via Docker network using container names.
-    """
-    return aegis_scholar_api_container

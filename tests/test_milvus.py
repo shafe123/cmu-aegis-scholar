@@ -9,7 +9,8 @@ from testcontainers.milvus import MilvusContainer
 # Milvus container fixture — starts once for all tests in this module
 # ---------------------------------------------------------------------------
 
-MILVUS_IMAGE = "milvusdb/milvus:v2.4.4"
+# newer versions of milvus do not support built-in etcd
+MILVUS_IMAGE = "milvusdb/milvus:v2.4.4" 
 TEST_COLLECTION = "test_aegis_vectors"
 EMBEDDING_DIM = 384
 

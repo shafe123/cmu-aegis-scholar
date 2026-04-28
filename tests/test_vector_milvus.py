@@ -7,72 +7,15 @@ then validate that our API correctly stores and retrieves vector embeddings.
 
 import pytest
 import httpx
-import docker
-from testcontainers.milvus import MilvusContainer
-from testcontainers.core.container import DockerContainer
-from testcontainers.core.waiting_utils import wait_for_logs
-
-# ---------------------------------------------------------------------------
-# Container configuration
-# ---------------------------------------------------------------------------
-
-MILVUS_IMAGE = "milvusdb/milvus:v2.4.4"
-VECTOR_DB_IMAGE = "aegis-vector-db-test:latest"
-VECTOR_DB_PORT = 8002
-NETWORK_NAME = "aegis-vector-test-net"
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="module")
-def docker_network():
-    """Create a shared Docker network for container-to-container communication."""
-    client = docker.from_env()
-    network = client.networks.create(NETWORK_NAME, driver="bridge")
-    yield network
-    network.remove()
-
-
-@pytest.fixture(scope="module")
-def milvus_container(docker_network):
-    """Start a real Milvus container on the shared test network."""
-    container = MilvusContainer(image=MILVUS_IMAGE)
-    container.with_kwargs(network=NETWORK_NAME, hostname="milvus-standalone")
-    with container:
-        yield container
-
-
-@pytest.fixture(scope="module")
-def vector_db_container(milvus_container, docker_network):
-    """
-    Start our vector-db service container pointed at the Milvus test container.
-    Mounts a model cache to avoid re-downloading the embedding model each run.
-    """
-    import os
-    model_cache = os.path.expanduser("~/.cache/aegis-model-cache")
-    os.makedirs(model_cache, exist_ok=True)
-
-    container = (
-        DockerContainer(image=VECTOR_DB_IMAGE)
-        .with_exposed_ports(VECTOR_DB_PORT)
-        .with_env("MILVUS_HOST", "milvus-standalone")
-        .with_env("MILVUS_PORT", "19530")
-        .with_env("DEFAULT_COLLECTION", "aegis_vectors")
-        .with_volume_mapping(model_cache, "/app/.cache", "rw")
-        .with_kwargs(network=NETWORK_NAME)
-    )
-    with container:
-        wait_for_logs(container, "Application startup complete.", timeout=180)
-        yield container
-
-
-@pytest.fixture(scope="module")
-def vector_api_url(vector_db_container):
-    """Return the base URL for the vector-db service container."""
-    host = vector_db_container.get_container_host_ip()
-    port = vector_db_container.get_exposed_port(VECTOR_DB_PORT)
-    return f"http://{host}:{port}"
+def vector_api_url(vector_db_url):
+    """Return the base URL for the vector-db service container from conftest."""
+    return vector_db_url
 
 
 # ---------------------------------------------------------------------------
@@ -106,11 +49,12 @@ def test_default_collection_created(vector_api_url):
 def test_create_author_embedding_via_api(vector_api_url, sample_authors, sample_works):
     """POST /authors/embeddings should create an embedding from abstracts."""
     author = sample_authors[0]
+    # sample_works has "authors": ["A123456", "A234567"] format
     works_for_author = [
         w for w in sample_works
-        if any(a["author_id"] == author["id"] for a in w.get("authors", []))
+        if author["id"] in w.get("authors", [])
     ]
-    abstracts = [w["abstract"] for w in works_for_author if w.get("abstract")]
+    abstracts = [w.get("abstract", "") for w in works_for_author if w.get("abstract")]
 
     if not abstracts:
         abstracts = ["Defense research in advanced materials and systems."]

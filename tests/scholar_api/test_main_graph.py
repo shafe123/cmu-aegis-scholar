@@ -7,7 +7,7 @@ from httpx import AsyncClient
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_author_details_integration(app_client):
+async def test_author_details_integration(main_api_url, ensure_test_data):
     """
     Validates the containerized API's interaction with the Graph DB container.
     Tests the /authors/{author_id} endpoint fetching author metadata.
@@ -15,7 +15,7 @@ async def test_author_details_integration(app_client):
     # Using a known ID from the dtic_authors_50.jsonl.gz subset
     test_author_id = "author_6671149b-381b-573b-bb3d-81d86a789471"
 
-    async with AsyncClient(base_url=app_client) as ac:
+    async with AsyncClient(base_url=main_api_url) as ac:
         response = await ac.get(f"/search/authors/{test_author_id}")
 
     # Validation
@@ -31,7 +31,7 @@ async def test_author_details_integration(app_client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_viz_endpoint_integration(app_client):
+async def test_viz_endpoint_integration(main_api_url, ensure_test_data):
     """
     Validates the containerized API's /viz endpoint (Network Explorer).
     Tests container-to-container communication: API → Graph DB.
@@ -39,7 +39,7 @@ async def test_viz_endpoint_integration(app_client):
     """
     test_author_id = "author_6671149b-381b-573b-bb3d-81d86a789471"
 
-    async with AsyncClient(base_url=app_client) as ac:
+    async with AsyncClient(base_url=main_api_url) as ac:
         # Testing depth=1 ensures we get the author and their immediate works
         response = await ac.get(f"/viz/author-network/{test_author_id}")
 
@@ -80,7 +80,7 @@ async def test_viz_endpoint_integration(app_client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_viz_expansion_logic(app_client):
+async def test_viz_expansion_logic(main_api_url, ensure_test_data):
     """
     Tests the containerized API's graph expansion logic.
     Simulates the "Expansion" flow for deeper graph traversal.
@@ -88,7 +88,7 @@ async def test_viz_expansion_logic(app_client):
     # Using the ID we confirmed exists in your Neo4j instance
     test_author_id = "author_6671149b-381b-573b-bb3d-81d86a789471"
 
-    async with AsyncClient(base_url=app_client) as ac:
+    async with AsyncClient(base_url=main_api_url) as ac:
         # Depth 1: Initial load
         res_d1 = await ac.get(f"/viz/author-network/{test_author_id}")
         assert res_d1.status_code == 200, f"D1 failed: {res_d1.text}"
@@ -108,11 +108,12 @@ async def test_viz_expansion_logic(app_client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.requires_docker
-async def test_graph_error_handling(app_client):
+async def test_graph_error_handling(main_api_url):
     """Tests the containerized API's error handling for non-existent authors."""
-    async with AsyncClient(base_url=app_client) as ac:
+    async with AsyncClient(base_url=main_api_url) as ac:
         response = await ac.get("/viz/author-network/this_is_not_a_real_id")
 
     # Accepts both "Not Found" and "Service Unavailable"
     assert response.status_code in [404, 503]
     assert "detail" in response.json()
+

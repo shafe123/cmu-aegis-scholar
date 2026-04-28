@@ -7,69 +7,15 @@ then validate that our API correctly stores and retrieves graph data.
 
 import pytest
 import httpx
-from testcontainers.neo4j import Neo4jContainer
-from testcontainers.core.container import DockerContainer
-from testcontainers.core.waiting_utils import wait_for_logs
 
 # ---------------------------------------------------------------------------
-# Container configuration
-# ---------------------------------------------------------------------------
-
-NEO4J_IMAGE = "neo4j:5.12"
-GRAPH_DB_IMAGE = "aegis-graph-db-test:latest"
-GRAPH_DB_PORT = 8003
-
-
-# ---------------------------------------------------------------------------
-# Fixtures
+# Fixtures  
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="module")
-def neo4j_container():
-    """Start a real Neo4j container."""
-    with Neo4jContainer(image=NEO4J_IMAGE) as container:
-        yield container
-
-
-@pytest.fixture(scope="module")
-def graph_db_container(neo4j_container):
-    """
-    Start our graph-db service container pointed at the Neo4j test container.
-    Uses the internal Docker bridge IP for container-to-container communication.
-    """
-    import docker
-    docker_client = docker.from_env()
-    neo4j_docker_container = docker_client.containers.get(
-        neo4j_container.get_wrapped_container().id
-    )
-    networks = neo4j_docker_container.attrs["NetworkSettings"]["Networks"]
-    neo4j_internal_ip = next(iter(networks.values()))["IPAddress"]
-    bolt_url = f"bolt://{neo4j_internal_ip}:7687"
-
-    container = (
-        DockerContainer(image=GRAPH_DB_IMAGE)
-        .with_exposed_ports(GRAPH_DB_PORT)
-        .with_env("NEO4J_URI", bolt_url)
-        .with_env("NEO4J_USER", neo4j_container.username)
-        .with_env("NEO4J_PASSWORD", neo4j_container.password)
-    )
-    with container:
-        wait_for_logs(container, "Application startup complete", timeout=60)
-        yield container
-
-
-@pytest.fixture(scope="module")
-def graph_api_url(graph_db_container):
-    """Return the base URL for the graph-db service container."""
-    host = graph_db_container.get_container_host_ip()
-    port = graph_db_container.get_exposed_port(GRAPH_DB_PORT)
-    return f"http://{host}:{port}"
-
-
-@pytest.fixture(autouse=True)
-def clean_graph(graph_api_url):
-    """Placeholder — test isolation handled via unique IDs from real dataset."""
-    pass
+def graph_api_url(graph_db_url):
+    """Return the base URL for the graph-db service container from conftest."""
+    return graph_db_url
 
 
 # ---------------------------------------------------------------------------
