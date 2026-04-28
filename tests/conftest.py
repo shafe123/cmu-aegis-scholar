@@ -101,20 +101,20 @@ MILVUS_CONTAINER_NAME = "milvus-standalone"
 @pytest.fixture(scope="session")
 def docker_network():
     """Creates a shared Docker network for testcontainers to communicate.
-    
+
     This enables inter-container communication in CI environments where
     containers can't reach each other via host networking.
     """
     import docker
-    
+
     client = docker.from_env()
     network_name = "aegis-test-network"
-    
+
     # Create network
     network = client.networks.create(network_name, driver="bridge")
-    
+
     yield network_name
-    
+
     # Cleanup
     try:
         network.remove()
@@ -136,7 +136,7 @@ def neo4j_container(docker_network):
         .with_env("NEO4J_AUTH", f"{NEO4J_USER}/{NEO4J_PASSWORD}")
         .with_name(NEO4J_CONTAINER_NAME)
     )
-    
+
     # Connect to the shared network
     container._kwargs["network"] = docker_network
 
@@ -191,13 +191,17 @@ def graph_db_container(neo4j_container, docker_network):
 
     # Use GitHub Actions cache if available (CI environment)
     build_cmd = [
-        "docker", "build", 
-        "-t", "graph-db:test",
-        "--cache-from", "type=gha,scope=graph-db",
-        "--cache-to", "type=gha,mode=max,scope=graph-db",
-        graph_db_path
+        "docker",
+        "build",
+        "-t",
+        "graph-db:test",
+        "--cache-from",
+        "type=gha,scope=graph-db",
+        "--cache-to",
+        "type=gha,mode=max,scope=graph-db",
+        graph_db_path,
     ]
-    
+
     subprocess.run(
         build_cmd,
         check=True,
@@ -214,7 +218,7 @@ def graph_db_container(neo4j_container, docker_network):
         .with_env("NEO4J_USER", NEO4J_USER)
         .with_env("NEO4J_PASSWORD", NEO4J_PASSWORD)
     )
-    
+
     # Connect to the shared network
     container._kwargs["network"] = docker_network
 
@@ -253,14 +257,16 @@ def graph_db_container(neo4j_container, docker_network):
                         break
             except Exception:
                 pass
-            
+
             if attempt < 29:
                 time.sleep(0.5)
         else:
             # Log the last health check for debugging
             try:
                 health_response = httpx.get(f"{graph_db_url}/health", timeout=3.0)
-                print(f"\n[Warning] Graph DB health check status: {health_response.json()}")
+                print(
+                    f"\n[Warning] Graph DB health check status: {health_response.json()}"
+                )
             except Exception as e:
                 print(f"\n[Warning] Could not check Graph DB health: {e}")
 
@@ -268,16 +274,18 @@ def graph_db_container(neo4j_container, docker_network):
 
 
 @pytest.fixture(scope="session")
-def aegis_scholar_api_container(docker_network, graph_db_container, identity_container, vector_db_container):
+def aegis_scholar_api_container(
+    docker_network, graph_db_container, identity_container, vector_db_container
+):
     """Builds and starts the main Aegis Scholar API as a Docker container.
-    
+
     Returns the API base URL for making HTTP requests.
-    
+
     Dependencies:
     - Depends on graph_db_container, identity_container, and vector_db_container
       to ensure those services start first (we don't use their returned URLs since
       the main API needs internal Docker network URLs, not external host URLs)
-    
+
     This container:
     - Builds from services/aegis_scholar_api/Dockerfile
     - Connects to the shared Docker network
@@ -287,36 +295,40 @@ def aegis_scholar_api_container(docker_network, graph_db_container, identity_con
     # Note: We depend on service fixtures above for startup ordering only
     # The returned URLs (graph_db_container, etc.) are external host URLs,
     # but we need internal Docker network URLs for inter-container communication
-    
+
     # Get the absolute path to the aegis_scholar_api service
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     api_service_path = os.path.join(project_root, "services", "aegis_scholar_api")
-    
+
     # Build the Docker image with BuildKit support and GitHub Actions cache
     env = os.environ.copy()
     env["DOCKER_BUILDKIT"] = "1"
-    
+
     # Use GitHub Actions cache if available (CI environment)
     build_cmd = [
-        "docker", "build",
-        "-t", "aegis-scholar-api:test",
-        "--cache-from", "type=gha,scope=aegis-scholar-api",
-        "--cache-to", "type=gha,mode=max,scope=aegis-scholar-api",
-        api_service_path
+        "docker",
+        "build",
+        "-t",
+        "aegis-scholar-api:test",
+        "--cache-from",
+        "type=gha,scope=aegis-scholar-api",
+        "--cache-to",
+        "type=gha,mode=max,scope=aegis-scholar-api",
+        api_service_path,
     ]
-    
+
     subprocess.run(
         build_cmd,
         check=True,
         env=env,
         capture_output=True,
     )
-    
+
     # Internal URLs for inter-container communication (using port and container name constants)
     graph_db_internal_url = f"http://{GRAPH_DB_CONTAINER_NAME}:{GRAPH_DB_PORT}"
     identity_internal_url = f"http://{IDENTITY_CONTAINER_NAME}:{IDENTITY_PORT}"
     vector_db_internal_url = f"http://{VECTOR_DB_CONTAINER_NAME}:{VECTOR_DB_PORT}"
-    
+
     # Build and configure the container
     container = (
         DockerContainer("aegis-scholar-api:test")
@@ -327,16 +339,16 @@ def aegis_scholar_api_container(docker_network, graph_db_container, identity_con
         .with_env("VECTOR_DB_URL", vector_db_internal_url)
         .with_env("LOG_LEVEL", "DEBUG")
     )
-    
+
     # Connect to shared network
     container._kwargs["network"] = docker_network
-    
+
     with container:
         # Wait for API to be ready
         host = container.get_container_host_ip()
         port = container.get_exposed_port(API_PORT)
         api_url = f"http://{host}:{port}"
-        
+
         # Step 1: Wait for API server to start responding to /docs
         time.sleep(3)
         for attempt in range(200):  # 20 seconds
@@ -346,7 +358,7 @@ def aegis_scholar_api_container(docker_network, graph_db_container, identity_con
                     break
             except (httpx.RequestError, httpx.TimeoutException):
                 pass
-            
+
             if attempt < 199:
                 time.sleep(0.1)
         else:
@@ -354,27 +366,32 @@ def aegis_scholar_api_container(docker_network, graph_db_container, identity_con
                 f"Aegis Scholar API at {api_url} failed to start. "
                 f"Check container logs for details."
             )
-        
+
         # Step 2: Wait for API to successfully connect to dependencies (Graph DB)
         # The /health endpoint checks downstream services
-        print(f"\n[Setup] Aegis Scholar API started at {api_url}, waiting for Graph DB connectivity...")
+        print(
+            f"\n[Setup] Aegis Scholar API started at {api_url}, waiting for Graph DB connectivity..."
+        )
         for attempt in range(100):  # 10 seconds
             try:
                 health_response = httpx.get(f"{api_url}/health", timeout=5.0)
                 if health_response.status_code == 200:
                     health_data = health_response.json()
                     # Check if dependencies are initialized (even if unreachable, API should respond)
-                    if "dependencies" in health_data or health_data.get("status") == "healthy":
+                    if (
+                        "dependencies" in health_data
+                        or health_data.get("status") == "healthy"
+                    ):
                         print(f"[Setup] API health check passed: {health_data}")
                         break
             except Exception:
                 pass
-            
+
             if attempt < 99:
                 time.sleep(0.1)
         else:
             print("[Warning] API /health endpoint did not stabilize, but proceeding...")
-        
+
         # Step 3: Warm up the connection with a real request to ensure Graph DB is accessible
         print("[Setup] Warming up API -> Graph DB connection...")
         for attempt in range(30):  # 15 seconds
@@ -388,10 +405,10 @@ def aegis_scholar_api_container(docker_network, graph_db_container, identity_con
                 if attempt == 29:
                     print(f"[Warning] Warmup request failed: {e}, proceeding anyway...")
                 pass
-            
+
             if attempt < 29:
                 time.sleep(0.5)
-        
+
         yield api_url
 
 
@@ -399,7 +416,7 @@ def aegis_scholar_api_container(docker_network, graph_db_container, identity_con
 def identity_container(docker_network):
     """
     Starts an Identity Service container with OpenLDAP backend.
-    
+
     - Builds the identity service Docker image
     - Starts OpenLDAP container for testing
     - Configures identity service to connect to LDAP
@@ -415,15 +432,15 @@ def identity_container(docker_network):
         .with_env("LDAP_PORT_NUMBER", str(LDAP_PORT))
         .with_kwargs(hostname=LDAP_CONTAINER_NAME)
     )
-    
+
     ldap_container._kwargs["network"] = docker_network
     ldap_container.start()
-    
+
     try:
         # Wait for LDAP to be ready - verify it's accepting connections via ldapsearch
         # Initial delay for container startup
         time.sleep(3)
-        
+
         max_attempts = 60  # 60 seconds total
         for attempt in range(max_attempts):
             try:
@@ -436,14 +453,14 @@ def identity_container(docker_network):
                     break
             except Exception:
                 pass
-            
+
             if attempt < max_attempts - 1:
                 time.sleep(1)
         else:
             raise RuntimeError(
                 f"LDAP server failed to become ready after {max_attempts} seconds"
             )
-        
+
         # Seed LDAP with test data for identity tests
         ldif_content = f"""dn: ou=users,{LDAP_BASE_DN}
 objectClass: organizationalUnit
@@ -460,7 +477,9 @@ mail: jane.smith@example.org
 o: Department of Defense
 """
         # Write LDIF content to container and add entries
-        ldap_container.exec(f"sh -c 'cat > /tmp/test_users.ldif << \"EOF\"\n{ldif_content}\nEOF'")
+        ldap_container.exec(
+            f"sh -c 'cat > /tmp/test_users.ldif << \"EOF\"\n{ldif_content}\nEOF'"
+        )
         result = ldap_container.exec(
             f"ldapadd -c -x -H ldap://127.0.0.1:{LDAP_PORT} "
             f"-D 'cn=admin,{LDAP_BASE_DN}' -w '{LDAP_ADMIN_PASSWORD}' "
@@ -471,28 +490,33 @@ o: Department of Defense
         if result[0] != 0 and result[0] != 68:
             print(f"Warning: LDAP seeding failed with exit code: {result[0]}")
             print(f"Output: {result[1]}")
-        
+
         # Build identity service Docker image
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         identity_path = os.path.join(project_root, "services", "identity")
-        
+
         env = os.environ.copy()
         env["DOCKER_BUILDKIT"] = "1"
-        
+
         build_cmd = [
-            "docker", "build",
-            "-t", "identity:test",
-            "--cache-from", "type=gha,scope=identity",
-            "--cache-to", "type=gha,mode=max,scope=identity",
-            identity_path
+            "docker",
+            "build",
+            "-t",
+            "identity:test",
+            "--cache-from",
+            "type=gha,scope=identity",
+            "--cache-to",
+            "type=gha,mode=max,scope=identity",
+            identity_path,
         ]
-        
+
         subprocess.run(build_cmd, check=True, env=env, capture_output=True)
-        
+
         # Create a temporary directory for identity data volume
         import tempfile
+
         temp_data_dir = tempfile.mkdtemp(prefix="identity_test_data_")
-        
+
         # Start identity service container
         identity_container = (
             DockerContainer("identity:test")
@@ -504,18 +528,18 @@ o: Department of Defense
             .with_env("LDAP_BASE_DN", LDAP_BASE_DN)
             .with_volume_mapping(temp_data_dir, "/data", "rw")
         )
-        
+
         identity_container._kwargs["network"] = docker_network
         identity_container.start()
-        
+
         try:
             # Wait for service to start (look for any FastAPI startup message)
             time.sleep(3)
-            
+
             host = identity_container.get_container_host_ip()
             port = identity_container.get_exposed_port(IDENTITY_PORT)
             identity_url = f"http://{host}:{port}"
-            
+
             # Poll /docs endpoint first (FastAPI auto-generated docs)
             docs_ready = False
             for attempt in range(60):  # 30 seconds
@@ -526,10 +550,10 @@ o: Department of Defense
                         break
                 except Exception:
                     pass
-                
+
                 if attempt < 59:
                     time.sleep(0.5)
-            
+
             # Then verify /health endpoint is responding
             health_ready = False
             for attempt in range(30):  # 15 seconds
@@ -541,22 +565,23 @@ o: Department of Defense
                 except Exception as e:
                     if attempt == 29:
                         print(f"Health check attempt {attempt + 1} failed: {e}")
-                
+
                 if attempt < 29:
                     time.sleep(0.5)
-            
+
             if not health_ready:
                 raise RuntimeError(
                     f"Identity service health check failed after 45 seconds. "
                     f"Docs ready: {docs_ready}, Health ready: {health_ready}"
                 )
-            
+
             yield identity_url
-            
+
         finally:
             identity_container.stop()
             # Clean up temp directory
             import shutil
+
             try:
                 shutil.rmtree(temp_data_dir)
             except Exception:
@@ -569,7 +594,7 @@ o: Department of Defense
 def vector_db_container(docker_network):
     """
     Starts a Vector DB service container with Milvus backend.
-    
+
     - Builds the vector-db service Docker image
     - Starts Milvus container for vector storage
     - Configures vector-db service to connect to Milvus
@@ -578,35 +603,39 @@ def vector_db_container(docker_network):
     from testcontainers.milvus import MilvusContainer
 
     MILVUS_IMAGE = "milvusdb/milvus:v2.4.4"
-    
+
     # Start Milvus container first
     milvus_container = MilvusContainer(image=MILVUS_IMAGE)
     milvus_container.with_kwargs(hostname=MILVUS_CONTAINER_NAME)
     milvus_container._kwargs["network"] = docker_network
     milvus_container.start()
-    
+
     try:
         # Build vector-db service Docker image
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         vector_db_path = os.path.join(project_root, "services", "vector-db")
-        
+
         env = os.environ.copy()
         env["DOCKER_BUILDKIT"] = "1"
-        
+
         build_cmd = [
-            "docker", "build",
-            "-t", "vector-db:test",
-            "--cache-from", "type=gha,scope=vector-db",
-            "--cache-to", "type=gha,mode=max,scope=vector-db",
-            vector_db_path
+            "docker",
+            "build",
+            "-t",
+            "vector-db:test",
+            "--cache-from",
+            "type=gha,scope=vector-db",
+            "--cache-to",
+            "type=gha,mode=max,scope=vector-db",
+            vector_db_path,
         ]
-        
+
         subprocess.run(build_cmd, check=True, env=env, capture_output=True)
-        
+
         # Start vector-db service container
         model_cache = os.path.expanduser("~/.cache/aegis-model-cache")
         os.makedirs(model_cache, exist_ok=True)
-        
+
         vector_container = (
             DockerContainer("vector-db:test")
             .with_name(VECTOR_DB_CONTAINER_NAME)
@@ -616,18 +645,18 @@ def vector_db_container(docker_network):
             .with_env("DEFAULT_COLLECTION", "aegis_vectors")
             .with_volume_mapping(model_cache, "/app/.cache", "rw")
         )
-        
+
         vector_container._kwargs["network"] = docker_network
         vector_container.start()
-        
+
         try:
             # Wait for service to start
             time.sleep(5)
-            
+
             host = vector_container.get_container_host_ip()
             port = vector_container.get_exposed_port(VECTOR_DB_PORT)
             vector_url = f"http://{host}:{port}"
-            
+
             # Poll /docs endpoint first (FastAPI auto-generated docs)
             # Vector service may take longer due to model loading
             docs_ready = False
@@ -639,10 +668,10 @@ def vector_db_container(docker_network):
                         break
                 except Exception:
                     pass
-                
+
                 if attempt < 119:
                     time.sleep(0.5)
-            
+
             # Then verify /health endpoint is responding
             health_ready = False
             for attempt in range(60):  # 30 seconds
@@ -653,19 +682,21 @@ def vector_db_container(docker_network):
                         break
                 except Exception as e:
                     if attempt == 59:
-                        print(f"Vector DB health check attempt {attempt + 1} failed: {e}")
-                
+                        print(
+                            f"Vector DB health check attempt {attempt + 1} failed: {e}"
+                        )
+
                 if attempt < 59:
                     time.sleep(0.5)
-            
+
             if not health_ready:
                 raise RuntimeError(
                     f"Vector DB service health check failed after 90 seconds. "
                     f"Docs ready: {docs_ready}, Health ready: {health_ready}"
                 )
-            
+
             yield vector_url
-            
+
         finally:
             vector_container.stop()
     finally:
@@ -693,23 +724,22 @@ def vector_db_url(vector_db_container):
 @pytest.fixture(scope="session")
 def main_api_url(aegis_scholar_api_container):
     """Returns the URL for the containerized Aegis Scholar API.
-    
+
     Scope: Session (same as the underlying container)
-    
+
     This fixture provides the base URL for the main API running in a Docker container.
     Tests should use httpx.AsyncClient to make HTTP requests to this URL.
-    
+
     The API container is configured to communicate with the Graph DB container
     via Docker network using container names.
     """
     return aegis_scholar_api_container
 
 
-
 @pytest.fixture(scope="function")
 async def http_client():
     """Async HTTP client for making API requests in tests.
-    
+
     Scope: Function (new client for each test to avoid state leakage)
     """
     async with httpx.AsyncClient(timeout=30.0) as client:
@@ -719,7 +749,7 @@ async def http_client():
 @pytest.fixture(scope="function")
 def sample_integration_data():
     """Sample data for integration testing across components.
-    
+
     Scope: Function (fresh data for each test)
     """
     return {
@@ -756,7 +786,7 @@ def sample_integration_data():
 @pytest.fixture(scope="function")
 def sample_search_query():
     """Sample search query for end-to-end tests.
-    
+
     Scope: Function (fresh query for each test)
     """
     return {
@@ -773,9 +803,9 @@ def sample_search_query():
 @pytest.fixture(scope="function")
 def sample_authors(sample_integration_data):
     """Extract authors from sample_integration_data for Milvus tests.
-    
+
     Scope: Function (fresh data for each test)
-    
+
     Returns list of dicts with 'id' and 'name' keys, where 'name' comes from
     'display_name' in the integration data to match the expected schema.
     """
@@ -788,7 +818,7 @@ def sample_authors(sample_integration_data):
 @pytest.fixture(scope="function")
 def sample_works(sample_integration_data):
     """Extract works from sample_integration_data for Neo4j tests.
-    
+
     Scope: Function (fresh data for each test)
     """
     return sample_integration_data["works"]
@@ -799,7 +829,7 @@ def sample_works(sample_integration_data):
 
 def get_free_port():
     """Finds a free port on the host machine.
-    
+
     Used for dynamically allocating ports to test services to avoid conflicts.
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -809,10 +839,10 @@ def get_free_port():
 
 def load_test_author(index=0):
     """Load a specific author from dtic_test_subset.
-    
+
     Args:
         index: Zero-based index of the author to load
-        
+
     Returns:
         dict: Author data from dtic_test_subset
     """
@@ -826,10 +856,10 @@ def load_test_author(index=0):
 
 def load_test_work(index=0):
     """Load a specific work from dtic_test_subset.
-    
+
     Args:
         index: Zero-based index of the work to load
-        
+
     Returns:
         dict: Work data from dtic_test_subset
     """
@@ -843,7 +873,7 @@ def load_test_work(index=0):
 
 def find_author_with_zero_works():
     """Find an author with works_count = 0.
-    
+
     Returns:
         dict: First author with zero works, or None
     """
@@ -858,7 +888,7 @@ def find_author_with_zero_works():
 
 def find_author_with_no_orgs():
     """Find an author with no organization affiliations.
-    
+
     Returns:
         dict: First author without org_ids, or None
     """
@@ -874,7 +904,7 @@ def find_author_with_no_orgs():
 
 def find_author_with_zero_citations():
     """Find an author with cited_by_count = 0.
-    
+
     Returns:
         dict: First author with zero citations, or None
     """
@@ -889,7 +919,7 @@ def find_author_with_zero_citations():
 
 def find_author_with_special_characters():
     """Find an author with special characters in name (unicode, apostrophes, etc).
-    
+
     Returns:
         dict: First author with non-ASCII characters, or None
     """
@@ -906,7 +936,7 @@ def find_author_with_special_characters():
 
 def find_work_without_authors():
     """Find a work with no author relationships.
-    
+
     Returns:
         dict: First work without authors, or None
     """
@@ -926,14 +956,14 @@ def find_work_without_authors():
 @pytest.fixture(scope="session")
 def neo4j_driver(neo4j_container):
     """Neo4j driver connected to the testcontainer.
-    
+
     Scope: Session (reuses connection across all tests)
-    
+
     Provides direct database access for:
     - Custom test data setup
     - Direct query verification
     - Database state inspection
-    
+
     Uses credentials from NEO4J_USER and NEO4J_PASSWORD constants.
     """
     neo4j_host = neo4j_container.get_container_host_ip()
@@ -948,14 +978,14 @@ def neo4j_driver(neo4j_container):
 @pytest.fixture(scope="session")
 def ensure_test_data(neo4j_driver):
     """Loads DTIC test data into Neo4j if the database is empty.
-    
+
     Scope: Session (runs once when explicitly requested)
-    
+
     Checks for a canary author ID. If not found, loads:
     - Authors from dtic_authors_50.jsonl.gz
     - Topics from dtic_topics_50.jsonl.gz
     - Works from dtic_works_50.jsonl.gz with relationships
-    
+
     This fixture ensures a consistent test dataset. Tests that need this data
     should explicitly declare it as a dependency.
     """
@@ -980,13 +1010,13 @@ def ensure_test_data(neo4j_driver):
 
 def load_gz_jsonl(session, file_path, label):
     """Loads a gzipped JSONL file into Neo4j.
-    
+
     Handles three node types:
     - Author: MERGE on id, SET name (from 'name' or 'display_name'), h_index, works_count
     - Topic: MERGE on id, SET name from 'display_name'
     - Work: MERGE on id, SET title, create AUTHORED relationships with Authors,
             and HAS_TOPIC relationships with Topics
-    
+
     The Work data format supports both nested objects (authors: [{author_id: ...}])
     and direct arrays (author_ids: [...]) for flexibility across data sources.
     """
@@ -1065,4 +1095,3 @@ def load_gz_jsonl(session, file_path, label):
                 continue
 
     print(f"[Setup] Loaded {label} from {file_path.name}")
-

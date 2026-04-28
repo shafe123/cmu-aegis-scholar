@@ -1,4 +1,5 @@
 """Tests for the vector-loader job."""
+
 import gzip
 import json
 from pathlib import Path
@@ -9,10 +10,10 @@ import pytest
 
 from app.loader import VectorDBClient, VectorLoader
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_gz_jsonl(path: Path, records: list) -> Path:
     """Write a list of dicts to a gzip'd JSONL file."""
@@ -33,8 +34,8 @@ def make_loader(tmp_path: Path, mock_client: MagicMock = None) -> VectorLoader:
 # VectorDBClient
 # ===========================================================================
 
-class TestVectorDBClient:
 
+class TestVectorDBClient:
     def test_check_health_success(self):
         with patch("httpx.Client") as mock_cls:
             mock_http = MagicMock()
@@ -105,9 +106,7 @@ class TestVectorDBClient:
             mock_http.post.return_value.raise_for_status.return_value = None
 
             client = VectorDBClient("http://test:8002")
-            ok = client.create_author_embedding(
-                "a1", "Alice", ["abstract"], "col", "model", citation_count=5
-            )
+            ok = client.create_author_embedding("a1", "Alice", ["abstract"], "col", "model", citation_count=5)
             assert ok is True
 
     def test_create_author_embedding_no_citation_count(self):
@@ -118,9 +117,7 @@ class TestVectorDBClient:
             mock_http.post.return_value.raise_for_status.return_value = None
 
             client = VectorDBClient("http://test:8002")
-            ok = client.create_author_embedding(
-                "a1", "Alice", ["text"], "col", "model", citation_count=None
-            )
+            ok = client.create_author_embedding("a1", "Alice", ["text"], "col", "model", citation_count=None)
 
             assert ok is True
             payload = mock_http.post.call_args.kwargs["json"]
@@ -132,8 +129,8 @@ class TestVectorDBClient:
             mock_cls.return_value = mock_http
             mock_resp = MagicMock()
             mock_resp.text = "Bad Request"
-            mock_http.post.return_value.raise_for_status.side_effect = (
-                httpx.HTTPStatusError("400", request=MagicMock(), response=mock_resp)
+            mock_http.post.return_value.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "400", request=MagicMock(), response=mock_resp
             )
 
             client = VectorDBClient("http://test:8002")
@@ -162,8 +159,8 @@ class TestVectorDBClient:
 # VectorLoader._parse_json
 # ===========================================================================
 
-class TestParseJson:
 
+class TestParseJson:
     def test_parse_json_without_orjson(self, tmp_path):
         loader = make_loader(tmp_path)
         with patch("app.loader.HAS_ORJSON", False):
@@ -181,8 +178,8 @@ class TestParseJson:
 # VectorLoader.should_skip_loading
 # ===========================================================================
 
-class TestShouldSkipLoading:
 
+class TestShouldSkipLoading:
     def test_returns_false_when_skip_if_loaded_disabled(self, tmp_path):
         mock_client = MagicMock()
         loader = make_loader(tmp_path, mock_client)
@@ -231,8 +228,8 @@ class TestShouldSkipLoading:
 # VectorLoader.get_compressed_files
 # ===========================================================================
 
-class TestGetCompressedFiles:
 
+class TestGetCompressedFiles:
     def test_returns_matching_files(self, tmp_path):
         (tmp_path / "dtic_works_001.jsonl.gz").touch()
         (tmp_path / "dtic_works_002.jsonl.gz").touch()
@@ -253,8 +250,8 @@ class TestGetCompressedFiles:
 # VectorLoader.build_author_lookup
 # ===========================================================================
 
-class TestBuildAuthorLookup:
 
+class TestBuildAuthorLookup:
     def test_returns_empty_when_no_files(self, tmp_path):
         loader = make_loader(tmp_path)
         assert loader.build_author_lookup() == {}
@@ -328,6 +325,7 @@ class TestBuildAuthorLookup:
 # VectorLoader.process_works_file
 # ===========================================================================
 
+
 def _settings_stub(max_records=None, collection="col", model="mdl"):
     """Return a minimal settings mock for process_works_file."""
     s = MagicMock()
@@ -338,7 +336,6 @@ def _settings_stub(max_records=None, collection="col", model="mdl"):
 
 
 class TestProcessWorksFile:
-
     def test_uploads_authors_from_works(self, tmp_path):
         works = [{"abstract": "Deep learning research", "authors": [{"author_id": "A1"}, {"author_id": "A2"}]}]
         gz = make_gz_jsonl(tmp_path / "dtic_works_001.jsonl.gz", works)
@@ -354,8 +351,7 @@ class TestProcessWorksFile:
         assert mock_client.create_author_embedding.call_count == 2
 
     def test_skips_works_without_abstract(self, tmp_path):
-        gz = make_gz_jsonl(tmp_path / "dtic_works_001.jsonl.gz",
-                           [{"abstract": "", "authors": [{"author_id": "A1"}]}])
+        gz = make_gz_jsonl(tmp_path / "dtic_works_001.jsonl.gz", [{"abstract": "", "authors": [{"author_id": "A1"}]}])
 
         mock_client = MagicMock()
         loader = make_loader(tmp_path, mock_client)
@@ -366,8 +362,9 @@ class TestProcessWorksFile:
         mock_client.create_author_embedding.assert_not_called()
 
     def test_skips_authors_without_id(self, tmp_path):
-        gz = make_gz_jsonl(tmp_path / "dtic_works_001.jsonl.gz",
-                           [{"abstract": "Valid text", "authors": [{"no_id": "X"}]}])
+        gz = make_gz_jsonl(
+            tmp_path / "dtic_works_001.jsonl.gz", [{"abstract": "Valid text", "authors": [{"no_id": "X"}]}]
+        )
 
         mock_client = MagicMock()
         loader = make_loader(tmp_path, mock_client)
@@ -507,8 +504,8 @@ class TestProcessWorksFile:
 # VectorLoader.process_entity_type
 # ===========================================================================
 
-class TestProcessEntityType:
 
+class TestProcessEntityType:
     def test_no_files_logs_warning_without_raising(self, tmp_path):
         loader = make_loader(tmp_path)
         loader.process_entity_type("works", {})  # no gz files → should not crash
@@ -540,8 +537,8 @@ class TestProcessEntityType:
 # VectorLoader.run
 # ===========================================================================
 
-class TestVectorLoaderRun:
 
+class TestVectorLoaderRun:
     def test_raises_when_health_check_never_passes(self, tmp_path):
         mock_client = MagicMock()
         mock_client.check_health.return_value = False
@@ -558,9 +555,11 @@ class TestVectorLoaderRun:
         mock_client.check_health.return_value = True
         loader = make_loader(tmp_path, mock_client)
 
-        with patch.object(loader, "should_skip_loading", return_value=True), \
-             patch.object(loader, "build_author_lookup") as mock_lookup, \
-             patch.object(loader, "process_entity_type") as mock_process:
+        with (
+            patch.object(loader, "should_skip_loading", return_value=True),
+            patch.object(loader, "build_author_lookup") as mock_lookup,
+            patch.object(loader, "process_entity_type") as mock_process,
+        ):
             loader.run()
 
         mock_lookup.assert_not_called()
@@ -574,9 +573,11 @@ class TestVectorLoaderRun:
 
         fake_lookup = {"A1": {"name": "Alice", "citation_count": 0}}
 
-        with patch.object(loader, "should_skip_loading", return_value=False), \
-             patch.object(loader, "build_author_lookup", return_value=fake_lookup), \
-             patch.object(loader, "process_entity_type") as mock_process:
+        with (
+            patch.object(loader, "should_skip_loading", return_value=False),
+            patch.object(loader, "build_author_lookup", return_value=fake_lookup),
+            patch.object(loader, "process_entity_type") as mock_process,
+        ):
             loader.run()
 
         mock_process.assert_called_once_with("works", fake_lookup)
@@ -600,8 +601,7 @@ class TestVectorLoaderRun:
         mock_client.check_health.side_effect = [False, True]
         loader = make_loader(tmp_path, mock_client)
 
-        with patch("app.loader.time.sleep"), \
-             patch.object(loader, "should_skip_loading", return_value=True):
+        with patch("app.loader.time.sleep"), patch.object(loader, "should_skip_loading", return_value=True):
             loader.run()  # should not raise
 
         assert mock_client.check_health.call_count == 2
@@ -611,12 +611,14 @@ class TestVectorLoaderRun:
 # main()
 # ===========================================================================
 
+
 def test_main():
     with patch("app.loader.VectorLoader") as mock_cls:
         mock_loader = MagicMock()
         mock_cls.return_value = mock_loader
 
         from app.loader import main
+
         main()
 
         mock_cls.assert_called_once()

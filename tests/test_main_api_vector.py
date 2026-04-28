@@ -49,7 +49,7 @@ async def test_author_search_integration(main_api_url, vector_db_url):
     """
     Validates the containerized API's author search via Vector DB.
     Tests the /search/authors endpoint with text query.
-    
+
     Note: This test uses a generic search query since we don't have specific
     test data pre-loaded in the vector DB. The test validates structure and
     communication rather than specific results.
@@ -175,9 +175,9 @@ async def test_author_search_with_sorting(main_api_url, vector_db_url):
         if len(data["results"]) > 1:
             relevance_scores = [r["relevance_score"] for r in data["results"]]
             # Scores should be in descending order (highest relevance first)
-            assert relevance_scores == sorted(
-                relevance_scores, reverse=True
-            ), "Results should be sorted by relevance score descending"
+            assert relevance_scores == sorted(relevance_scores, reverse=True), (
+                "Results should be sorted by relevance score descending"
+            )
 
     if response_citations.status_code == 200:
         data = response_citations.json()
@@ -191,9 +191,9 @@ async def test_author_search_with_sorting(main_api_url, vector_db_url):
             if len(results_with_citations) > 1:
                 citation_counts = [r["citation_count"] for r in results_with_citations]
                 # Should be in descending order (highest citations first)
-                assert citation_counts == sorted(
-                    citation_counts, reverse=True
-                ), "Results should be sorted by citation_count descending"
+                assert citation_counts == sorted(citation_counts, reverse=True), (
+                    "Results should be sorted by citation_count descending"
+                )
 
 
 @pytest.mark.integration
@@ -254,7 +254,7 @@ async def test_author_search_respects_limits(main_api_url, vector_db_url):
 async def test_vector_db_connectivity_error_handling(main_api_url):
     """
     Tests that the API handles Vector DB connection failures gracefully.
-    
+
     Note: This test verifies that the API returns appropriate error codes
     when the Vector DB is unavailable, rather than crashing.
     """
@@ -301,20 +301,20 @@ async def test_relevance_score_calculation(main_api_url, vector_db_url):
         if len(data["results"]) > 0:
             for author in data["results"]:
                 # Every result should have a relevance_score
-                assert (
-                    "relevance_score" in author
-                ), "Author results must include relevance_score"
+                assert "relevance_score" in author, (
+                    "Author results must include relevance_score"
+                )
                 relevance = author["relevance_score"]
 
                 # Relevance should be a number between 0 and 1 (or slightly higher due to boosting)
-                assert isinstance(
-                    relevance, (int, float)
-                ), "relevance_score must be numeric"
+                assert isinstance(relevance, (int, float)), (
+                    "relevance_score must be numeric"
+                )
                 assert relevance >= 0, "relevance_score should be non-negative"
                 # Allow some tolerance for boosted scores
-                assert (
-                    relevance <= 2.0
-                ), "relevance_score should not be unreasonably high"
+                assert relevance <= 2.0, (
+                    "relevance_score should not be unreasonably high"
+                )
 
 
 # --- Edge Case Tests ---
@@ -335,19 +335,19 @@ async def test_search_with_special_characters(main_api_url, vector_db_url):
         "data (structured)",
         "100% accurate",
     ]
-    
+
     async with AsyncClient(base_url=main_api_url) as ac:
         for query in special_queries:
             response = await ac.get(
                 "/search/authors",
                 params={"q": query, "limit": 5},
             )
-            
+
             # Should not crash with 500, should return 200 or 503
             assert response.status_code in [200, 503], (
                 f"Query '{query}' returned unexpected status: {response.status_code}"
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 assert "results" in data, "Response must include results"
@@ -369,19 +369,19 @@ async def test_search_with_unicode_query(main_api_url, vector_db_url):
         "Müller research",  # German umlaut
         "🤖 robotics",  # Emoji
     ]
-    
+
     async with AsyncClient(base_url=main_api_url) as ac:
         for query in unicode_queries:
             response = await ac.get(
                 "/search/authors",
                 params={"q": query, "limit": 5},
             )
-            
+
             # Should handle gracefully, not crash
             assert response.status_code in [200, 503], (
                 f"Unicode query '{query}' returned unexpected status: {response.status_code}"
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 assert "results" in data
@@ -401,7 +401,7 @@ async def test_search_negative_offset(main_api_url):
             "/search/authors",
             params={"q": QUERY_ML, "limit": 10, "offset": -1},
         )
-    
+
     # Should return 422 validation error for negative offset
     assert response.status_code == 422, (
         f"Negative offset should return 422, got {response.status_code}"
@@ -422,7 +422,7 @@ async def test_search_negative_limit(main_api_url):
             "/search/authors",
             params={"q": QUERY_ML, "limit": -5},
         )
-    
+
     # Should return 422 validation error for negative limit
     assert response.status_code == 422, (
         f"Negative limit should return 422, got {response.status_code}"
@@ -444,19 +444,19 @@ async def test_search_with_stopwords_only(main_api_url, vector_db_url):
         "a an the",
         "is was are",
     ]
-    
+
     async with AsyncClient(base_url=main_api_url) as ac:
         for query in stopword_queries:
             response = await ac.get(
                 "/search/authors",
                 params={"q": query, "limit": 5},
             )
-            
+
             # Should handle gracefully
             assert response.status_code in [200, 503], (
                 f"Stopword query '{query}' failed: {response.status_code}"
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 assert "results" in data
@@ -473,18 +473,18 @@ async def test_search_very_long_query(main_api_url, vector_db_url):
     """
     # Create a 1500 character query
     long_query = " ".join(["machine learning artificial intelligence"] * 50)
-    
+
     async with AsyncClient(base_url=main_api_url) as ac:
         response = await ac.get(
             "/search/authors",
             params={"q": long_query, "limit": 5},
         )
-    
+
     # Should either accept it (200/503) or reject with validation error (422)
     assert response.status_code in [200, 422, 503], (
         f"Very long query returned unexpected status: {response.status_code}"
     )
-    
+
     if response.status_code == 200:
         data = response.json()
         assert "results" in data
@@ -506,29 +506,29 @@ async def test_search_case_insensitive(main_api_url, vector_db_url):
         "Machine Learning",
         "MaChInE LeArNiNg",
     ]
-    
+
     results_list = []
-    
+
     async with AsyncClient(base_url=main_api_url) as ac:
         for query in queries:
             response = await ac.get(
                 "/search/authors",
                 params={"q": query, "limit": 10},
             )
-            
+
             assert response.status_code in [200, 503], (
                 f"Query '{query}' failed: {response.status_code}"
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 results_list.append(data)
-    
+
     # If all queries succeeded, verify they return similar results
     if len(results_list) == len(queries):
         # Check that result counts are similar (within reasonable range)
         result_counts = [len(r["results"]) for r in results_list]
-        
+
         if len(result_counts) > 1 and any(c > 0 for c in result_counts):
             # All counts should be similar (not necessarily identical due to ranking)
             avg_count = sum(result_counts) / len(result_counts)
@@ -552,12 +552,12 @@ async def test_search_offset_beyond_results(main_api_url, vector_db_url):
             "/search/authors",
             params={"q": QUERY_ML, "limit": 10, "offset": 10000},
         )
-    
+
     # Should return 200 with empty results, not error
     assert response.status_code in [200, 503], (
         f"High offset returned unexpected status: {response.status_code}"
     )
-    
+
     if response.status_code == 200:
         data = response.json()
         assert "results" in data
@@ -575,19 +575,19 @@ async def test_search_whitespace_only_query(main_api_url, vector_db_url):
     API may accept and return empty results or reject with validation error.
     """
     whitespace_queries = ["   ", "\t\t"]
-    
+
     async with AsyncClient(base_url=main_api_url) as ac:
         for query in whitespace_queries:
             response = await ac.get(
                 "/search/authors",
                 params={"q": query, "limit": 5},
             )
-            
+
             # API may return 200 (accepts and handles) or 422 (validation error)
             assert response.status_code in [200, 422, 503], (
                 f"Whitespace query returned unexpected status: {response.status_code}"
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 assert "results" in data

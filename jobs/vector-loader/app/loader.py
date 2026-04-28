@@ -4,16 +4,17 @@ Vector Loader for DTIC Vector Database
 Loads compressed JSONL data into the vector database.
 Runs once and inspects vector database to avoid duplicate loading.
 """
+
 import gzip
 import json
 import logging
 import time
-from pathlib import Path
-from typing import Optional
 from collections import defaultdict
+from pathlib import Path
 
 try:
     import orjson
+
     HAS_ORJSON = True
 except ImportError:
     HAS_ORJSON = False
@@ -24,8 +25,7 @@ from app.config import settings
 
 # Configure logging
 logging.basicConfig(
-    level=getattr(logging, settings.log_level.upper()),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=getattr(logging, settings.log_level.upper()), format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class VectorDBClient:
 
     def __init__(self, base_url: str, timeout: int = 300):
         """Initialize the client."""
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.client = httpx.Client(timeout=timeout)
         logger.info("Initialized VectorDBClient with base_url: %s", self.base_url)
 
@@ -51,7 +51,7 @@ class VectorDBClient:
             logger.error("Health check failed: %s", e)
             return False
 
-    def get_collection_info(self, collection_name: str) -> Optional[dict]:
+    def get_collection_info(self, collection_name: str) -> dict | None:
         """Get information about a collection."""
         try:
             response = self.client.get(f"{self.base_url}/collections/{collection_name}")
@@ -70,7 +70,7 @@ class VectorDBClient:
         abstracts: list[str],
         collection_name: str,
         model_name: str,
-        citation_count: int = None
+        citation_count: int = None,
     ) -> bool:
         """Create an author embedding from abstracts."""
         try:
@@ -79,22 +79,16 @@ class VectorDBClient:
                 "author_name": author_name,
                 "abstracts": abstracts,
                 "collection_name": collection_name,
-                "model_name": model_name
+                "model_name": model_name,
             }
             if citation_count is not None:
                 payload["citation_count"] = citation_count
 
-            response = self.client.post(
-                f"{self.base_url}/authors/embeddings",
-                json=payload
-            )
+            response = self.client.post(f"{self.base_url}/authors/embeddings", json=payload)
             response.raise_for_status()
             return True
         except httpx.HTTPStatusError as e:
-            logger.error(
-                "Failed to create author embedding for %s: %s",
-                author_id, e.response.text
-            )
+            logger.error("Failed to create author embedding for %s: %s", author_id, e.response.text)
             return False
         except Exception as e:
             logger.error("Failed to create author embedding for %s: %s", author_id, e)
@@ -108,11 +102,11 @@ class VectorDBClient:
 class VectorLoader:
     """Loads DTIC data into the vector database."""
 
-    def __init__(self, client: 'VectorDBClient' = None, data_dir: Path = None):
+    def __init__(self, client: "VectorDBClient" = None, data_dir: Path = None):
         """Initialize the data loader."""
         self.data_dir = data_dir if data_dir is not None else Path(settings.data_dir)
-        self.client = client if client is not None else VectorDBClient(
-            settings.vector_db_url, settings.vector_db_timeout
+        self.client = (
+            client if client is not None else VectorDBClient(settings.vector_db_url, settings.vector_db_timeout)
         )
         self.stats = defaultdict(int)
 
@@ -120,7 +114,7 @@ class VectorLoader:
         """Parse a JSON line using orjson if available, otherwise standard json."""
         if HAS_ORJSON:
             return orjson.loads(line)
-        return json.loads(line.decode('utf-8'))
+        return json.loads(line.decode("utf-8"))
 
     def should_skip_loading(self) -> bool:
         """Check if loading should be skipped by inspecting the vector database."""
@@ -134,21 +128,15 @@ class VectorLoader:
             num_entities = collection_info.get("num_entities", 0)
             if num_entities >= settings.min_entities_threshold:
                 logger.info(
-                    "Collection '%s' already has %d entities (threshold: %d). "
-                    "Skipping load.",
-                    settings.collection_name, num_entities,
-                    settings.min_entities_threshold
+                    "Collection '%s' already has %d entities (threshold: %d). Skipping load.",
+                    settings.collection_name,
+                    num_entities,
+                    settings.min_entities_threshold,
                 )
                 return True
-            logger.info(
-                "Collection has %d entities, below threshold. Proceeding with load.",
-                num_entities
-            )
+            logger.info("Collection has %d entities, below threshold. Proceeding with load.", num_entities)
         else:
-            logger.info(
-                "Collection '%s' does not exist. Proceeding with load.",
-                settings.collection_name
-            )
+            logger.info("Collection '%s' does not exist. Proceeding with load.", settings.collection_name)
 
         return False
 
@@ -178,7 +166,7 @@ class VectorLoader:
         total_authors = 0
         for file_path in author_files:
             try:
-                with gzip.open(file_path, 'rb') as f:
+                with gzip.open(file_path, "rb") as f:
                     for line in f:
                         if not line.strip():
                             continue
@@ -190,10 +178,7 @@ class VectorLoader:
                             citation_count = author.get("citation_count", 0)
 
                             if author_id:
-                                lookup[author_id] = {
-                                    "name": author_name or author_id,
-                                    "citation_count": citation_count
-                                }
+                                lookup[author_id] = {"name": author_name or author_id, "citation_count": citation_count}
                                 total_authors += 1
                         except Exception as e:
                             logger.debug("Error parsing author record: %s", e)
@@ -202,10 +187,7 @@ class VectorLoader:
                 logger.error("Error reading author file %s: %s", file_path, e)
                 continue
 
-        logger.info(
-            "Built lookup table with %d authors (%d unique)",
-            total_authors, len(lookup)
-        )
+        logger.info("Built lookup table with %d authors (%d unique)", total_authors, len(lookup))
         return lookup
 
     def process_works_file(self, file_path: Path, author_lookup: dict[str, dict]) -> int:
@@ -226,7 +208,7 @@ class VectorLoader:
         records_read = 0
 
         try:
-            with gzip.open(file_path, 'rb') as f:
+            with gzip.open(file_path, "rb") as f:
                 for line in f:
                     if not line.strip():
                         continue
@@ -251,9 +233,7 @@ class VectorLoader:
                             if author_data[author_id]["name"] is None:
                                 author_info = author_lookup.get(author_id, {})
                                 author_data[author_id]["name"] = author_info.get("name", author_id)
-                            author_data[author_id]["citation_count"] = (
-                                author_info.get("citation_count", 0)
-                            )
+                            author_data[author_id]["citation_count"] = author_info.get("citation_count", 0)
                             # Add abstract to this author's collection
                             author_data[author_id]["abstracts"].append(abstract)
 
@@ -266,10 +246,7 @@ class VectorLoader:
                         logger.error("Error parsing work record: %s", e)
                         continue
 
-            logger.info(
-                "Read %d works, extracted abstracts for %d authors",
-                records_read, len(author_data)
-            )
+            logger.info("Read %d works, extracted abstracts for %d authors", records_read, len(author_data))
 
             # Upload author embeddings in batches
             authors_uploaded = 0
@@ -286,7 +263,7 @@ class VectorLoader:
                         abstracts=data["abstracts"],
                         collection_name=settings.collection_name,
                         model_name=settings.embedding_model,
-                        citation_count=data.get("citation_count")
+                        citation_count=data.get("citation_count"),
                     )
 
                     if success:
@@ -297,18 +274,14 @@ class VectorLoader:
                     # Progress logging
                     if (authors_uploaded + authors_failed) % 10 == 0:
                         logger.info(
-                            "  Progress: %d/%d authors processed",
-                            authors_uploaded + authors_failed, len(author_data)
+                            "  Progress: %d/%d authors processed", authors_uploaded + authors_failed, len(author_data)
                         )
 
                 except Exception as e:
                     logger.error("Failed to upload author %s: %s", author_id, e)
                     authors_failed += 1
 
-            logger.info(
-                "Completed file: %d authors uploaded, %d failed",
-                authors_uploaded, authors_failed
-            )
+            logger.info("Completed file: %d authors uploaded, %d failed", authors_uploaded, authors_failed)
 
             self.stats["works_files_processed"] += 1
             self.stats["works_records_read"] += records_read
@@ -335,9 +308,7 @@ class VectorLoader:
             if entity_type == "works":
                 self.process_works_file(file_path, author_lookup)
             else:
-                logger.warning(
-                    "Entity type '%s' not yet supported for loading", entity_type
-                )
+                logger.warning("Entity type '%s' not yet supported for loading", entity_type)
                 continue
 
     def run(self):
@@ -359,9 +330,7 @@ class VectorLoader:
                 if self.client.check_health():
                     logger.info("Vector DB is healthy!")
                     break
-                logger.warning(
-                    "Vector DB not ready, retrying (%d/%d)...", i+1, max_retries
-                )
+                logger.warning("Vector DB not ready, retrying (%d/%d)...", i + 1, max_retries)
                 time.sleep(5)
             else:
                 raise RuntimeError("Vector DB failed health check after max retries")
@@ -386,10 +355,10 @@ class VectorLoader:
             logger.info("=" * 70)
             logger.info("VECTOR LOADING COMPLETED")
             logger.info("=" * 70)
-            logger.info("Works files processed: %d", self.stats['works_files_processed'])
-            logger.info("Works records read: %d", self.stats['works_records_read'])
-            logger.info("Authors uploaded: %d", self.stats['authors_uploaded'])
-            logger.info("Authors failed: %d", self.stats['authors_failed'])
+            logger.info("Works files processed: %d", self.stats["works_files_processed"])
+            logger.info("Works records read: %d", self.stats["works_records_read"])
+            logger.info("Authors uploaded: %d", self.stats["authors_uploaded"])
+            logger.info("Authors failed: %d", self.stats["authors_failed"])
             logger.info("=" * 70)
 
         except Exception as e:

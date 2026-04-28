@@ -15,6 +15,7 @@ from conftest import load_test_author, load_test_work
 # Tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.integration
 @pytest.mark.requires_docker
 def test_vector_db_service_is_healthy(vector_db_url):
@@ -43,11 +44,13 @@ def test_create_author_embedding_via_api(vector_db_url):
     """POST /authors/embeddings should create an embedding from abstracts."""
     author = load_test_author(0)
     work = load_test_work(0)
-    
+
     # Use the actual abstract from the work
-    abstracts = [work.get("abstract", "")] if work.get("abstract") else [
-        "Research in advanced materials and systems."
-    ]
+    abstracts = (
+        [work.get("abstract", "")]
+        if work.get("abstract")
+        else ["Research in advanced materials and systems."]
+    )
 
     payload = {
         "author_id": author["id"],
@@ -72,9 +75,10 @@ def test_create_author_embedding_via_api(vector_db_url):
 def test_text_search_returns_results(vector_db_url):
     """POST /search/text should return ranked results after embeddings are loaded."""
     import time
+
     author = load_test_author(0)
     work = load_test_work(0)
-    
+
     # Use the actual abstract or a default
     abstract = work.get("abstract", "Research in carbon dioxide adsorption on ice.")
     abstracts = [abstract]

@@ -15,6 +15,7 @@ from conftest import load_test_author, load_test_work
 # Tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.integration
 @pytest.mark.requires_docker
 def test_graph_db_service_is_healthy(graph_db_url):
@@ -66,20 +67,32 @@ def test_link_author_work_via_api(graph_db_url):
     work = load_test_work(0)
 
     # Ensure both exist first
-    httpx.post(f"{graph_db_url}/authors", json={
-        "id": author["id"], "name": author["name"],
-        "h_index": 0, "works_count": author.get("works_count", 0),
-    })
-    httpx.post(f"{graph_db_url}/works", json={
-        "id": work["id"], "title": work["title"],
-        "year": work.get("publication_date", "2024-01-01")[:4],
-        "citation_count": work.get("citation_count", 0),
-    })
+    httpx.post(
+        f"{graph_db_url}/authors",
+        json={
+            "id": author["id"],
+            "name": author["name"],
+            "h_index": 0,
+            "works_count": author.get("works_count", 0),
+        },
+    )
+    httpx.post(
+        f"{graph_db_url}/works",
+        json={
+            "id": work["id"],
+            "title": work["title"],
+            "year": work.get("publication_date", "2024-01-01")[:4],
+            "citation_count": work.get("citation_count", 0),
+        },
+    )
 
-    response = httpx.post(f"{graph_db_url}/relationships/authored", json={
-        "author_id": author["id"],
-        "work_id": work["id"],
-    })
+    response = httpx.post(
+        f"{graph_db_url}/relationships/authored",
+        json={
+            "author_id": author["id"],
+            "work_id": work["id"],
+        },
+    )
     assert response.status_code == 200
     assert response.json()["status"] == "linked"
 
@@ -94,21 +107,38 @@ def test_collaborator_discovery_via_api(graph_db_url):
 
     # Ingest both authors and a shared work
     for author in [author1, author2]:
-        httpx.post(f"{graph_db_url}/authors", json={
-            "id": author["id"], "name": author["name"],
-            "h_index": 0, "works_count": author.get("works_count", 0),
-        })
-    httpx.post(f"{graph_db_url}/works", json={
-        "id": work["id"], "title": work["title"],
-        "year": work.get("publication_date", "2024-01-01")[:4],
-        "citation_count": work.get("citation_count", 0),
-    })
-    httpx.post(f"{graph_db_url}/relationships/authored", json={
-        "author_id": author1["id"], "work_id": work["id"],
-    })
-    httpx.post(f"{graph_db_url}/relationships/authored", json={
-        "author_id": author2["id"], "work_id": work["id"],
-    })
+        httpx.post(
+            f"{graph_db_url}/authors",
+            json={
+                "id": author["id"],
+                "name": author["name"],
+                "h_index": 0,
+                "works_count": author.get("works_count", 0),
+            },
+        )
+    httpx.post(
+        f"{graph_db_url}/works",
+        json={
+            "id": work["id"],
+            "title": work["title"],
+            "year": work.get("publication_date", "2024-01-01")[:4],
+            "citation_count": work.get("citation_count", 0),
+        },
+    )
+    httpx.post(
+        f"{graph_db_url}/relationships/authored",
+        json={
+            "author_id": author1["id"],
+            "work_id": work["id"],
+        },
+    )
+    httpx.post(
+        f"{graph_db_url}/relationships/authored",
+        json={
+            "author_id": author2["id"],
+            "work_id": work["id"],
+        },
+    )
 
     response = httpx.get(f"{graph_db_url}/authors/{author1['id']}/collaborators")
     assert response.status_code == 200
@@ -124,18 +154,31 @@ def test_viz_network_via_api(graph_db_url):
     author = load_test_author(0)
     work = load_test_work(0)
 
-    httpx.post(f"{graph_db_url}/authors", json={
-        "id": author["id"], "name": author["name"],
-        "h_index": 0, "works_count": author.get("works_count", 0),
-    })
-    httpx.post(f"{graph_db_url}/works", json={
-        "id": work["id"], "title": work["title"],
-        "year": work.get("publication_date", "2024-01-01")[:4],
-        "citation_count": work.get("citation_count", 0),
-    })
-    httpx.post(f"{graph_db_url}/relationships/authored", json={
-        "author_id": author["id"], "work_id": work["id"],
-    })
+    httpx.post(
+        f"{graph_db_url}/authors",
+        json={
+            "id": author["id"],
+            "name": author["name"],
+            "h_index": 0,
+            "works_count": author.get("works_count", 0),
+        },
+    )
+    httpx.post(
+        f"{graph_db_url}/works",
+        json={
+            "id": work["id"],
+            "title": work["title"],
+            "year": work.get("publication_date", "2024-01-01")[:4],
+            "citation_count": work.get("citation_count", 0),
+        },
+    )
+    httpx.post(
+        f"{graph_db_url}/relationships/authored",
+        json={
+            "author_id": author["id"],
+            "work_id": work["id"],
+        },
+    )
 
     response = httpx.get(f"{graph_db_url}/viz/author-network/{author['id']}")
     assert response.status_code == 200
