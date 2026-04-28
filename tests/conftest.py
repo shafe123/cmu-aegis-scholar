@@ -841,6 +841,85 @@ def load_test_work(index=0):
     return None
 
 
+def find_author_with_zero_works():
+    """Find an author with works_count = 0.
+    
+    Returns:
+        dict: First author with zero works, or None
+    """
+    data_dir = Path(__file__).resolve().parent / "dtic_test_subset"
+    with gzip.open(data_dir / "dtic_authors_50.jsonl.gz", "rt", encoding="utf-8") as f:
+        for line in f:
+            author = json.loads(line)
+            if author.get("works_count", 0) == 0:
+                return author
+    return None
+
+
+def find_author_with_no_orgs():
+    """Find an author with no organization affiliations.
+    
+    Returns:
+        dict: First author without org_ids, or None
+    """
+    data_dir = Path(__file__).resolve().parent / "dtic_test_subset"
+    with gzip.open(data_dir / "dtic_authors_50.jsonl.gz", "rt", encoding="utf-8") as f:
+        for line in f:
+            author = json.loads(line)
+            org_ids = author.get("org_ids", [])
+            if not org_ids or len(org_ids) == 0:
+                return author
+    return None
+
+
+def find_author_with_zero_citations():
+    """Find an author with cited_by_count = 0.
+    
+    Returns:
+        dict: First author with zero citations, or None
+    """
+    data_dir = Path(__file__).resolve().parent / "dtic_test_subset"
+    with gzip.open(data_dir / "dtic_authors_50.jsonl.gz", "rt", encoding="utf-8") as f:
+        for line in f:
+            author = json.loads(line)
+            if author.get("cited_by_count", 0) == 0:
+                return author
+    return None
+
+
+def find_author_with_special_characters():
+    """Find an author with special characters in name (unicode, apostrophes, etc).
+    
+    Returns:
+        dict: First author with non-ASCII characters, or None
+    """
+    data_dir = Path(__file__).resolve().parent / "dtic_test_subset"
+    with gzip.open(data_dir / "dtic_authors_50.jsonl.gz", "rt", encoding="utf-8") as f:
+        for line in f:
+            author = json.loads(line)
+            name = author.get("display_name", "") or author.get("name", "")
+            # Check for non-ASCII characters or special chars
+            if any(ord(c) > 127 or c in ["'", "-", ".", ","] for c in name):
+                return author
+    return None
+
+
+def find_work_without_authors():
+    """Find a work with no author relationships.
+    
+    Returns:
+        dict: First work without authors, or None
+    """
+    data_dir = Path(__file__).resolve().parent / "dtic_test_subset"
+    with gzip.open(data_dir / "dtic_works_50.jsonl.gz", "rt", encoding="utf-8") as f:
+        for line in f:
+            work = json.loads(line)
+            author_ids = work.get("author_ids", [])
+            if not author_ids or len(author_ids) == 0:
+                return work
+    return None
+
+
 # --- Neo4j Database Fixtures ---
 
 

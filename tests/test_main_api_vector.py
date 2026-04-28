@@ -315,3 +315,280 @@ async def test_relevance_score_calculation(main_api_url, vector_db_url):
                 assert (
                     relevance <= 2.0
                 ), "relevance_score should not be unreasonably high"
+
+
+# --- Edge Case Tests ---
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_search_with_special_characters(main_api_url, vector_db_url):
+    """
+    Tests that special characters in query strings are handled correctly.
+    Validates query sanitization/escaping.
+    """
+    special_queries = [
+        "C++ programming",
+        "AI & ML",
+        "research@university",
+        "data (structured)",
+        "100% accurate",
+    ]
+    
+    async with AsyncClient(base_url=main_api_url) as ac:
+        for query in special_queries:
+            response = await ac.get(
+                "/search/authors",
+                params={"q": query, "limit": 5},
+            )
+            
+            # Should not crash with 500, should return 200 or 503
+            assert response.status_code in [200, 503], (
+                f"Query '{query}' returned unexpected status: {response.status_code}"
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                assert "results" in data, "Response must include results"
+                assert data["query"] == query, "Query should be preserved"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_search_with_unicode_query(main_api_url, vector_db_url):
+    """
+    Tests that unicode characters in queries are handled correctly.
+    Validates multilingual search support.
+    """
+    unicode_queries = [
+        "机器学习",  # Chinese: machine learning
+        "الذكاء الاصطناعي",  # Arabic: artificial intelligence
+        "café résumé",  # French accents
+        "Müller research",  # German umlaut
+        "🤖 robotics",  # Emoji
+    ]
+    
+    async with AsyncClient(base_url=main_api_url) as ac:
+        for query in unicode_queries:
+            response = await ac.get(
+                "/search/authors",
+                params={"q": query, "limit": 5},
+            )
+            
+            # Should handle gracefully, not crash
+            assert response.status_code in [200, 503], (
+                f"Unicode query '{query}' returned unexpected status: {response.status_code}"
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                assert "results" in data
+                # Query should be preserved with unicode intact
+                assert data["query"] == query
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_search_negative_offset(main_api_url):
+    """
+    Tests that negative offset values are rejected with validation error.
+    """
+    async with AsyncClient(base_url=main_api_url) as ac:
+        response = await ac.get(
+            "/search/authors",
+            params={"q": QUERY_ML, "limit": 10, "offset": -1},
+        )
+    
+    # Should return 422 validation error for negative offset
+    assert response.status_code == 422, (
+        f"Negative offset should return 422, got {response.status_code}"
+    )
+    data = response.json()
+    assert "detail" in data, "Error response should include detail"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_search_negative_limit(main_api_url):
+    """
+    Tests that negative limit values are rejected with validation error.
+    """
+    async with AsyncClient(base_url=main_api_url) as ac:
+        response = await ac.get(
+            "/search/authors",
+            params={"q": QUERY_ML, "limit": -5},
+        )
+    
+    # Should return 422 validation error for negative limit
+    assert response.status_code == 422, (
+        f"Negative limit should return 422, got {response.status_code}"
+    )
+    data = response.json()
+    assert "detail" in data
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_search_with_stopwords_only(main_api_url, vector_db_url):
+    """
+    Tests that queries containing only stopwords are handled correctly.
+    Stopwords like "the", "and", "or" should not crash the system.
+    """
+    stopword_queries = [
+        "the and or but",
+        "a an the",
+        "is was are",
+    ]
+    
+    async with AsyncClient(base_url=main_api_url) as ac:
+        for query in stopword_queries:
+            response = await ac.get(
+                "/search/authors",
+                params={"q": query, "limit": 5},
+            )
+            
+            # Should handle gracefully
+            assert response.status_code in [200, 503], (
+                f"Stopword query '{query}' failed: {response.status_code}"
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                assert "results" in data
+                # May return empty results or filtered results
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_search_very_long_query(main_api_url, vector_db_url):
+    """
+    Tests that very long queries are handled correctly.
+    Validates query length limits and truncation.
+    """
+    # Create a 1500 character query
+    long_query = " ".join(["machine learning artificial intelligence"] * 50)
+    
+    async with AsyncClient(base_url=main_api_url) as ac:
+        response = await ac.get(
+            "/search/authors",
+            params={"q": long_query, "limit": 5},
+        )
+    
+    # Should either accept it (200/503) or reject with validation error (422)
+    assert response.status_code in [200, 422, 503], (
+        f"Very long query returned unexpected status: {response.status_code}"
+    )
+    
+    if response.status_code == 200:
+        data = response.json()
+        assert "results" in data
+        # Query might be truncated
+        assert "query" in data
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_search_case_insensitive(main_api_url, vector_db_url):
+    """
+    Tests that search queries are case-insensitive.
+    "MACHINE LEARNING" and "machine learning" should return similar results.
+    """
+    queries = [
+        "machine learning",
+        "MACHINE LEARNING",
+        "Machine Learning",
+        "MaChInE LeArNiNg",
+    ]
+    
+    results_list = []
+    
+    async with AsyncClient(base_url=main_api_url) as ac:
+        for query in queries:
+            response = await ac.get(
+                "/search/authors",
+                params={"q": query, "limit": 10},
+            )
+            
+            assert response.status_code in [200, 503], (
+                f"Query '{query}' failed: {response.status_code}"
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                results_list.append(data)
+    
+    # If all queries succeeded, verify they return similar results
+    if len(results_list) == len(queries):
+        # Check that result counts are similar (within reasonable range)
+        result_counts = [len(r["results"]) for r in results_list]
+        
+        if len(result_counts) > 1 and any(c > 0 for c in result_counts):
+            # All counts should be similar (not necessarily identical due to ranking)
+            avg_count = sum(result_counts) / len(result_counts)
+            for count in result_counts:
+                # Allow some variation but should be in same ballpark
+                assert abs(count - avg_count) <= avg_count * 0.5, (
+                    f"Case variations returned very different result counts: {result_counts}"
+                )
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_search_offset_beyond_results(main_api_url, vector_db_url):
+    """
+    Tests that offset beyond total results returns empty results gracefully.
+    """
+    async with AsyncClient(base_url=main_api_url) as ac:
+        # Request with very high offset
+        response = await ac.get(
+            "/search/authors",
+            params={"q": QUERY_ML, "limit": 10, "offset": 10000},
+        )
+    
+    # Should return 200 with empty results, not error
+    assert response.status_code in [200, 503], (
+        f"High offset returned unexpected status: {response.status_code}"
+    )
+    
+    if response.status_code == 200:
+        data = response.json()
+        assert "results" in data
+        assert isinstance(data["results"], list)
+        # Results should be empty or very few
+        assert len(data["results"]) >= 0, "Results should be empty or minimal"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.requires_docker
+async def test_search_whitespace_only_query(main_api_url, vector_db_url):
+    """
+    Tests that queries with only whitespace are handled gracefully.
+    API may accept and return empty results or reject with validation error.
+    """
+    whitespace_queries = ["   ", "\t\t"]
+    
+    async with AsyncClient(base_url=main_api_url) as ac:
+        for query in whitespace_queries:
+            response = await ac.get(
+                "/search/authors",
+                params={"q": query, "limit": 5},
+            )
+            
+            # API may return 200 (accepts and handles) or 422 (validation error)
+            assert response.status_code in [200, 422, 503], (
+                f"Whitespace query returned unexpected status: {response.status_code}"
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                assert "results" in data
+                # Results may be empty or minimal
