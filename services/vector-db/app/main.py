@@ -15,13 +15,12 @@ from fastembed import TextEmbedding
 from pymilvus import (
     Collection,
     CollectionSchema,
-    DataType,
-    FieldSchema,
     connections,
     utility,
 )
 
 from app.config import AVAILABLE_MODELS, settings
+from app.schema_def import AUTHOR_FIELDS, INDEX_PARAMS
 from app.schemas import (
     CollectionInfo,
     CreateAuthorEmbeddingRequest,
@@ -171,30 +170,13 @@ def initialize_default_collection():
                 logger.warning("Skipping collection initialization.")
                 return
 
-            # Define schema
-            fields = [
-                FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=255),
-                FieldSchema(name="author_id", dtype=DataType.VARCHAR, max_length=255),
-                FieldSchema(name="author_name", dtype=DataType.VARCHAR, max_length=500),
-                FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=embedding_dim),
-                FieldSchema(name="num_abstracts", dtype=DataType.INT64),
-                FieldSchema(name="citation_count", dtype=DataType.INT64, default_value=0),
-            ]
-
+            # Use shared schema definition — single source of truth with tests
             schema = CollectionSchema(
-                fields=fields,
+                fields=AUTHOR_FIELDS,
                 description="Author embeddings from averaged paper abstracts",
             )
-
             collection = Collection(name=collection_name, schema=schema)
-
-            # Create index for vector field
-            index_params = {
-                "metric_type": "L2",
-                "index_type": "IVF_FLAT",
-                "params": {"nlist": 128},
-            }
-            collection.create_index(field_name="embedding", index_params=index_params)
+            collection.create_index(field_name="embedding", index_params=INDEX_PARAMS)
             logger.info(
                 "Created collection '%s' with index (dim=%d)",
                 collection_name,

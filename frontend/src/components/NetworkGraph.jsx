@@ -35,10 +35,12 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       if (!response.ok) throw new Error("Graph API error");
       const data = await response.json();
       if (onDataLoad) onDataLoad(data);
+      if (onDataLoad) onDataLoad(data);
 
       if (!data.edges || data.edges.length === 0) setNoData(true);
 
       if (data.nodes && data.nodes.length > 0) {
+        nodesRef.current.clear();
         nodesRef.current.clear();
         nodesRef.current.update(
           data.nodes.map((n) => {
@@ -63,6 +65,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       }
 
       if (data.edges && data.edges.length > 0) {
+        edgesRef.current.clear();
         edgesRef.current.clear();
         edgesRef.current.update(
           data.edges.map((e) => ({

@@ -17,6 +17,8 @@ pytest-asyncio = "^0.23.0"  # Async test support
 testcontainers = ">=4.0.0"  # Docker container management
 ldap3 = "^2.9.1"  # LDAP testing in test_identity_integration
 docker = "^7.0.0"  # Docker network management in conftest
+pymilvus = "^2.4.0"  # Milvus vector database client for test_milvus.py
+numpy = "^2.0.0"  # Array operations for test_milvus.py
 
 # Optional: Coverage and linting (not runtime dependencies)
 pytest-cov = "^4.1.0"  # For coverage reports (optional)
