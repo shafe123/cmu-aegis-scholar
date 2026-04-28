@@ -85,6 +85,18 @@ LDAP_PORT = int(os.getenv("LDAP_PORT", "1389"))
 LDAP_BASE_DN = os.getenv("LDAP_BASE_DN", "dc=example,dc=org")
 LDAP_ADMIN_PASSWORD = os.getenv("LDAP_ADMIN_PASSWORD", "testpassword")
 
+IDENTITY_PORT = 8000
+IDENTITY_DEFAULT_URL = f"http://localhost:{IDENTITY_PORT}"
+
+# Container names for Docker network DNS resolution
+NEO4J_CONTAINER_NAME = "neo4j-test"
+GRAPH_DB_CONTAINER_NAME = "graph-db-test"
+IDENTITY_CONTAINER_NAME = "identity-test"
+VECTOR_DB_CONTAINER_NAME = "vector-db-test"
+AEGIS_API_CONTAINER_NAME = "aegis-api-test"
+LDAP_CONTAINER_NAME = "ldap-server"
+MILVUS_CONTAINER_NAME = "milvus-standalone"
+
 
 @pytest.fixture(scope="session")
 def docker_network():
@@ -122,7 +134,7 @@ def neo4j_container(docker_network):
         DockerContainer("neo4j:latest")
         .with_exposed_ports(NEO4J_BOLT_PORT, NEO4J_HTTP_PORT)
         .with_env("NEO4J_AUTH", f"{NEO4J_USER}/{NEO4J_PASSWORD}")
-        .with_name("neo4j-test")
+        .with_name(NEO4J_CONTAINER_NAME)
     )
     
     # Connect to the shared network
@@ -171,7 +183,7 @@ def graph_db_container(neo4j_container, docker_network):
 
     # Use the container name for inter-container communication
     # This works in both local and CI environments when on same network
-    neo4j_uri = f"bolt://neo4j-test:{NEO4J_BOLT_PORT}"
+    neo4j_uri = f"bolt://{NEO4J_CONTAINER_NAME}:{NEO4J_BOLT_PORT}"
 
     # Build the Docker image with BuildKit support for cache mount directives
     env = os.environ.copy()
@@ -196,7 +208,7 @@ def graph_db_container(neo4j_container, docker_network):
     # Start the Graph DB service container on the same network
     container = (
         DockerContainer("graph-db:test")
-        .with_name("graph-db-test")  # Named container for DNS resolution
+        .with_name(GRAPH_DB_CONTAINER_NAME)  # Named container for DNS resolution
         .with_exposed_ports(GRAPH_DB_PORT)
         .with_env("NEO4J_URI", neo4j_uri)
         .with_env("NEO4J_USER", NEO4J_USER)
@@ -256,17 +268,26 @@ def graph_db_container(neo4j_container, docker_network):
 
 
 @pytest.fixture(scope="session")
-def aegis_scholar_api_container(docker_network, graph_db_container):
+def aegis_scholar_api_container(docker_network, graph_db_container, identity_container, vector_db_container):
     """Builds and starts the main Aegis Scholar API as a Docker container.
     
     Returns the API base URL for making HTTP requests.
     
+    Dependencies:
+    - Depends on graph_db_container, identity_container, and vector_db_container
+      to ensure those services start first (we don't use their returned URLs since
+      the main API needs internal Docker network URLs, not external host URLs)
+    
     This container:
     - Builds from services/aegis_scholar_api/Dockerfile
     - Connects to the shared Docker network
-    - Configures GRAPH_DB_URL to use container name (graph-db-test)
-    - Exposes port 8000 for API requests
+    - Configures service URLs to use internal container names (using port constants)
+    - Exposes API_PORT for API requests
     """
+    # Note: We depend on service fixtures above for startup ordering only
+    # The returned URLs (graph_db_container, etc.) are external host URLs,
+    # but we need internal Docker network URLs for inter-container communication
+    
     # Get the absolute path to the aegis_scholar_api service
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     api_service_path = os.path.join(project_root, "services", "aegis_scholar_api")
@@ -291,16 +312,19 @@ def aegis_scholar_api_container(docker_network, graph_db_container):
         capture_output=True,
     )
     
-    # Graph DB URL for inter-container communication
-    graph_db_internal_url = "http://graph-db-test:8003"
+    # Internal URLs for inter-container communication (using port and container name constants)
+    graph_db_internal_url = f"http://{GRAPH_DB_CONTAINER_NAME}:{GRAPH_DB_PORT}"
+    identity_internal_url = f"http://{IDENTITY_CONTAINER_NAME}:{IDENTITY_PORT}"
+    vector_db_internal_url = f"http://{VECTOR_DB_CONTAINER_NAME}:{VECTOR_DB_PORT}"
     
     # Build and configure the container
     container = (
         DockerContainer("aegis-scholar-api:test")
-        .with_name("aegis-api-test")
-        .with_exposed_ports(8000)
+        .with_name(AEGIS_API_CONTAINER_NAME)
+        .with_exposed_ports(API_PORT)
         .with_env("GRAPH_DB_URL", graph_db_internal_url)
-        .with_env("VECTOR_DB_URL", VECTOR_DB_DEFAULT_URL)
+        .with_env("IDENTITY_API_URL", identity_internal_url)
+        .with_env("VECTOR_DB_URL", vector_db_internal_url)
         .with_env("LOG_LEVEL", "DEBUG")
     )
     
@@ -310,7 +334,7 @@ def aegis_scholar_api_container(docker_network, graph_db_container):
     with container:
         # Wait for API to be ready
         host = container.get_container_host_ip()
-        port = container.get_exposed_port(8000)
+        port = container.get_exposed_port(API_PORT)
         api_url = f"http://{host}:{port}"
         
         # Step 1: Wait for API server to start responding to /docs
@@ -389,7 +413,7 @@ def identity_container(docker_network):
         .with_env("LDAP_ADMIN_USERNAME", "admin")
         .with_env("LDAP_ADMIN_PASSWORD", LDAP_ADMIN_PASSWORD)
         .with_env("LDAP_PORT_NUMBER", str(LDAP_PORT))
-        .with_kwargs(hostname="ldap-server")
+        .with_kwargs(hostname=LDAP_CONTAINER_NAME)
     )
     
     ldap_container._kwargs["network"] = docker_network
@@ -420,6 +444,34 @@ def identity_container(docker_network):
                 f"LDAP server failed to become ready after {max_attempts} seconds"
             )
         
+        # Seed LDAP with test data for identity tests
+        ldif_content = f"""dn: ou=users,{LDAP_BASE_DN}
+objectClass: organizationalUnit
+objectClass: top
+ou: users
+
+dn: uid=jsmith,ou=users,{LDAP_BASE_DN}
+objectClass: inetOrgPerson
+objectClass: top
+sn: Smith
+cn: Jane Smith
+uid: jsmith
+mail: jane.smith@example.org
+o: Department of Defense
+"""
+        # Write LDIF content to container and add entries
+        ldap_container.exec(f"sh -c 'cat > /tmp/test_users.ldif << \"EOF\"\n{ldif_content}\nEOF'")
+        result = ldap_container.exec(
+            f"ldapadd -c -x -H ldap://127.0.0.1:{LDAP_PORT} "
+            f"-D 'cn=admin,{LDAP_BASE_DN}' -w '{LDAP_ADMIN_PASSWORD}' "
+            f"-f /tmp/test_users.ldif"
+        )
+        # Exit code 68 means "already exists" - this is fine for session-scoped fixture
+        # The -c flag allows ldapadd to continue processing even when entries exist
+        if result[0] != 0 and result[0] != 68:
+            print(f"Warning: LDAP seeding failed with exit code: {result[0]}")
+            print(f"Output: {result[1]}")
+        
         # Build identity service Docker image
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         identity_path = os.path.join(project_root, "services", "identity")
@@ -444,9 +496,9 @@ def identity_container(docker_network):
         # Start identity service container
         identity_container = (
             DockerContainer("identity:test")
-            .with_name("identity-test")
-            .with_exposed_ports(8000)
-            .with_env("LDAP_SERVER", f"ldap://ldap-server:{LDAP_PORT}")
+            .with_name(IDENTITY_CONTAINER_NAME)
+            .with_exposed_ports(IDENTITY_PORT)
+            .with_env("LDAP_SERVER", f"ldap://{LDAP_CONTAINER_NAME}:{LDAP_PORT}")
             .with_env("LDAP_ADMIN_DN", f"cn=admin,{LDAP_BASE_DN}")
             .with_env("LDAP_ADMIN_PASSWORD", LDAP_ADMIN_PASSWORD)
             .with_env("LDAP_BASE_DN", LDAP_BASE_DN)
@@ -461,7 +513,7 @@ def identity_container(docker_network):
             time.sleep(3)
             
             host = identity_container.get_container_host_ip()
-            port = identity_container.get_exposed_port(8000)
+            port = identity_container.get_exposed_port(IDENTITY_PORT)
             identity_url = f"http://{host}:{port}"
             
             # Poll /docs endpoint first (FastAPI auto-generated docs)
@@ -529,7 +581,7 @@ def vector_db_container(docker_network):
     
     # Start Milvus container first
     milvus_container = MilvusContainer(image=MILVUS_IMAGE)
-    milvus_container.with_kwargs(hostname="milvus-standalone")
+    milvus_container.with_kwargs(hostname=MILVUS_CONTAINER_NAME)
     milvus_container._kwargs["network"] = docker_network
     milvus_container.start()
     
@@ -557,9 +609,9 @@ def vector_db_container(docker_network):
         
         vector_container = (
             DockerContainer("vector-db:test")
-            .with_name("vector-db-test")
-            .with_exposed_ports(8002)
-            .with_env("MILVUS_HOST", "milvus-standalone")
+            .with_name(VECTOR_DB_CONTAINER_NAME)
+            .with_exposed_ports(VECTOR_DB_PORT)
+            .with_env("MILVUS_HOST", MILVUS_CONTAINER_NAME)
             .with_env("MILVUS_PORT", "19530")
             .with_env("DEFAULT_COLLECTION", "aegis_vectors")
             .with_volume_mapping(model_cache, "/app/.cache", "rw")
@@ -573,7 +625,7 @@ def vector_db_container(docker_network):
             time.sleep(5)
             
             host = vector_container.get_container_host_ip()
-            port = vector_container.get_exposed_port(8002)
+            port = vector_container.get_exposed_port(VECTOR_DB_PORT)
             vector_url = f"http://{host}:{port}"
             
             # Poll /docs endpoint first (FastAPI auto-generated docs)

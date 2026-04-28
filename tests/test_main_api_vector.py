@@ -3,6 +3,14 @@
 import pytest
 from httpx import AsyncClient
 
+# Test query constants - Generic research terms for vector search validation
+QUERY_ML = "machine learning"
+QUERY_AI = "artificial intelligence"
+QUERY_CS = "computer science"
+QUERY_BIOLOGY = "biology"
+QUERY_NEURAL_NETS = "neural networks"
+QUERY_TEST = "test query"
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -50,7 +58,7 @@ async def test_author_search_integration(main_api_url, vector_db_url):
         # Search for a common research term
         response = await ac.get(
             "/search/authors",
-            params={"q": "machine learning", "limit": 10},
+            params={"q": QUERY_ML, "limit": 10},
         )
 
     # Response structure validation
@@ -69,7 +77,7 @@ async def test_author_search_integration(main_api_url, vector_db_url):
         assert "limit" in data, "Response must include limit"
         assert "offset" in data, "Response must include offset"
 
-        assert data["query"] == "machine learning"
+        assert data["query"] == QUERY_ML
         assert isinstance(data["results"], list)
         assert data["limit"] == 10
         assert data["offset"] == 0
@@ -94,13 +102,13 @@ async def test_author_search_with_pagination(main_api_url, vector_db_url):
         # Request first page
         response_page1 = await ac.get(
             "/search/authors",
-            params={"q": "artificial intelligence", "limit": 5, "offset": 0},
+            params={"q": QUERY_AI, "limit": 5, "offset": 0},
         )
 
         # Request second page
         response_page2 = await ac.get(
             "/search/authors",
-            params={"q": "artificial intelligence", "limit": 5, "offset": 5},
+            params={"q": QUERY_AI, "limit": 5, "offset": 5},
         )
 
     # Both requests should succeed (or both return 503 if vector DB unavailable)
@@ -138,7 +146,7 @@ async def test_author_search_with_sorting(main_api_url, vector_db_url):
         response_relevance = await ac.get(
             "/search/authors",
             params={
-                "q": "computer science",
+                "q": QUERY_CS,
                 "limit": 10,
                 "sort_by": "relevance_score",
                 "order": "desc",
@@ -149,7 +157,7 @@ async def test_author_search_with_sorting(main_api_url, vector_db_url):
         response_citations = await ac.get(
             "/search/authors",
             params={
-                "q": "computer science",
+                "q": QUERY_CS,
                 "limit": 10,
                 "sort_by": "citation_count",
                 "order": "desc",
@@ -217,19 +225,19 @@ async def test_author_search_respects_limits(main_api_url, vector_db_url):
         # Test with valid limit
         response_valid = await ac.get(
             "/search/authors",
-            params={"q": "biology", "limit": 20},
+            params={"q": QUERY_BIOLOGY, "limit": 20},
         )
 
         # Test with limit exceeding max (should be rejected or clamped)
         response_too_large = await ac.get(
             "/search/authors",
-            params={"q": "biology", "limit": 1000},
+            params={"q": QUERY_BIOLOGY, "limit": 1000},
         )
 
         # Test with zero limit (should be rejected)
         response_zero = await ac.get(
             "/search/authors",
-            params={"q": "biology", "limit": 0},
+            params={"q": QUERY_BIOLOGY, "limit": 0},
         )
 
     # Valid limit should work
@@ -253,7 +261,7 @@ async def test_vector_db_connectivity_error_handling(main_api_url):
     async with AsyncClient(base_url=main_api_url) as ac:
         response = await ac.get(
             "/search/authors",
-            params={"q": "test query", "limit": 10},
+            params={"q": QUERY_TEST, "limit": 10},
         )
 
     # Should return either 200 (if Vector DB is up) or 503 (if unavailable)
@@ -284,7 +292,7 @@ async def test_relevance_score_calculation(main_api_url, vector_db_url):
     async with AsyncClient(base_url=main_api_url) as ac:
         response = await ac.get(
             "/search/authors",
-            params={"q": "neural networks", "limit": 10},
+            params={"q": QUERY_NEURAL_NETS, "limit": 10},
         )
 
     if response.status_code == 200:
