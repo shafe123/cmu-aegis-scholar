@@ -981,7 +981,7 @@ def ensure_test_data(neo4j_driver):
 
     Scope: Session (runs once when explicitly requested)
 
-    Checks for a canary author ID. If not found, loads:
+    Checks for expected author count. If not 50, clears and reloads:
     - Authors from dtic_authors_50.jsonl.gz
     - Topics from dtic_topics_50.jsonl.gz
     - Works from dtic_works_50.jsonl.gz with relationships
@@ -991,21 +991,88 @@ def ensure_test_data(neo4j_driver):
     """
     time.sleep(2)
 
-    # Use a known author ID as a canary to detect if data is already loaded
-    canary_id = "author_703841d2-b558-53e2-8454-11689b6251db"
     data_dir = Path(__file__).resolve().parent / "dtic_test_subset"
 
     with neo4j_driver.session() as session:
-        result = session.run("MATCH (a:Author {id: $id}) RETURN a", id=canary_id)
-
-        if not result.single():
-            print(f"\n[Setup] Database empty. Loading test subset from {data_dir}...")
+        # Check current author count instead of just canary
+        count_result = session.run("MATCH (a:Author) RETURN count(a) as count")
+        current_count = count_result.single()["count"]
+        
+        # Only skip loading if we have exactly 50 authors (our expected test set)
+        if current_count == 50:
+            print(f"\n[Setup] Test data already loaded ({current_count} authors), skipping load.")
+            # Still verify edge case author exists
+            edge_case_author = find_author_with_zero_works()
+            if edge_case_author:
+                edge_verify = session.run(
+                    "MATCH (a:Author {id: $id}) RETURN a", 
+                    id=edge_case_author["id"]
+                )
+                if edge_verify.single():
+                    print(f"[Setup] Verified edge case author exists in Neo4j: {edge_case_author['id'][:20]}...")
+                else:
+                    print(f"[ERROR] Edge case author {edge_case_author['id'][:20]} not found, will reload data")
+                    current_count = 0  # Force reload
+        
+        if current_count != 50:
+            if current_count > 0:
+                print(f"\n[Setup] Found {current_count} authors (expected 50), clearing database...")
+                session.run("MATCH (n) DETACH DELETE n")
+                print("[Setup] Database cleared.")
+            
+            print(f"\n[Setup] Loading test subset from {data_dir}...")
 
             load_gz_jsonl(session, data_dir / "dtic_authors_50.jsonl.gz", "Author")
             load_gz_jsonl(session, data_dir / "dtic_topics_50.jsonl.gz", "Topic")
             load_gz_jsonl(session, data_dir / "dtic_works_50.jsonl.gz", "Work")
 
             print("[Setup] Test data loading complete.")
+            
+            # Verify the data was actually persisted
+            verification_result = session.run("MATCH (a:Author) RETURN count(a) as count")
+            author_count = verification_result.single()["count"]
+            print(f"[Setup] Verification: {author_count} authors in database")
+            
+            if author_count == 0:
+                raise RuntimeError("[ERROR] Data loading failed - no authors found after load!")
+            
+            # Verify edge case author exists via direct Neo4j query
+            edge_case_author = find_author_with_zero_works()
+            if edge_case_author:
+                edge_verify = session.run(
+                    "MATCH (a:Author {id: $id}) RETURN a", 
+                    id=edge_case_author["id"]
+                )
+                if edge_verify.single():
+                    print(f"[Setup] Verified edge case author exists in Neo4j: {edge_case_author['id'][:20]}...")
+                else:
+                    raise RuntimeError(f"[ERROR] Edge case author not found in DB after loading: {edge_case_author['id']}")
+
+
+@pytest.fixture(scope="session")
+def verify_graph_db_access(ensure_test_data, graph_db_container):
+    """Verifies that the graph-db service can access authors loaded by ensure_test_data.
+    
+    This catches issues where data is loaded directly into Neo4j but the graph-db
+    service can't access it due to network/connection problems.
+    """
+    import httpx
+    
+    # Get a test author and try to fetch it via the graph-db service
+    test_author = find_author_with_zero_works()
+    if test_author:
+        try:
+            response = httpx.get(
+                f"{graph_db_container}/authors/{test_author['id']}",
+                timeout=5.0
+            )
+            if response.status_code == 200:
+                print(f"[Setup] Graph DB service can access test author: {test_author['id'][:20]}...")
+            else:
+                print(f"[ERROR] Graph DB returned {response.status_code} for test author {test_author['id'][:20]}")
+                print(f"[ERROR] Response: {response.text}")
+        except Exception as e:
+            print(f"[ERROR] Graph DB service check failed: {e}")
 
 
 def load_gz_jsonl(session, file_path, label):
@@ -1024,26 +1091,40 @@ def load_gz_jsonl(session, file_path, label):
         print(f"[Warning] Skipping {file_path.name} - file not found.")
         return
 
+    loaded_count = 0
+    edge_case_count = {"zero_works": 0, "no_orgs": 0, "zero_citations": 0}
+    
     with gzip.open(file_path, "rt", encoding="utf-8") as f:
         for line_num, line in enumerate(f, 1):
             try:
                 item = json.loads(line)
 
                 if label == "Author":
+                    # Track edge cases for debugging
+                    if item.get("works_count", 0) == 0:
+                        edge_case_count["zero_works"] += 1
+                    if not item.get("org_ids") or len(item.get("org_ids", [])) == 0:
+                        edge_case_count["no_orgs"] += 1
+                    if item.get("cited_by_count", 0) == 0:
+                        edge_case_count["zero_citations"] += 1
+                    
                     session.execute_write(
                         lambda tx: tx.run(
                             """
                             MERGE (a:Author {id: $id})
                             SET a.name = $name,
                                 a.h_index = $h_index,
-                                a.works_count = $works_count
+                                a.works_count = $works_count,
+                                a.cited_by_count = $cited_by_count
                             """,
                             id=item["id"],
                             name=item.get("name") or item.get("display_name"),
                             h_index=item.get("h_index", 0),
                             works_count=item.get("works_count", 0),
+                            cited_by_count=item.get("cited_by_count", 0),
                         )
                     )
+                    loaded_count += 1
 
                 elif label == "Topic":
                     session.execute_write(
@@ -1053,6 +1134,7 @@ def load_gz_jsonl(session, file_path, label):
                             name=item.get("display_name"),
                         )
                     )
+                    loaded_count += 1
 
                 elif label == "Work":
                     # Handle both nested object format and direct array format
@@ -1090,8 +1172,73 @@ def load_gz_jsonl(session, file_path, label):
                             topic_ids=topic_ids,
                         )
                     )
+                    loaded_count += 1
             except Exception as e:
                 print(f"[Warning] Error loading {label} at line {line_num}: {e}")
                 continue
 
-    print(f"[Setup] Loaded {label} from {file_path.name}")
+    print(f"[Setup] Loaded {loaded_count} {label}(s) from {file_path.name}")
+    if label == "Author" and any(edge_case_count.values()):
+        print(f"[Setup]   Edge cases: {edge_case_count['zero_works']} with zero works, "
+              f"{edge_case_count['no_orgs']} with no orgs, "
+              f"{edge_case_count['zero_citations']} with zero citations")
+
+
+# --- Container Log Capture for CI Debugging ---
+
+
+@pytest.fixture(scope="session", autouse=True)
+def capture_container_logs_on_failure(request):
+    """Capture container logs on test failure for CI debugging.
+    
+    Only active in CI environments. Creates test-logs/ directory with logs
+    from all containers when tests fail. Useful for debugging container
+    startup issues or runtime errors in CI.
+    """
+    import os
+    
+    # Only run in CI environment
+    if not os.getenv("CI"):
+        return
+    
+    def save_logs():
+        """Save all container logs to test-logs/ directory."""
+        # Only save logs if tests failed
+        if request.session.testsfailed == 0:
+            return
+            
+        logs_dir = Path(__file__).resolve().parent / "test-logs"
+        logs_dir.mkdir(exist_ok=True)
+        
+        # Access session-scoped container fixtures
+        # We'll try to get them from the session namespace
+        container_names = [
+            ("neo4j", "neo4j_container"),
+            ("milvus", "milvus_container"),
+            ("ldap", "ldap_container"),
+            ("graph-db", "graph_db_container"),
+            ("vector-db", "vector_db_container"),
+            ("identity", "identity_container"),
+            ("aegis-api", "aegis_scholar_api_container"),
+        ]
+        
+        for log_name, fixture_name in container_names:
+            try:
+                # Try to get container from pytest internals
+                container = request.getfixturevalue(fixture_name)
+                if container and hasattr(container, "get_logs"):
+                    logs = container.get_logs()
+                    if logs:
+                        log_file = logs_dir / f"{log_name}.log"
+                        with open(log_file, "w", encoding="utf-8") as f:
+                            f.write(logs)
+                        print(f"[CI] Saved logs to {log_file}")
+            except Exception as e:
+                # Container might not exist or fixture might not be available
+                print(f"[CI] Could not save {log_name} logs: {e}")
+                continue
+        
+        print(f"[CI] Container logs saved to {logs_dir}")
+    
+    # Register cleanup function
+    request.addfinalizer(save_logs)
