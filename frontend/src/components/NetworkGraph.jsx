@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { DataSet, Network } from "vis-network/standalone";
 import { Download, Loader2, AlertCircle } from "lucide-react";
 
-const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorName, activeFilters, onDataLoad }) => {
+const NetworkGraph = ({ theme, authorId, onNodeSelect, expandTrigger, selectedAuthorName, activeFilters, onDataLoad }) => {
   const containerRef = useRef(null);
   const networkRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,16 +31,16 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     setIsLoading(true);
     setNoData(false);
     try {
+      const nodeColor = theme === 'dark' ? '#0d1117' : '#ffffff';
+      const fontColor = theme === 'dark' ? '#f8fafc' : '#0f172a';
       const response = await fetch(`/api/viz/author-network/${id}`);
       if (!response.ok) throw new Error("Graph API error");
       const data = await response.json();
-      if (onDataLoad) onDataLoad(data);
       if (onDataLoad) onDataLoad(data);
 
       if (!data.edges || data.edges.length === 0) setNoData(true);
 
       if (data.nodes && data.nodes.length > 0) {
-        nodesRef.current.clear();
         nodesRef.current.clear();
         nodesRef.current.update(
           data.nodes.map((n) => {
@@ -51,12 +51,17 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
               ...n,
               label: n.full_title || n.label,
               shape: "dot",
-              size: isAuthor ? 25 : isWork ? 12 : 20, // Distinguish by size
-              font: { color: "#f8fafc", size: isAuthor ? 14 : 11, face: "Inter, sans-serif", bold: isAuthor },
+              size: isAuthor ? 25 : isWork ? 12 : 20,
+              font: {
+                color: fontColor, // Change from "#f8fafc"
+                size: isAuthor ? 14 : 11,
+                face: "Inter, sans-serif",
+                bold: isAuthor
+              },
               borderWidth: isAuthor ? 3 : 2,
               color: {
                 border: isAuthor ? "#4ecdc4" : isWork ? "#2563eb" : "#7c3aed",
-                background: isAuthor ? "#0d1117" : isWork ? "#3b82f6" : "#8b5cf6",
+                background: isAuthor ? nodeColor : isWork ? "#3b82f6" : "#8b5cf6", // Use nodeColor here
                 highlight: { background: "#ffffff", border: "#4ecdc4" },
               },
             };
@@ -65,7 +70,6 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
       }
 
       if (data.edges && data.edges.length > 0) {
-        edgesRef.current.clear();
         edgesRef.current.clear();
         edgesRef.current.update(
           data.edges.map((e) => ({
@@ -90,7 +94,7 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     } finally {
       setIsLoading(false);
     }
-  }, [authorId, onDataLoad, onNodeSelect]);
+  }, [authorId, onDataLoad, onNodeSelect, theme]);
 
   useEffect(() => {
     const initGraph = async () => {
@@ -155,22 +159,22 @@ const NetworkGraph = ({ authorId, onNodeSelect, expandTrigger, selectedAuthorNam
     <div style={{ position: "relative", height: "100%", minHeight: "600px", width: "100%" }}>
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
         {isLoading && (
-          <div className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm text-aegis-cyan text-xs px-4 py-2 rounded border border-slate-700 shadow-lg">
+          <div className="flex items-center gap-2 bg-aegis-surface/80 backdrop-blur-sm text-aegis-cyan text-xs px-4 py-2 rounded border border-aegis-border shadow-lg">
             <Loader2 size={14} className="animate-spin" /> Analyzing Connections...
           </div>
         )}
         {noData && !isLoading && (
-          <div className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm text-yellow-500 text-xs px-4 py-2 rounded border border-yellow-500/30 shadow-lg">
+          <div className="flex items-center gap-2 bg-aegis-surface/80 backdrop-blur-sm text-yellow-500 text-xs px-4 py-2 rounded border border-yellow-500/30 shadow-lg">
             <AlertCircle size={14} /> No external connections found.
           </div>
         )}
       </div>
       <div className="absolute top-4 right-4 z-10">
-        <button onClick={handleExportGraphJSON} className="flex items-center gap-2 bg-slate-800 hover:bg-aegis-cyan hover:text-[#0d1117] text-slate-300 text-xs px-4 py-2 rounded transition-colors font-bold tracking-wider border border-slate-700 shadow-lg">
+        <button onClick={handleExportGraphJSON} className="flex items-center gap-2 bg-aegis-surface hover:bg-aegis-cyan hover:text-[#0d1117] text-aegis-text text-xs px-4 py-2 rounded transition-colors font-bold tracking-wider border border-aegis-border shadow-lg">
           <Download size={14} /> Export JSON
         </button>
       </div>
-      <div ref={containerRef} data-testid="network-container" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} className="bg-[#0a0c10] cursor-grab active:cursor-grabbing" />
+      <div ref={containerRef} data-testid="network-container" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} className="bg-aegis-bg cursor-grab active:cursor-grabbing" />
     </div>
   );
 };
