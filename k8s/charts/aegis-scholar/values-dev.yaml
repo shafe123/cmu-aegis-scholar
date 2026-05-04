@@ -99,6 +99,7 @@ vector-db:
     host: "aegis-scholar-milvus"
   loader:
     enabled: true
+    dataDir: "/data/dtic_test_subset"
     image:
       registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
       repository: "vector-loader"
@@ -139,6 +140,7 @@ graph-db:
             storage: 5Gi
   loader:
     enabled: true
+    dataDir: "/data/dtic_test_subset"
     image:
       registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
       repository: "graph-loader"

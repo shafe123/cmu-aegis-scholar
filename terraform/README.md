@@ -66,6 +66,8 @@ Deploy to any Kubernetes cluster (local, cloud, or on-premises).
    ```
 
    **Load DTIC files into the PVC**:
+   
+   For development and testing, use the small test subset (50 records each):
    ```powershell
    $helperPodYaml = @(
      'apiVersion: v1'
@@ -89,10 +91,12 @@ Deploy to any Kubernetes cluster (local, cloud, or on-premises).
 
    $helperPodYaml | kubectl apply -f -
    kubectl wait --for=condition=ready pod/data-loader-helper -n aegis-dev --timeout=2m
-   kubectl cp ../data/dtic_compressed data-loader-helper:/data/ -n aegis-dev -c helper
-   kubectl exec -n aegis-dev data-loader-helper -- ls -lh /data/dtic_compressed/
+   kubectl cp ../tests/dtic_test_subset data-loader-helper:/data/ -n aegis-dev -c helper
+   kubectl exec -n aegis-dev data-loader-helper -- ls -lh /data/dtic_test_subset/
    kubectl delete pod data-loader-helper -n aegis-dev
    ```
+   
+   **Note:** The test subset contains 50 authors, 50 organizations, 50 topics, and 50 works - all fully linked. Perfect for development and validation. For production deployment with the full dataset (~97K authors), use `../data/dtic_compressed` instead.
 
    **App phase** — builds images and installs the full application stack:
    
@@ -111,7 +115,7 @@ Deploy to any Kubernetes cluster (local, cloud, or on-premises).
    - Helm charts must be downloaded and dependencies resolved (Milvus, Neo4j)
    - Large database images need to be pulled (Neo4j ~800MB, Milvus components ~2GB total)
    - Neo4j and Milvus require time to initialize their databases
-   - Loader jobs must process and ingest all DTIC data files
+   - Loader jobs must process and ingest DTIC data files (with test subset: ~1-2 minutes; full dataset: ~6+ hours)
    - Health checks must pass before Terraform considers the deployment complete
 
    You can monitor progress in another terminal with:
@@ -165,9 +169,10 @@ After deployment completes, verify the application is running correctly:
 6. **Access Frontend**
    ```powershell
    # Port forward to frontend
-   kubectl port-forward -n aegis-dev svc/frontend 3000:3000
+   kubectl port-forward -n aegis-dev svc/aegis-scholar-frontend 3000:80
    
    # Open browser to http://localhost:3000
+   # Should get some HTML with a root div
    ```
 
 **Common Issues:**
