@@ -176,6 +176,35 @@ resource "helm_release" "aegis_scholar" {
   timeout           = local.deploy_app_layer ? 1200 : 120
   wait              = local.deploy_app_layer
 
+  # Pre-destroy cleanup: remove blocking resources before Helm uninstall
+  provisioner "local-exec" {
+    when        = destroy
+    interpreter = ["PowerShell", "-Command"]
+    command     = <<-EOT
+      $ErrorActionPreference = "SilentlyContinue"
+      
+      Write-Host "Pre-destroy cleanup: removing blocking resources..." -ForegroundColor Yellow
+      
+      # Delete data-loader-helper pod (blocks PVC deletion)
+      kubectl delete pod data-loader-helper -n aegis-dev --force --grace-period=0 2>$null | Out-Null
+      Write-Host "Deleted data-loader-helper pod" -ForegroundColor Green
+      
+      # Remove finalizers from PVCs
+      kubectl get pvc -n aegis-dev -o name 2>$null | ForEach-Object {
+        kubectl patch $_ -n aegis-dev -p '{"metadata":{"finalizers":[]}}' --type=merge 2>$null | Out-Null
+      }
+      Write-Host "Removed PVC finalizers" -ForegroundColor Green
+      
+      # Remove finalizers from services
+      kubectl get svc -n aegis-dev -o name 2>$null | ForEach-Object {
+        kubectl patch $_ -n aegis-dev -p '{"metadata":{"finalizers":[]}}' --type=merge 2>$null | Out-Null
+      }
+      Write-Host "Removed service finalizers" -ForegroundColor Green
+      
+      Write-Host "Pre-destroy cleanup complete!" -ForegroundColor Green
+    EOT
+  }
+
   depends_on = [
     kubernetes_namespace.aegis_scholar,
     kubernetes_secret.neo4j_auth,
@@ -363,25 +392,4 @@ resource "kubernetes_manifest" "registry_config" {
   }
 
   depends_on = [helm_release.aegis_scholar]
-}
-
-resource "terraform_data" "destroy_service_finalizer_cleanup" {
-  input = local.namespace
-
-  depends_on = [
-    helm_release.aegis_scholar,
-    kubernetes_manifest.registry_config,
-  ]
-
-  provisioner "local-exec" {
-    when        = destroy
-    interpreter = ["PowerShell", "-Command"]
-    command     = <<-EOT
-      $ns = "${self.input}"
-      $ErrorActionPreference = "SilentlyContinue"
-      kubectl get svc -n $ns -o name 2>$null | ForEach-Object {
-        kubectl patch $_ -n $ns -p '{"metadata":{"finalizers":[]}}' --type=merge 2>$null | Out-Null
-      }
-    EOT
-  }
 }
