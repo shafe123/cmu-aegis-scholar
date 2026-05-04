@@ -112,3 +112,15 @@ variable "registry_email" {
   description = "Container registry email"
   default     = ""
 }
+
+variable "build_images" {
+  type        = bool
+  description = "Automatically build and push container images before deployment"
+  default     = true
+}
+
+variable "force_image_rebuild" {
+  type        = bool
+  description = "Force rebuild of images on every apply (ignores cache)"
+  default     = false
+}

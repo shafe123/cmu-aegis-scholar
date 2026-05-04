@@ -19,6 +19,19 @@ spec:
         app.kubernetes.io/component: loader
     spec:
       restartPolicy: OnFailure
+      initContainers:
+      - name: wait-for-graph-db
+        image: curlimages/curl:8.1.2
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for graph-db service to be ready..."
+          until curl -f -s http://{{ .Release.Name }}-graph-db:{{ $graphDb.service.port | default 8003 }}/health > /dev/null 2>&1; do
+            echo "graph-db not ready yet, waiting..."
+            sleep 5
+          done
+          echo "graph-db is ready!"
       containers:
       - name: graph-loader
         {{- $registry := .Values.global.imageRegistry | default $graphDb.loader.image.registry | default "" }}

@@ -2,13 +2,13 @@
 # This module recreates the current local Helm-based Kubernetes stack in Terraform.
 
 locals {
-  namespace              = var.kubernetes_namespace != "" ? var.kubernetes_namespace : "aegis-${var.environment}"
-  chart_path             = abspath(var.helm_chart_path)
-  values_file            = var.values_file != "" ? abspath(var.values_file) : "${local.chart_path}/values-${var.environment}.yaml"
-  phase                  = lower(var.deployment_phase)
-  deploy_data_layer      = contains(["data", "app", "all"], local.phase)
-  deploy_app_layer       = contains(["app", "all"], local.phase)
-  deploy_registry_layer  = contains(["bootstrap", "data", "app", "all"], local.phase)
+  namespace             = var.kubernetes_namespace != "" ? var.kubernetes_namespace : "aegis-${var.environment}"
+  chart_path            = abspath(var.helm_chart_path)
+  values_file           = var.values_file != "" ? abspath(var.values_file) : "${local.chart_path}/values-${var.environment}.yaml"
+  phase                 = lower(var.deployment_phase)
+  deploy_data_layer     = contains(["data", "app", "all"], local.phase)
+  deploy_app_layer      = contains(["app", "all"], local.phase)
+  deploy_registry_layer = contains(["bootstrap", "data", "app", "all"], local.phase)
 }
 
 resource "kubernetes_namespace" "aegis_scholar" {
@@ -69,6 +69,18 @@ resource "kubernetes_secret" "registry_credentials" {
   depends_on = [kubernetes_namespace.aegis_scholar]
 }
 
+resource "kubernetes_namespace" "traefik" {
+  count = var.install_traefik ? 1 : 0
+
+  metadata {
+    name = var.traefik_namespace
+    labels = {
+      name       = var.traefik_namespace
+      managed-by = "terraform"
+    }
+  }
+}
+
 resource "helm_release" "traefik" {
   count = var.install_traefik ? 1 : 0
 
@@ -77,9 +89,11 @@ resource "helm_release" "traefik" {
   chart            = "traefik"
   version          = var.traefik_chart_version
   namespace        = var.traefik_namespace
-  create_namespace = true
+  create_namespace = false
   wait             = true
   timeout          = 600
+
+  depends_on = [kubernetes_namespace.traefik]
 
   set {
     name  = "image.tag"
@@ -92,14 +106,83 @@ resource "helm_release" "traefik" {
   }
 }
 
+# Build and push container images before deploying the app
+resource "null_resource" "build_and_push_images" {
+  count = local.deploy_app_layer && var.build_images ? 1 : 0
+
+  # Trigger rebuild when any source file changes or when explicitly requested
+  triggers = {
+    always_run = var.force_image_rebuild ? timestamp() : "once"
+  }
+
+  provisioner "local-exec" {
+    command     = <<-EOT
+      Write-Host "Building and pushing container images..." -ForegroundColor Cyan
+      
+      $images = @(
+        @{name="frontend"; path="./frontend"},
+        @{name="aegis-scholar-api"; path="./services/aegis_scholar_api"},
+        @{name="vector-db"; path="./services/vector-db"},
+        @{name="graph-db"; path="./services/graph-db"},
+        @{name="graph-loader"; path="./jobs/graph-loader"},
+        @{name="vector-loader"; path="./jobs/vector-loader"}
+      )
+      
+      $registry = "localhost:5000"
+      $failed = @()
+      
+      foreach ($img in $images) {
+        Write-Host "`nBuilding $($img.name)..." -ForegroundColor Yellow
+        docker build -t "$registry/$($img.name):${var.image_tag}" $($img.path)
+        if ($LASTEXITCODE -ne 0) {
+          $failed += $img.name
+          Write-Host "Failed to build $($img.name)" -ForegroundColor Red
+          continue
+        }
+        
+        Write-Host "Pushing $($img.name)..." -ForegroundColor Yellow
+        docker push "$registry/$($img.name):${var.image_tag}"
+        if ($LASTEXITCODE -ne 0) {
+          $failed += $img.name
+          Write-Host "Failed to push $($img.name)" -ForegroundColor Red
+        }
+      }
+      
+      if ($failed.Count -gt 0) {
+        Write-Host "`nFailed images: $($failed -join ', ')" -ForegroundColor Red
+        exit 1
+      }
+      
+      Write-Host "`nVerifying images in registry..." -ForegroundColor Green
+      $catalog = Invoke-WebRequest -Uri "http://localhost:5000/v2/_catalog" -UseBasicParsing
+      Write-Host $catalog.Content
+      Write-Host "`nAll images built and pushed successfully!" -ForegroundColor Green
+    EOT
+    interpreter = ["PowerShell", "-Command"]
+    working_dir = "${path.module}/../.."
+  }
+
+  depends_on = [
+    helm_release.traefik
+  ]
+}
+
 resource "helm_release" "aegis_scholar" {
   name              = var.helm_release_name
   namespace         = local.namespace
   chart             = local.chart_path
   dependency_update = true
   cleanup_on_fail   = true
-  timeout           = local.deploy_app_layer ? 600 : 120
+  timeout           = local.deploy_app_layer ? 1200 : 120
   wait              = local.deploy_app_layer
+
+  depends_on = [
+    kubernetes_namespace.aegis_scholar,
+    kubernetes_secret.neo4j_auth,
+    kubernetes_secret.registry_credentials,
+    helm_release.traefik,
+    null_resource.build_and_push_images
+  ]
 
   lifecycle {
     precondition {
@@ -212,13 +295,6 @@ resource "helm_release" "aegis_scholar" {
     name  = "graph-db.loader.image.tag"
     value = var.image_tag
   }
-
-  depends_on = [
-    kubernetes_namespace.aegis_scholar,
-    kubernetes_secret.neo4j_auth,
-    kubernetes_secret.registry_credentials,
-    helm_release.traefik
-  ]
 }
 
 resource "kubernetes_manifest" "registry_config" {

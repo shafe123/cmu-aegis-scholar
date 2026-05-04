@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 2.11"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
+    }
   }
 }
 
@@ -44,4 +48,7 @@ module "k8s_deployment" {
   registry_username = var.registry_username
   registry_password = var.registry_password
   registry_email    = var.registry_email
+  
+  build_images         = var.build_images
+  force_image_rebuild  = var.force_image_rebuild
 }

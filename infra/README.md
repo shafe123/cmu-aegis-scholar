@@ -19,20 +19,18 @@ infra/
 └── README.md                  # This file
 ```
 
-## Deployment Options
-
-### Option 1: Kubernetes Deployment (Recommended)
+## Kubernetes Deployment
 
 Deploy to any Kubernetes cluster (local, cloud, or on-premises).
 
-#### Prerequisites
+### Prerequisites
 
 1. **Kubernetes Cluster**: Running cluster with kubectl access
 2. **Helm**: Helm 3.x installed
 3. **Terraform**: v1.5.0 or later
 4. **kubeconfig**: Valid kubeconfig file at `~/.kube/config`
 
-#### Setup Steps
+### Setup Steps
 
 1. **Initialize Terraform**
    ```bash
@@ -96,15 +94,89 @@ Deploy to any Kubernetes cluster (local, cloud, or on-premises).
    kubectl delete pod data-loader-helper -n aegis-dev
    ```
 
-   **App phase** — installs the full application stack and loader jobs:
+   **App phase** — builds images and installs the full application stack:
+   
    ```bash
    terraform apply -var="deployment_phase=app"
    ```
 
-   Or do a one-shot deployment:
+   **Note:** Images are automatically built and pushed to the local registry during this phase. To skip automatic builds (if you've built images manually), set:
    ```bash
-   terraform apply -var="deployment_phase=all"
+   terraform apply -var="deployment_phase=app" -var="build_images=false"
    ```
+
+   **⏱️ Note:** The app phase can take 10-20 minutes to complete because:
+   - Container images must be built from source (if `build_images=true`)
+   - Built images must be pushed to the local registry
+   - Helm charts must be downloaded and dependencies resolved (Milvus, Neo4j)
+   - Large database images need to be pulled (Neo4j ~800MB, Milvus components ~2GB total)
+   - Neo4j and Milvus require time to initialize their databases
+   - Loader jobs must process and ingest all DTIC data files
+   - Health checks must pass before Terraform considers the deployment complete
+
+   You can monitor progress in another terminal with:
+   ```powershell
+   kubectl get pods -n aegis-dev --watch
+   ```
+
+### Validation
+
+After deployment completes, verify the application is running correctly:
+
+1. **Check Namespaces**
+   ```powershell
+   kubectl get namespaces
+   # Should see: aegis-dev and traefik-system
+   ```
+
+2. **Check All Pods**
+   ```powershell
+   # Overview of all pods in aegis-dev
+   kubectl get pods -n aegis-dev
+   
+   # All pods should show Running or Completed (for jobs)
+   ```
+
+3. **Check Loader Jobs**
+   ```powershell
+   # Verify loader jobs completed successfully
+   kubectl get jobs -n aegis-dev
+   
+   # Check logs if needed
+   kubectl logs job/graph-loader -n aegis-dev
+   kubectl logs job/vector-loader -n aegis-dev
+   ```
+
+4. **Check Services**
+   ```powershell
+   kubectl get svc -n aegis-dev
+   kubectl get ingress -n aegis-dev
+   ```
+
+5. **Test API Health**
+   ```powershell
+   # Port forward to API
+   kubectl port-forward -n aegis-dev svc/aegis-scholar-api 8000:8000
+   
+   # In another terminal
+   curl http://localhost:8000/health
+   ```
+
+6. **Access Frontend**
+   ```powershell
+   # Port forward to frontend
+   kubectl port-forward -n aegis-dev svc/frontend 3000:3000
+   
+   # Open browser to http://localhost:3000
+   ```
+
+**Common Issues:**
+- **ImagePullBackOff**: Images not built/pushed to registry - verify with `curl http://localhost:5000/v2/_catalog`
+- **CrashLoopBackOff**: Application crashes on startup - check logs with `kubectl logs`
+- **Jobs not completing**: Data loading failures - verify DTIC data was copied correctly
+- **Pending pods**: Resource constraints or PVC mounting issues
+
+For detailed troubleshooting, see the [Troubleshooting](#troubleshooting) section below.
 
 ## Configuration Variables
 
@@ -172,7 +244,7 @@ Helm chart changes are automatically detected and applied.
 
 ### Recommended staged teardown
 
-For local development, tear down in reverse order first:
+For local development, tear down in reverse order:
 
 ```bash
 terraform apply -var="deployment_phase=data"
@@ -186,6 +258,8 @@ This removes the application layer before the shared infrastructure and reduces 
 ```bash
 terraform destroy
 ```
+
+**Note:** Terraform now properly manages both the `aegis-dev` and `traefik-system` namespaces, so they will be cleaned up automatically during destroy.
 
 ### Destroy Specific Module
 ```bash

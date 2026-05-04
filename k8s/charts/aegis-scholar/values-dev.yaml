@@ -21,6 +21,7 @@ docker-registry:
 # API service configuration
 aegis-scholar-api:
   enabled: true
+  fullnameOverride: aegis-scholar-api
   replicaCount: 1
   image:
     registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"

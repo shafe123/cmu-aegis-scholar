@@ -18,6 +18,7 @@ dticData:
 # Enable/disable components
 aegis-scholar-api:
   enabled: true
+  fullnameOverride: aegis-scholar-api
 
 frontend:
   enabled: true
