@@ -29,8 +29,8 @@ class Settings(BaseSettings):  # pylint: disable=too-few-public-methods
     max_limit: int = 100
     default_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     api_title: str = "Aegis Scholar Vector DB API"
-    api_version: str = "0.1.0"
-    api_description: str = "FastAPI service for vector search operations"
+    api_version: str = "1.0.0"
+    api_description: str = "Vector search and embedding service for research paper semantic search"
 
 
 settings = Settings()

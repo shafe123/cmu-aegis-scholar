@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "graph-loader"
-version = "0.1.0"
+version = "1.0.0"
 description = "Job for importing DTIC structural data and relationships into Neo4j via Graph API"
 authors = ["Aegis Scholar Team"]
 

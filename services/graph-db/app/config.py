@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     neo4j_password: str | None = Field(default=None)
     api_title: str = "Aegis Scholar Graph API"
     api_version: str = "1.0.0"  # removed duplicate line
-    api_description: str = "FastAPI service for Neo4j graph operations"
+    api_description: str = "Neo4j graph database service for managing relationships between authors, organizations, topics, and research works"
     api_port: int = 8003
 
 

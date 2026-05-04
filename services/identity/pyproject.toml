@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mips"
-version = "0.1.0"
+version = "1.0.0"
 description = "Mock identity service"
 authors = ["Aegis Scholar Team"]
 
@@ -12,6 +12,7 @@ orjson = ">=3.11.8,<4.0.0"
 uvicorn = ">=0.44.0,<0.45.0"
 rapidfuzz = ">=3.14.5,<4.0.0"
 pydantic = ">=2.6.3,<3.0.0"
+pydantic-settings = ">=2.14.0,<3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.4.0"

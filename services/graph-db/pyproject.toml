@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "graph-db"
-version = "0.1.0"
+version = "1.0.0"
 description = "FastAPI gateway for Neo4j graph operations"
 authors = ["Aegis Scholar Team"]
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dtic"
-version = "0.1.0"
+version = "1.0.0"
 description = "dtic utils for aegis scholar"
 authors = ["shafe123 <ethan.h.shafer@gmail.com>"]
 package-mode = false

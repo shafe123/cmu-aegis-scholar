@@ -15,6 +15,7 @@ from ldap3.core.exceptions import LDAPEntryAlreadyExistsResult
 from ldap3.utils.dn import escape_rdn
 from rapidfuzz import fuzz, process
 
+from app.config import settings
 from app.docs import (
     HEALTH_RESPONSES,
     LOOKUP_RESPONSES,
@@ -25,24 +26,6 @@ from app.schemas import LookupResponse, SimilarMatch, UserRecord
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
-
-# Config - Explicitly stripping whitespace to prevent invalidDNSyntax
-LDAP_SERVER = os.getenv("LDAP_SERVER", "ldap://ldap-server:389").strip()
-LDAP_USER = os.getenv("LDAP_ADMIN_DN", "cn=admin,dc=example,dc=org").strip()
-LDAP_PASS = os.getenv("LDAP_ADMIN_PASSWORD", "admin").strip()
-LDAP_BASE_DN = os.getenv("LDAP_BASE_DN", "dc=example,dc=org").strip()
-
-AUTHOR_FILE = os.getenv("AUTH_JSONL_FILE_PATH", "/data/dtic_compressed/dtic_authors_001.jsonl.gz")
-ORG_FILE = os.getenv("ORG_JSONL_FILE_PATH", "/data/dtic_compressed/dtic_orgs_001.jsonl.gz")
-DOMAINS = [
-    "dtic.mil",
-    "navy.mil",
-    "army.mil",
-    "af.mil",
-    "usmc.mil",
-    "university.edu",
-    "us.gov",
-]
 
 _ORG_LIST_CACHE: list[str] | None = None
 
@@ -62,12 +45,12 @@ async def log_startup_config() -> None:
         "  LDAP_BASE_DN=%s\n"
         "  AUTH_JSONL_FILE_PATH=%s\n"
         "  ORG_JSONL_FILE_PATH=%s",
-        LDAP_SERVER,
-        LDAP_USER,
-        _mask_config_value(LDAP_PASS),
-        LDAP_BASE_DN,
-        AUTHOR_FILE,
-        ORG_FILE,
+        settings.ldap_server,
+        settings.ldap_admin_dn,
+        _mask_config_value(settings.ldap_admin_password),
+        settings.ldap_base_dn,
+        settings.auth_jsonl_file_path,
+        settings.org_jsonl_file_path,
     )
 
 
@@ -78,7 +61,12 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title=settings.api_title,
+    version=settings.api_version,
+    description=settings.api_description,
+    lifespan=lifespan,
+)
 
 
 def clean_uid(text: str) -> str:
@@ -94,9 +82,9 @@ def get_org_list() -> list[str]:
         return _ORG_LIST_CACHE
 
     orgs: set[str] = set()
-    if os.path.exists(ORG_FILE):
+    if os.path.exists(settings.org_jsonl_file_path):
         try:
-            with gzip.open(ORG_FILE, "rb") as file_handle:
+            with gzip.open(settings.org_jsonl_file_path, "rb") as file_handle:
                 for line in file_handle:
                     try:
                         org_data = json.loads(line)
@@ -119,17 +107,19 @@ async def health_check() -> dict[str, str]:
     return {
         "status": "ok",
         "service": "identity",
-        "ldap_server": LDAP_SERVER,
+        "ldap_server": settings.ldap_server,
     }
 
 
 @app.get("/stats", responses=STATS_RESPONSES)
 async def get_stats() -> dict[str, int]:
     """Return basic LDAP population statistics for the identity directory."""
-    server = Server(LDAP_SERVER, get_info=ALL)
+    server = Server(settings.ldap_server, get_info=ALL)
     try:
-        with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
-            search_base = f"ou=users,{LDAP_BASE_DN}"
+        with Connection(
+            server, user=settings.ldap_admin_dn, password=settings.ldap_admin_password, auto_bind=True
+        ) as conn:
+            search_base = f"ou=users,{settings.ldap_base_dn}"
             conn.search(search_base, "(objectClass=inetOrgPerson)", attributes=["cn"])
             total = len(conn.entries)
             conn.search(search_base, "(mail=*)", attributes=["cn"])
@@ -170,11 +160,11 @@ def _sync_author_record(conn: Connection, author_data: dict[str, Any], org_names
 
     email = author_data.get("email")
     if not email and random.random() < 0.5:
-        email = f"{name.replace(' ', '.').lower()}@{random.choice(DOMAINS)}"
+        email = f"{name.replace(' ', '.').lower()}@{random.choice(settings.email_domains)}"
 
     org = author_data.get("org_name") or random.choice(org_names)
     safe_uid = escape_rdn(clean_uid(author_data.get("uid", name.replace(" ", ""))))
-    dn = f"uid={safe_uid},ou=users,{LDAP_BASE_DN}"
+    dn = f"uid={safe_uid},ou=users,{settings.ldap_base_dn}"
     attrs = _build_ldap_attributes(name, org, email)
 
     try:
@@ -186,15 +176,17 @@ def _sync_author_record(conn: Connection, author_data: dict[str, Any], org_names
 
 def process_and_sync_file(force: bool = False) -> None:
     """Load author data from disk and synchronize it into the LDAP directory."""
-    if not os.path.exists(AUTHOR_FILE):
-        logger.error("File not found: %s", AUTHOR_FILE)
+    if not os.path.exists(settings.auth_jsonl_file_path):
+        logger.error("File not found: %s", settings.auth_jsonl_file_path)
         return
 
-    server = Server(LDAP_SERVER, get_info=ALL)
+    server = Server(settings.ldap_server, get_info=ALL)
     try:
-        with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
-            users_ou = f"ou=users,{LDAP_BASE_DN}"
-            conn.search(LDAP_BASE_DN, "(ou=users)", SUBTREE)
+        with Connection(
+            server, user=settings.ldap_admin_dn, password=settings.ldap_admin_password, auto_bind=True
+        ) as conn:
+            users_ou = f"ou=users,{settings.ldap_base_dn}"
+            conn.search(settings.ldap_base_dn, "(ou=users)", SUBTREE)
             if not conn.entries:
                 logger.info("Creating ou=users...")
                 conn.add(users_ou, ["organizationalUnit", "top"], {"ou": "users"})
@@ -208,7 +200,7 @@ def process_and_sync_file(force: bool = False) -> None:
 
             org_names = get_org_list()
             count = 0
-            with gzip.open(AUTHOR_FILE, "rb") as file_handle:
+            with gzip.open(settings.auth_jsonl_file_path, "rb") as file_handle:
                 for line in file_handle:
                     if not line.strip():
                         continue
@@ -232,10 +224,12 @@ def process_and_sync_file(force: bool = False) -> None:
 @app.get("/lookup", response_model=LookupResponse, responses=LOOKUP_RESPONSES)
 async def lookup_record(name: str = Query(...)) -> LookupResponse:
     """Return an exact identity match plus fuzzy-match suggestions for a name query."""
-    server = Server(LDAP_SERVER, get_info=ALL)
+    server = Server(settings.ldap_server, get_info=ALL)
     try:
-        with Connection(server, user=LDAP_USER, password=LDAP_PASS, auto_bind=True) as conn:
-            search_base = f"ou=users,{LDAP_BASE_DN}"
+        with Connection(
+            server, user=settings.ldap_admin_dn, password=settings.ldap_admin_password, auto_bind=True
+        ) as conn:
+            search_base = f"ou=users,{settings.ldap_base_dn}"
             exact_record = None
 
             conn.search(search_base, f"(cn={name})", attributes=["mail", "cn", "uid", "o"])
