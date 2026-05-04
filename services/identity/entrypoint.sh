@@ -2,8 +2,11 @@
 set -e
 
 # Wait for LDAP server to accept connections
-echo "Checking connection to LDAP server (ldap-server:1389)..."
-until timeout 1 bash -c "cat < /dev/null > /dev/tcp/ldap-server/1389"; do
+LDAP_HOST="${LDAP_HOST:-ldap-server}"
+LDAP_PORT="${LDAP_PORT:-389}"
+
+echo "Checking connection to LDAP server (${LDAP_HOST}:${LDAP_PORT})..."
+until timeout 1 bash -c "cat < /dev/null > /dev/tcp/${LDAP_HOST}/${LDAP_PORT}"; do
   echo "LDAP not ready yet. Sleeping 2s..."
   sleep 2
 done

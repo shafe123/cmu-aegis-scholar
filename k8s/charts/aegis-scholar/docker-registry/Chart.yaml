@@ -1,0 +1,6 @@
+apiVersion: v2
+name: docker-registry
+description: Docker Registry v2 for local container image storage
+type: application
+version: 0.1.0
+appVersion: "2.8.3"

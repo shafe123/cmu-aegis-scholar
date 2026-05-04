@@ -1,0 +1,43 @@
+# Example Terraform Variables for the current local Kubernetes deployment
+# Copy this file to terraform.tfvars and customize for your environment
+
+environment = "dev"
+
+# Deployment phase
+# bootstrap = namespace + Traefik + registry pieces
+# data      = bootstrap + DTIC PVC
+# app       = bootstrap + data + full application
+# all       = one-shot deployment
+deployment_phase = "all"
+
+# Kubernetes Configuration
+kubeconfig_path      = "~/.kube/config"
+kubernetes_namespace = "aegis-dev"
+create_namespace     = true
+
+# Helm / Chart Configuration
+helm_release_name = "aegis-scholar"
+helm_chart_path   = "../k8s/charts/aegis-scholar"
+values_file       = "../k8s/charts/aegis-scholar/values-dev.yaml"
+
+# Match the current local ingress setup
+install_traefik                  = true
+traefik_namespace                = "traefik-system"
+traefik_chart_version            = "39.0.7"
+traefik_image_tag                = "v3.6.12"
+traefik_web_port                 = 80
+create_registry_config_daemonset = true
+
+# Container Registry
+# Leave empty for the current built-in cluster registry flow defined in values-dev.yaml.
+# Set this only when you want Terraform to override the chart to use another registry.
+image_registry = ""
+image_tag      = "latest"
+
+# Secrets (IMPORTANT: Do not commit actual secrets to version control)
+neo4j_password = "" # Prefer TF_VAR_neo4j_password
+
+# Registry Credentials (only needed for a private external registry)
+registry_username = ""
+registry_password = ""
+registry_email    = ""

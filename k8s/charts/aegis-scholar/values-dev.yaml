@@ -1,0 +1,255 @@
+# Development Environment Values
+# Override with: helm install aegis-scholar ./charts/aegis-scholar -f values-dev.yaml -n aegis-dev
+
+global:
+  imageRegistry: "" # Don't set global registry - it affects Milvus too
+  namespace: aegis-dev
+
+# Shared data volume for DTIC compressed data
+dticData:
+  enabled: true
+  size: 20Gi
+  storageClass: ""
+  accessMode: ReadWriteOnce
+
+# Enable local Docker registry for development
+docker-registry:
+  enabled: true
+  persistence:
+    size: 10Gi
+
+# API service configuration
+aegis-scholar-api:
+  enabled: true
+  fullnameOverride: aegis-scholar-api
+  replicaCount: 1
+  image:
+    registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+    repository: "aegis-scholar-api"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  ingress:
+    enabled: false
+    className: traefik
+    hosts:
+    - host: localhost
+      paths:
+      - path: /api
+        pathType: Prefix
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  env:
+  - name: LOG_LEVEL
+    value: "DEBUG"
+  - name: ENVIRONMENT
+    value: "dev"
+  - name: VECTOR_DB_URL
+    value: "http://aegis-scholar-vector-db:8002"
+  - name: GRAPH_DB_URL
+    value: "http://aegis-scholar-graph-db:8003"
+  - name: IDENTITY_API_URL
+    value: "http://identity:8000"
+
+# Frontend configuration
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+    repository: "frontend"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Vector DB configuration
+vector-db:
+  enabled: true
+  replicaCount: 1
+  image:
+    registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+    repository: "vector-db"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  persistence:
+    enabled: true
+    size: 5Gi
+  milvus:
+    host: "aegis-scholar-milvus"
+  loader:
+    enabled: true
+    dataDir: "/data/dtic_test_subset"
+    image:
+      registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+      repository: "vector-loader"
+      tag: "latest"
+      pullPolicy: IfNotPresent
+
+# Graph DB configuration
+graph-db:
+  enabled: true
+  replicaCount: 1
+  image:
+    registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+    repository: "graph-db"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  neo4jConnection:
+    host: "aegis-scholar-neo4j"
+    port: "7687"
+    scheme: "bolt"
+    database: "neo4j"
+  neo4j:
+    enabled: true
+    image:
+      imagePullPolicy: IfNotPresent
+      repository: "neo4j"
+      tag: "5.25.1"
+    volumes:
+      data:
+        defaultStorageClass:
+          requests:
+            storage: 5Gi
+  loader:
+    enabled: true
+    dataDir: "/data/dtic_test_subset"
+    image:
+      registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+      repository: "graph-loader"
+      tag: "latest"
+      pullPolicy: IfNotPresent
+
+# Identity service configuration
+identity:
+  enabled: true
+  fullnameOverride: identity
+  replicaCount: 1
+  image:
+    registry: "aegis-scholar-docker-registry.aegis-dev.svc.cluster.local"
+    repository: "identity"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  env:
+  - name: LOG_LEVEL
+    value: "DEBUG"
+  - name: ENVIRONMENT
+    value: "dev"
+  data:
+    existingClaim: "dtic-data"
+    mountPath: "/data"
+    authJsonlFilePath: "/data/dtic_test_subset/dtic_authors_50.jsonl.gz"
+    orgJsonlFilePath: "/data/dtic_test_subset/dtic_orgs_50.jsonl.gz"
+
+# LDAP service configuration
+ldap-server:
+  enabled: true
+  fullnameOverride: ldap-server
+  adminPassword: "admin"
+  persistence:
+    data:
+      enabled: true
+      size: 2Gi
+    config:
+      enabled: true
+      size: 1Gi
+
+# Milvus configuration (standalone for dev)
+milvus:
+  enabled: true
+  cluster:
+    enabled: false
+  standalone:
+    enabled: true
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: traefik
+  stripPrefixes:
+  - /api
+  - /vector
+  - /graph
+  hosts:
+  - host: localhost
+    paths:
+    - path: /api
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /search
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /health
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /viz
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /docs
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /redoc
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /openapi.json
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /favicon.ico
+      pathType: Prefix
+      service: aegis-scholar-api
+      port: 8000
+    - path: /vector
+      pathType: Prefix
+      service: vector-db
+      port: 8002
+    - path: /graph
+      pathType: Prefix
+      service: graph-db
+      port: 8003
+    - path: /
+      pathType: Prefix
+      service: frontend
+      port: 80

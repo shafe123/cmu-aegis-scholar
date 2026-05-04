@@ -283,6 +283,8 @@ jobs:
                   cache-to: type=gha,mode=max,scope=${{ matrix.image }}
                   # Don't push, just build and cache
                   push: false
+                  provenance: true
+                  sbom: true
 
     test-integration:
         name: "Integration Tests"
