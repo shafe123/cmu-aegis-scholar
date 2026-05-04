@@ -96,7 +96,7 @@ Deploy to any Kubernetes cluster (local, cloud, or on-premises).
    kubectl delete pod data-loader-helper -n aegis-dev
    ```
    
-   **Note:** The test subset contains 50 authors, 50 organizations, 50 topics, and 50 works - all fully linked. Perfect for development and validation. For production deployment with the full dataset (~97K authors), use `../data/dtic_compressed` instead.
+   **Note:** Deleting the pod make take a little bit of time.  The test subset contains 50 authors, 50 organizations, 50 topics, and 50 works - all fully linked. Perfect for development and validation. For production deployment with the full dataset (~97K authors), use `../data/dtic_compressed` instead.
 
    **App phase** — builds images and installs the full application stack:
    

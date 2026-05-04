@@ -40,13 +40,13 @@ aegis-scholar-api (:8000)   ← primary gateway (read-only for end users)
 
 ### Services
 
-| Service | Port | Responsibility |
-|---|---|---|
-| `aegis-scholar-api` | 8000 | Orchestrates search; computes hybrid relevance scores; proxies identity lookups |
-| `vector-db` | 8002 | Text-to-embedding + Milvus similarity search |
-| `graph-db` | 8003 | Neo4j graph operations (authors, works, orgs, topics) |
-| `identity` | 8005 | LDAP directory sync and fuzzy name lookup |
-| `frontend` | 5173 (dev) / 80+443 (prod) | React/Vite app with interactive vis-network graph, served by Nginx in production |
+| Service             | Port                       | Responsibility                                                                   |
+| ------------------- | -------------------------- | -------------------------------------------------------------------------------- |
+| `aegis-scholar-api` | 8000                       | Orchestrates search; computes hybrid relevance scores; proxies identity lookups  |
+| `vector-db`         | 8002                       | Text-to-embedding + Milvus similarity search                                     |
+| `graph-db`          | 8003                       | Neo4j graph operations (authors, works, orgs, topics)                            |
+| `identity`          | 8005                       | LDAP directory sync and fuzzy name lookup                                        |
+| `frontend`          | 5173 (dev) / 80+443 (prod) | React/Vite app with interactive vis-network graph, served by Nginx in production |
 
 ### Relevance Scoring
 
@@ -64,12 +64,12 @@ score(x, y, t) = ⅓·(1−x) + ⅓·σ(0.005·(y−100)) + ⅓·½·(1−tanh(t
 
 Four entity types sourced from DTIC, stored across both databases:
 
-| Entity | Neo4j label | Milvus collection |
-|---|---|---|
-| Author | `Author` | `aegis_vectors` (averaged abstract embedding) |
-| Work | `Work` | — |
-| Organization | `Organization` | — |
-| Topic | `Topic` | — |
+| Entity       | Neo4j label    | Milvus collection                             |
+| ------------ | -------------- | --------------------------------------------- |
+| Author       | `Author`       | `aegis_vectors` (averaged abstract embedding) |
+| Work         | `Work`         | —                                             |
+| Organization | `Organization` | —                                             |
+| Topic        | `Topic`        | —                                             |
 
 Graph relationships: `AUTHORED`, `AFFILIATED_WITH`, `COVERS_TOPIC`
 
@@ -87,8 +87,8 @@ jobs/
 frontend/              React/Vite application
 libs/                  Shared Python libraries
 tests/                 Cross-service integration test suite
-infra/                 Terraform modules
-k8s/                   Kubernetes manifests
+terraform/             Infrastructure as code (Terraform)
+k8s/                   Kubernetes Helm charts
 dev/                   Docker Compose stack and env templates
 data/                  Schema definitions and sample data
 utils/                 DTIC scraping and data preparation utilities
@@ -168,21 +168,21 @@ Open the frontend at **http://localhost:5173**.
 
 All runtime configuration is supplied through environment variables. Secrets must never be committed to source control.
 
-| Variable | Service(s) | Default | Description |
-|---|---|---|---|
-| `NEO4J_PASSWORD` | `neo4j`, `graph-db` | *(required)* | Neo4j admin password |
-| `LDAP_ADMIN_PASSWORD` | `ldap-server`, `identity` | *(required)* | OpenLDAP admin password |
-| `SEAWEEDFS_ACCESS_KEY` | `milvus-seaweedfs` | `minioadmin` | S3-compatible object store key |
-| `SEAWEEDFS_SECRET_KEY` | `milvus-seaweedfs` | `minioadmin` | S3-compatible object store secret |
-| `DTIC_DATASET_DIR` | `vector-loader`, `graph-loader`, `identity` | `../tests/dtic_test_subset` | Host path to JSONL dataset directory |
-| `IDENTITY_AUTH_JSONL_FILE` | `identity` | `dtic_authors_50.jsonl.gz` | Author data filename within `DTIC_DATASET_DIR` |
-| `IDENTITY_ORG_JSONL_FILE` | `identity` | `dtic_orgs_50.jsonl.gz` | Organization data filename |
-| `VECTOR_DB_URL` | `aegis-scholar-api` | `http://vector-db:8002` | Internal vector-db address |
-| `GRAPH_DB_URL` | `aegis-scholar-api` | `http://graph-db:8003` | Internal graph-db address |
-| `API_PORT` | `aegis-scholar-api` | `8000` | Listening port |
-| `LOG_LEVEL` | all Python services | `INFO` | Python logging level |
-| `EMBEDDING_MODEL` | `vector-loader` | `sentence-transformers/all-MiniLM-L6-v2` | Sentence embedding model |
-| `BATCH_SIZE` | `vector-loader` | `100` | Embedding batch size |
+| Variable                   | Service(s)                                  | Default                                  | Description                                    |
+| -------------------------- | ------------------------------------------- | ---------------------------------------- | ---------------------------------------------- |
+| `NEO4J_PASSWORD`           | `neo4j`, `graph-db`                         | *(required)*                             | Neo4j admin password                           |
+| `LDAP_ADMIN_PASSWORD`      | `ldap-server`, `identity`                   | *(required)*                             | OpenLDAP admin password                        |
+| `SEAWEEDFS_ACCESS_KEY`     | `milvus-seaweedfs`                          | `minioadmin`                             | S3-compatible object store key                 |
+| `SEAWEEDFS_SECRET_KEY`     | `milvus-seaweedfs`                          | `minioadmin`                             | S3-compatible object store secret              |
+| `DTIC_DATASET_DIR`         | `vector-loader`, `graph-loader`, `identity` | `../tests/dtic_test_subset`              | Host path to JSONL dataset directory           |
+| `IDENTITY_AUTH_JSONL_FILE` | `identity`                                  | `dtic_authors_50.jsonl.gz`               | Author data filename within `DTIC_DATASET_DIR` |
+| `IDENTITY_ORG_JSONL_FILE`  | `identity`                                  | `dtic_orgs_50.jsonl.gz`                  | Organization data filename                     |
+| `VECTOR_DB_URL`            | `aegis-scholar-api`                         | `http://vector-db:8002`                  | Internal vector-db address                     |
+| `GRAPH_DB_URL`             | `aegis-scholar-api`                         | `http://graph-db:8003`                   | Internal graph-db address                      |
+| `API_PORT`                 | `aegis-scholar-api`                         | `8000`                                   | Listening port                                 |
+| `LOG_LEVEL`                | all Python services                         | `INFO`                                   | Python logging level                           |
+| `EMBEDDING_MODEL`          | `vector-loader`                             | `sentence-transformers/all-MiniLM-L6-v2` | Sentence embedding model                       |
+| `BATCH_SIZE`               | `vector-loader`                             | `100`                                    | Embedding batch size                           |
 
 Service-specific `.env.example` files live alongside each service's `pyproject.toml`.
 
@@ -240,11 +240,11 @@ Open **http://localhost:5173**, enter a search query, select a result, and explo
 
 ### API documentation (Swagger / ReDoc)
 
-| Service | Swagger | ReDoc |
-|---|---|---|
+| Service           | Swagger                    | ReDoc                       |
+| ----------------- | -------------------------- | --------------------------- |
 | aegis-scholar-api | http://localhost:8000/docs | http://localhost:8000/redoc |
-| vector-db | http://localhost:8002/docs | http://localhost:8002/redoc |
-| graph-db | http://localhost:8003/docs | http://localhost:8003/redoc |
+| vector-db         | http://localhost:8002/docs | http://localhost:8002/redoc |
+| graph-db          | http://localhost:8003/docs | http://localhost:8003/redoc |
 
 ---
 
@@ -315,16 +315,16 @@ All Python services enforce **80% line coverage** via `pytest-cov`. CI fails bui
 
 GitHub Actions runs on every pull request and push to `main`:
 
-| Job | What it checks |
-|---|---|
-| `lint-python` | ruff lint + format, pylint ≥ 9.0 (all services) |
-| `lint-frontend` | ESLint |
-| `test-frontend` | Vitest build + unit tests |
-| `security-scan` | bandit SAST + mypy type checking (all services) |
-| `test-python` | pytest with 80% coverage (all services) |
-| `build-images` | Docker Buildx build for all images |
-| `test-integration` | 27 testcontainers integration tests (runs after all above pass) |
-| `docker-scout` | Critical/high CVE scan on PRs (requires `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN` secrets) |
+| Job                | What it checks                                                                            |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| `lint-python`      | ruff lint + format, pylint ≥ 9.0 (all services)                                           |
+| `lint-frontend`    | ESLint                                                                                    |
+| `test-frontend`    | Vitest build + unit tests                                                                 |
+| `security-scan`    | bandit SAST + mypy type checking (all services)                                           |
+| `test-python`      | pytest with 80% coverage (all services)                                                   |
+| `build-images`     | Docker Buildx build for all images                                                        |
+| `test-integration` | 27 testcontainers integration tests (runs after all above pass)                           |
+| `docker-scout`     | Critical/high CVE scan on PRs (requires `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN` secrets) |
 
 ### Production: HTTPS via Nginx (domain: aegisscholar.org)
 
@@ -357,7 +357,9 @@ Kubernetes manifests are in `k8s/`. See [`k8s/README.md`](k8s/README.md) for clu
 
 ### Infrastructure (Terraform)
 
-Cloud infrastructure is defined in `infra/` using Terraform modules. `infra/vector-db/` provisions the managed vector database; `infra/example-service/` is a template for new modules. See [`infra/README.md`](infra/README.md) for provider setup and `terraform apply` steps.
+Infrastructure deployment is automated with Terraform in `terraform/`. The configuration supports phased deployment to Kubernetes (local or cloud) with automatic image building and Helm chart installation. Deployment is split into three phases: bootstrap (namespace, Traefik, registry), data (shared DTIC PVC), and app (image builds and full application stack).
+
+See [`terraform/README.md`](terraform/README.md) for setup instructions, deployment steps, validation, and troubleshooting.
 
 ---
 

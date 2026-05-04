@@ -2,6 +2,8 @@
 
 This directory contains Helm charts and Kubernetes manifests for deploying the Aegis Scholar research discovery system to any Kubernetes cluster.
 
+> **💡 Automated Deployment:** For a streamlined deployment with automatic image building and phased installation, use the Terraform configuration in [`../terraform/`](../terraform/README.md). The instructions below provide manual deployment steps for those who need more control or want to understand the deployment process in detail.
+
 ## Architecture
 
 The application consists of:
