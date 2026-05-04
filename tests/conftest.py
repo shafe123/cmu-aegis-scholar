@@ -80,8 +80,8 @@ VECTOR_DB_DEFAULT_URL = f"http://localhost:{VECTOR_DB_PORT}"
 API_PORT = 8000
 API_DEFAULT_URL = f"http://localhost:{API_PORT}"
 
-LDAP_IMAGE = "symas/openldap:latest"
-LDAP_PORT = int(os.getenv("LDAP_PORT", "1389"))
+LDAP_IMAGE = "osixia/openldap:1.5.0"
+LDAP_PORT = int(os.getenv("LDAP_PORT", "389"))
 LDAP_BASE_DN = os.getenv("LDAP_BASE_DN", "dc=example,dc=org")
 LDAP_ADMIN_PASSWORD = os.getenv("LDAP_ADMIN_PASSWORD", "testpassword")
 
@@ -426,10 +426,11 @@ def identity_container(docker_network):
     ldap_container = (
         DockerContainer(LDAP_IMAGE)
         .with_exposed_ports(LDAP_PORT)
-        .with_env("LDAP_ROOT", LDAP_BASE_DN)
-        .with_env("LDAP_ADMIN_USERNAME", "admin")
+        .with_env("LDAP_ORGANISATION", "Example Inc.")
+        .with_env("LDAP_DOMAIN", "example.org")
+        .with_env("LDAP_BASE_DN", LDAP_BASE_DN)
         .with_env("LDAP_ADMIN_PASSWORD", LDAP_ADMIN_PASSWORD)
-        .with_env("LDAP_PORT_NUMBER", str(LDAP_PORT))
+        .with_env("LDAP_TLS", "false")
         .with_kwargs(hostname=LDAP_CONTAINER_NAME)
     )
 

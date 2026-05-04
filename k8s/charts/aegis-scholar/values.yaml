@@ -29,6 +29,14 @@ vector-db:
 graph-db:
   enabled: true
 
+identity:
+  enabled: true
+  fullnameOverride: identity
+
+ldap-server:
+  enabled: true
+  fullnameOverride: ldap-server
+
 milvus:
   enabled: true
   # Milvus standalone configuration

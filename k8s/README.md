@@ -7,6 +7,8 @@ This directory contains Helm charts and Kubernetes manifests for deploying the A
 The application consists of:
 - **frontend**: React web application served through Traefik at `/`
 - **aegis-scholar-api**: REST API for research discovery
+- **identity**: FastAPI identity lookup and LDAP sync service
+- **ldap-server**: osixia OpenLDAP directory backing the identity service
 - **vector-db**: Vector similarity search service using Milvus
 - **graph-db**: Graph database API service using Neo4j
 - **milvus**: Standalone Milvus vector database
@@ -213,6 +215,8 @@ helm install aegis-scholar . `
   -n aegis-dev `
   --set frontend.enabled=false `
   --set aegis-scholar-api.enabled=false `
+  --set identity.enabled=false `
+  --set ldap-server.enabled=false `
   --set vector-db.enabled=false `
   --set graph-db.enabled=false `
   --set milvus.enabled=false
@@ -244,18 +248,20 @@ In your main terminal:
 # Build images with localhost:5000 tag (for pushing via port-forward)
 docker build -t localhost:5000/frontend:latest ./frontend
 docker build -t localhost:5000/aegis-scholar-api:latest ./services/aegis-scholar-api
+docker build -t localhost:5000/identity:latest ./services/identity
 docker build -t localhost:5000/vector-db:latest ./services/vector-db
 docker build -t localhost:5000/graph-db:latest ./services/graph-db
 
 # Push to the cluster registry (via port-forward)
 docker push localhost:5000/frontend:latest
 docker push localhost:5000/aegis-scholar-api:latest
+docker push localhost:5000/identity:latest
 docker push localhost:5000/vector-db:latest
 docker push localhost:5000/graph-db:latest
 
 # Verify images were pushed
 curl http://localhost:5000/v2/_catalog
-# Should return: {"repositories":["aegis-scholar-api","frontend","graph-db","vector-db"]}
+# Should return: {"repositories":["aegis-scholar-api","frontend","graph-db","identity","vector-db"]}
 ```
 
 #### 7.2 Build and Push Loader Images
@@ -271,7 +277,7 @@ docker push localhost:5000/vector-loader:latest
 
 # Verify all images
 curl http://localhost:5000/v2/_catalog
-# Should return: {"repositories":["aegis-scholar-api","frontend","graph-db","graph-loader","vector-db","vector-loader"]}
+# Should return: {"repositories":["aegis-scholar-api","frontend","graph-db","graph-loader","identity","vector-db","vector-loader"]}
 ```
 
 ---

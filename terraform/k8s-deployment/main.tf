@@ -122,6 +122,7 @@ resource "null_resource" "build_and_push_images" {
       $images = @(
         @{name="frontend"; path="./frontend"},
         @{name="aegis-scholar-api"; path="./services/aegis_scholar_api"},
+        @{name="identity"; path="./services/identity"},
         @{name="vector-db"; path="./services/vector-db"},
         @{name="graph-db"; path="./services/graph-db"},
         @{name="graph-loader"; path="./jobs/graph-loader"},
@@ -255,6 +256,16 @@ resource "helm_release" "aegis_scholar" {
   }
 
   set {
+    name  = "identity.enabled"
+    value = local.deploy_app_layer ? "true" : "false"
+  }
+
+  set {
+    name  = "ldap-server.enabled"
+    value = local.deploy_app_layer ? "true" : "false"
+  }
+
+  set {
     name  = "vector-db.enabled"
     value = local.deploy_app_layer ? "true" : "false"
   }
@@ -302,6 +313,11 @@ resource "helm_release" "aegis_scholar" {
 
   set {
     name  = "aegis-scholar-api.image.tag"
+    value = var.image_tag
+  }
+
+  set {
+    name  = "identity.image.tag"
     value = var.image_tag
   }
 

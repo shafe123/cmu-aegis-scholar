@@ -27,13 +27,13 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Config - Explicitly stripping whitespace to prevent invalidDNSyntax
-LDAP_SERVER = os.getenv("LDAP_SERVER", "ldap://ldap-server:1389").strip()
+LDAP_SERVER = os.getenv("LDAP_SERVER", "ldap://ldap-server:389").strip()
 LDAP_USER = os.getenv("LDAP_ADMIN_DN", "cn=admin,dc=example,dc=org").strip()
 LDAP_PASS = os.getenv("LDAP_ADMIN_PASSWORD", "admin").strip()
 LDAP_BASE_DN = os.getenv("LDAP_BASE_DN", "dc=example,dc=org").strip()
 
-AUTHOR_FILE = os.getenv("AUTH_JSONL_FILE_PATH", "/data/dtic_authors_001.jsonl.gz")
-ORG_FILE = os.getenv("ORG_JSONL_FILE_PATH", "/data/dtic_orgs_001.jsonl.gz")
+AUTHOR_FILE = os.getenv("AUTH_JSONL_FILE_PATH", "/data/dtic_compressed/dtic_authors_001.jsonl.gz")
+ORG_FILE = os.getenv("ORG_JSONL_FILE_PATH", "/data/dtic_compressed/dtic_orgs_001.jsonl.gz")
 DOMAINS = [
     "dtic.mil",
     "navy.mil",

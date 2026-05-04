@@ -35,6 +35,8 @@ aegis-scholar-api:
     value: "http://aegis-scholar-vector-db:8002"
   - name: GRAPH_DB_URL
     value: "http://aegis-scholar-graph-db:8003"
+  - name: IDENTITY_API_URL
+    value: "http://identity:8000"
 
 # Frontend configuration
 frontend:
@@ -110,6 +112,44 @@ graph-db:
       limits:
         cpu: 4000m
         memory: 8Gi
+
+# Identity service configuration
+identity:
+  enabled: true
+  fullnameOverride: identity
+  replicaCount: 2
+  image:
+    tag: "latest"
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  data:
+    existingClaim: "dtic-data"
+    mountPath: "/data"
+    authJsonlFilePath: "/data/dtic_compressed/dtic_authors_001.jsonl.gz"
+    orgJsonlFilePath: "/data/dtic_compressed/dtic_orgs_001.jsonl.gz"
+
+# LDAP service configuration
+ldap-server:
+  enabled: true
+  fullnameOverride: ldap-server
+  adminPassword: "CHANGE_ME"
+  persistence:
+    data:
+      enabled: true
+      size: 10Gi
+    config:
+      enabled: true
+      size: 2Gi
 
 # Milvus configuration (standalone but production-ready)
 milvus:

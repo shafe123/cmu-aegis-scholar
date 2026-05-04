@@ -29,6 +29,14 @@ dependencies:
   version: 0.1.0
   repository: file://./graph-db
   condition: graph-db.enabled
+- name: identity
+  version: 0.1.0
+  repository: file://./identity
+  condition: identity.enabled
+- name: ldap-server
+  version: 0.1.0
+  repository: file://./ldap-server
+  condition: ldap-server.enabled
 - name: milvus
   version: 4.2.8
   repository: https://zilliztech.github.io/milvus-helm

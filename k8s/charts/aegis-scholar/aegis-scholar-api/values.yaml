@@ -76,6 +76,8 @@ env:
   value: "http://vector-db:8002"
 - name: GRAPH_DB_URL
   value: "http://graph-db:8003"
+- name: IDENTITY_API_URL
+  value: "http://identity:8000"
 
 # Additional environment variables from secrets or configmaps
 envFrom: []

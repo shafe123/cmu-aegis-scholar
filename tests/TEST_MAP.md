@@ -14,14 +14,14 @@
 **Containers:** Neo4j + Graph DB service  
 **Pattern:** HTTP API calls to graph-db service, validates Neo4j storage
 
-| Test | Validates |
-|------|-----------|
-| `test_graph_db_service_is_healthy` | Health check reports Neo4j connected |
-| `test_upsert_author_via_api` | POST /authors creates Author node |
-| `test_upsert_work_via_api` | POST /works creates Work node |
-| `test_link_author_work_via_api` | POST /relationships/authored creates AUTHORED relationship |
-| `test_collaborator_discovery_via_api` | GET /authors/{id}/collaborators returns co-authors |
-| `test_viz_network_via_api` | GET /viz/author-network/{id} returns graph structure |
+| Test                                  | Validates                                                  |
+| ------------------------------------- | ---------------------------------------------------------- |
+| `test_graph_db_service_is_healthy`    | Health check reports Neo4j connected                       |
+| `test_upsert_author_via_api`          | POST /authors creates Author node                          |
+| `test_upsert_work_via_api`            | POST /works creates Work node                              |
+| `test_link_author_work_via_api`       | POST /relationships/authored creates AUTHORED relationship |
+| `test_collaborator_discovery_via_api` | GET /authors/{id}/collaborators returns co-authors         |
+| `test_viz_network_via_api`            | GET /viz/author-network/{id} returns graph structure       |
 
 ---
 
@@ -31,13 +31,13 @@
 **Containers:** Milvus + Vector DB service  
 **Pattern:** HTTP API calls to vector-db service, validates Milvus storage
 
-| Test | Validates |
-|------|-----------|
-| `test_vector_db_service_is_healthy` | Health check reports Milvus connected |
-| `test_default_collection_created` | GET /collections shows default collection exists |
+| Test                                   | Validates                                             |
+| -------------------------------------- | ----------------------------------------------------- |
+| `test_vector_db_service_is_healthy`    | Health check reports Milvus connected                 |
+| `test_default_collection_created`      | GET /collections shows default collection exists      |
 | `test_create_author_embedding_via_api` | POST /authors/embedding creates embeddings from works |
-| `test_text_search_returns_results` | POST /search/text finds authors via semantic search |
-| `test_models_endpoint` | GET /models returns available embedding models |
+| `test_text_search_returns_results`     | POST /search/text finds authors via semantic search   |
+| `test_models_endpoint`                 | GET /models returns available embedding models        |
 
 ---
 
@@ -47,11 +47,11 @@
 **Containers:** OpenLDAP + Identity service  
 **Pattern:** HTTP API calls to identity service, validates LDAP queries
 
-| Test | Validates |
-|------|-----------|
-| `test_identity_service_is_healthy` | Health check reports LDAP connected |
+| Test                                         | Validates                                    |
+| -------------------------------------------- | -------------------------------------------- |
+| `test_identity_service_is_healthy`           | Health check reports LDAP connected          |
 | `test_lookup_returns_empty_for_unknown_name` | GET /lookup handles unknown names gracefully |
-| `test_stats_endpoint` | GET /stats returns LDAP population metrics |
+| `test_stats_endpoint`                        | GET /stats returns LDAP population metrics   |
 
 ---
 
@@ -62,12 +62,12 @@
 **Pattern:** Async HTTP calls to main API, validates container-to-container communication  
 **Test Data:** Uses `ensure_test_data` fixture with DTIC subset
 
-| Test | Validates |
-|------|-----------|
-| `test_author_details_integration` | GET /search/authors/{id} fetches author metadata from Graph DB |
-| `test_viz_endpoint_integration` | GET /viz/author-network/{id} returns D3-compatible graph structure |
-| `test_viz_expansion_logic` | Graph expansion logic works across depth levels |
-| `test_graph_error_handling` | 404/503 error handling for non-existent authors |
+| Test                              | Validates                                                          |
+| --------------------------------- | ------------------------------------------------------------------ |
+| `test_author_details_integration` | GET /search/authors/{id} fetches author metadata from Graph DB     |
+| `test_viz_endpoint_integration`   | GET /viz/author-network/{id} returns D3-compatible graph structure |
+| `test_viz_expansion_logic`        | Graph expansion logic works across depth levels                    |
+| `test_graph_error_handling`       | 404/503 error handling for non-existent authors                    |
 
 ---
 
@@ -77,16 +77,16 @@
 **Containers:** Milvus + Vector DB service + Main API  
 **Pattern:** Async HTTP calls to main API, validates semantic search integration
 
-| Test | Validates |
-|------|-----------|
-| `test_health_check_reports_vector_db_status` | Main API /health reports vector DB dependency status |
-| `test_author_search_integration` | GET /search/authors performs semantic search via vector DB |
-| `test_author_search_with_pagination` | Pagination (limit/offset) parameters work correctly |
-| `test_author_search_with_sorting` | Sort by relevance_score or citation_count works |
-| `test_author_search_empty_query` | 422 validation error for missing query parameter |
-| `test_author_search_respects_limits` | Min/max limit validation enforced |
-| `test_vector_db_connectivity_error_handling` | 503 error when vector DB unavailable |
-| `test_relevance_score_calculation` | Relevance scores properly calculated and included |
+| Test                                         | Validates                                                  |
+| -------------------------------------------- | ---------------------------------------------------------- |
+| `test_health_check_reports_vector_db_status` | Main API /health reports vector DB dependency status       |
+| `test_author_search_integration`             | GET /search/authors performs semantic search via vector DB |
+| `test_author_search_with_pagination`         | Pagination (limit/offset) parameters work correctly        |
+| `test_author_search_with_sorting`            | Sort by relevance_score or citation_count works            |
+| `test_author_search_empty_query`             | 422 validation error for missing query parameter           |
+| `test_author_search_respects_limits`         | Min/max limit validation enforced                          |
+| `test_vector_db_connectivity_error_handling` | 503 error when vector DB unavailable                       |
+| `test_relevance_score_calculation`           | Relevance scores properly calculated and included          |
 
 ---
 
@@ -96,8 +96,8 @@
 **Containers:** OpenLDAP + Identity service + Main API  
 **Pattern:** Async HTTP calls to main API, validates identity lookup flow
 
-| Test | Validates |
-|------|-----------|
+| Test                             | Validates                                      |
+| -------------------------------- | ---------------------------------------------- |
 | `test_full_identity_lookup_flow` | Complete identity lookup workflow via main API |
 
 ---
@@ -128,7 +128,7 @@
 
 **Configuration:**
 - Neo4j: Port 7687 (bolt), credentials via env vars
-- LDAP: Port 1389, configurable via env vars (LDAP_PORT, LDAP_BASE_DN, LDAP_ADMIN_PASSWORD)
+- LDAP: Internal container port 389, configurable via env vars (LDAP_PORT, LDAP_BASE_DN, LDAP_ADMIN_PASSWORD)
 - All services use Docker BuildKit with GitHub Actions cache support
 
 ---
@@ -177,11 +177,11 @@ poetry run pytest --cov=. --cov-report=term-missing
 ## Coverage Summary
 
 | Component | Unit Tests | Service Integration | API Integration |
-|-----------|-----------|-------------------|-----------------|
-| Graph DB | ❌ | ✅ (6 tests) | ✅ (4 tests) |
-| Vector DB | ❌ | ✅ (5 tests) | ✅ (8 tests) |
-| Identity | ❌ | ✅ (3 tests) | ✅ (1 test) |
-| Main API | ❌ | N/A | ✅ (13 tests) |
+| --------- | ---------- | ------------------- | --------------- |
+| Graph DB  | ❌          | ✅ (6 tests)         | ✅ (4 tests)     |
+| Vector DB | ❌          | ✅ (5 tests)         | ✅ (8 tests)     |
+| Identity  | ❌          | ✅ (3 tests)         | ✅ (1 test)      |
+| Main API  | ❌          | N/A                 | ✅ (13 tests)    |
 
 **Next Steps:**
 - Add unit tests for service business logic
