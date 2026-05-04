@@ -1,12 +1,33 @@
 @import "tailwindcss";
 
 @theme {
-  --color-aegis-dark: #1e2227;
-  --color-aegis-navy: #0f172a;
+  /* Use variables so Tailwind colors update automatically */
+  --color-aegis-bg: var(--bg-main);
+  --color-aegis-surface: var(--bg-surface);
+  --color-aegis-text: var(--text-main);
+  --color-aegis-muted: var(--text-muted);
+  --color-aegis-border: var(--border-main);
+  
   --color-aegis-cyan: #22d3ee;
-  --color-aegis-edge: #334155;
-
   --shadow-cyan-glow: 0 0 15px rgba(34, 211, 238, 0.3);
+}
+
+/* Default (Dark Mode) */
+:root {
+  --bg-main: #0a0c10;
+  --bg-surface: #0d1117;
+  --text-main: #cbd5e1; /* slate-300 */
+  --text-muted: #64748b; /* slate-500 */
+  --border-main: #1e293b; /* slate-800 */
+}
+
+/* Light Mode Override */
+:root.light {
+  --bg-main: #f8fafc;    /* slate-50 */
+  --bg-surface: #ffffff; 
+  --text-main: #1e293b;  /* slate-800 */
+  --text-muted: #475569; /* slate-600 */
+  --border-main: #e2e8f0; /* slate-200 */
 }
 
 .transition-all {
