@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "integration-tests"
-version = "1.0.0"
+version = "1.0.1"
 description = "Integration tests for Aegis Scholar components"
 authors = ["Aegis Scholar Team"]
 package-mode = false
