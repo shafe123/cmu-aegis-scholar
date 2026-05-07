@@ -22,6 +22,7 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    restart: unless-stopped
 
   milvus-seaweedfs:
     container_name: milvus-seaweedfs
@@ -44,6 +45,7 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    restart: unless-stopped
 
   milvus-standalone:
     container_name: milvus-standalone
@@ -69,6 +71,7 @@ services:
     depends_on:
       - "milvus-etcd"
       - "milvus-seaweedfs"
+    restart: unless-stopped
     networks:
       - aegisnet
 
@@ -92,6 +95,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
+    restart: unless-stopped
     networks:
       - aegisnet
 
@@ -131,12 +135,15 @@ services:
     environment:
       - NEO4J_PLUGINS=["apoc"]
       - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
     healthcheck:
       test: [ "CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD} 'RETURN 1'" ]
       interval: 15s
       timeout: 10s
       retries: 5
       start_period: 30s
+    restart: unless-stopped
     networks:
       - aegisnet
 
@@ -159,6 +166,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: unless-stopped
     networks:
       - aegisnet
 
@@ -198,6 +206,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    restart: unless-stopped
     networks:
       - aegisnet
 
@@ -212,6 +221,7 @@ services:
       - ../dev/certs:/etc/nginx/certs:ro
     depends_on:
       - aegis-scholar-api
+    restart: unless-stopped
     networks:
       - aegisnet
 
